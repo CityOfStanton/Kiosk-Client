@@ -203,6 +203,12 @@
   <ItemGroup>
     <None Include="Kiosk-Client_TemporaryKey.pfx" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KioskLibrary\KioskLibrary.csproj">
+      <Project>{3a33dd7f-a863-43d1-a2c0-8ee46cfae78f}</Project>
+      <Name>KioskLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
