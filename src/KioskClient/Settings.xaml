@@ -7,11 +7,45 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Base.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
 
-    <Grid>
-        <TextBlock HorizontalAlignment="Left" Margin="71,586,0,0" Text="Settings URI:" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="48"/>
-        <TextBox x:Name="tbSettingsUri" PlaceholderText="Settings URI" HorizontalAlignment="Left" Margin="382,575,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="85" Width="1298" FontSize="48"/>
-        <Button x:Name="btnSave" Content="Save" Margin="1717,579,0,0" VerticalAlignment="Top" FontSize="48" Width="162" Click="btnSave_Click" />
-        <Button x:Name="btnStart" Content="Start" Margin="0,822,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="72" Width="263" Click="btnStart_Click" />
+    <Grid x:Name="mainGrid" Background="#FF267B30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50*" />
+            <ColumnDefinition Width="50*" />
+        </Grid.ColumnDefinitions>
+        <ContentControl x:Name="ccLogo"  Grid.RowSpan="2" Grid.Column="0" Grid.Row="0" Template="{StaticResource MainLogo}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <Grid Grid.Column="1"  Grid.RowSpan="2" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="The Settings URI must be a location that is accessible to the client. This location will have the JSON/XML Action commands that controls what this Kiosk Client will display. For more information, check out our wiki section Action files." TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="24" TextTrimming="WordEllipsis" />
+            <HyperlinkButton  Grid.Row="1" Content="Action Files Wiki" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+        </Grid>
+
+        <Grid Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="180" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="tbSettingsUri" Margin="20,0" HorizontalAlignment="Stretch" PlaceholderText="Settings URI" TextWrapping="Wrap" VerticalAlignment="Top" Height="85" FontSize="48"/>
+            <Button x:Name="btnSave" Grid.Column="1" Content="Save" VerticalAlignment="Top" FontSize="48" Width="162" Click="btnSave_Click" />
+        </Grid>
+
+        <Button x:Name="btnStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="72" Width="263" Click="btnStart_Click" />
     </Grid>
 </Page>

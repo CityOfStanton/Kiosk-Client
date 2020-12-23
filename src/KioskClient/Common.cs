@@ -32,7 +32,7 @@ namespace KioskClient
             var localSettings = ApplicationData.Current.LocalSettings;
             var settingsUri = localSettings.Values[Constants.SystemUriSetting];
 
-            if (settingsUri == null)
+            if (settingsUri != null)
             {
                 // Retreive settings from server
                 var client = new HttpClient();
@@ -71,6 +71,21 @@ namespace KioskClient
                 }
             }
 
+            return null;
+        }
+
+        public static void SaveSettingsUri(string settingsUri)
+        {
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values[Constants.SystemUriSetting] = settingsUri;
+        }
+
+        public static Uri GetSettingsUri()
+        {
+            var localSettings = ApplicationData.Current.LocalSettings;
+            var settingsUri = localSettings.Values[Constants.SystemUriSetting];
+            if (!string.IsNullOrEmpty(settingsUri?.ToString()))
+                return new Uri(settingsUri?.ToString());
             return null;
         }
     }

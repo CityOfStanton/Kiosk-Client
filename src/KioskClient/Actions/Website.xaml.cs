@@ -27,5 +27,7 @@ namespace KioskClient.Actions
         {
             this.InitializeComponent();
         }
+
+        private void Page_KeyUp(object sender, KeyRoutedEventArgs e) => Common.CommonKeyUp(sender, e);
     }
 }

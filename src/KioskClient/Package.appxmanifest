@@ -16,7 +16,7 @@
   <Properties>
     <DisplayName>Kiosk-Client</DisplayName>
     <PublisherDisplayName>City of Stanton</PublisherDisplayName>
-    <Logo>Assets\StoreLogo.png</Logo>
+    <Logo>Assets\AppIcon\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
@@ -33,23 +33,22 @@
       EntryPoint="KioskClient.App">
       <uap:VisualElements
         DisplayName="Kiosk Client"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png"
         Description="A simple app used to operate with Windows 10 systems running in kiosk mode."
-        BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png" ShortName="Kiosk Client">
+        BackgroundColor="#277C31"  Square150x150Logo="Assets\AppIcon\Square150x150Logo.png" Square44x44Logo="Assets\AppIcon\Square44x44Logo.png">
+        <uap:DefaultTile ShortName="Kiosk Client"  Square71x71Logo="Assets\AppIcon\SmallTile.png" Wide310x150Logo="Assets\AppIcon\Wide310x150Logo.png" Square310x310Logo="Assets\AppIcon\LargeTile.png">
           <uap:ShowNameOnTiles>
             <uap:ShowOn Tile="square150x150Logo"/>
-            <uap:ShowOn Tile="wide310x150Logo"/>
             <uap:ShowOn Tile="square310x310Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
           </uap:ShowNameOnTiles>
         </uap:DefaultTile >
-        <uap:SplashScreen Image="Assets\SplashScreen.png" />
         <uap:InitialRotationPreference>
           <uap:Rotation Preference="landscape"/>
           <uap:Rotation Preference="portrait"/>
           <uap:Rotation Preference="landscapeFlipped"/>
           <uap:Rotation Preference="portraitFlipped"/></uap:InitialRotationPreference>
+        <uap:SplashScreen BackgroundColor="#277C31"  Image="Assets\AppIcon\SplashScreen.png"/>
+        <uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badge"/>
       </uap:VisualElements>
     </Application>
   </Applications>

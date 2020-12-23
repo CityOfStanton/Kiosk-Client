@@ -27,8 +27,6 @@ namespace KioskClient
         public MainPage()
         {
             this.InitializeComponent();
-
-            EvaluateMainPageArguments(null).Wait();            
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
@@ -42,7 +40,15 @@ namespace KioskClient
             if (mainPageArguments != null)
                 if (mainPageArguments.ShowSetupInformation)
                     return; // Show the Setup Information dialog
-            await Common.GetSettingsFromServer();
+
+            var settings = await Common.GetSettingsFromServer();
+            if(settings == null)
+                this.Frame.Navigate(typeof(Settings));
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            await EvaluateMainPageArguments(null);
         }
     }
 }

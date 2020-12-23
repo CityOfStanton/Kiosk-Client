@@ -26,12 +26,14 @@ namespace KioskClient
         public Settings()
         {
             this.InitializeComponent();
+
+            var settingsUri = Common.GetSettingsUri();
+            tbSettingsUri.Text = settingsUri?.AbsoluteUri ?? "";
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            var localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values[Constants.SystemUriSetting] = tbSettingsUri.Text;
+            Common.SaveSettingsUri(tbSettingsUri.Text);
         }
 
         private async void btnStart_Click(object sender, RoutedEventArgs e)
