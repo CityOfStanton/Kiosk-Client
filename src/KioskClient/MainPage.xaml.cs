@@ -1,8 +1,10 @@
-﻿using System;
+﻿using KioskLibrary;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -25,6 +27,22 @@ namespace KioskClient
         public MainPage()
         {
             this.InitializeComponent();
+
+            EvaluateMainPageArguments(null).Wait();            
+        }
+
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            if (e.Parameter is MainPageArguments)
+                await EvaluateMainPageArguments(e.Parameter as MainPageArguments);
+        }
+
+        private async Task EvaluateMainPageArguments(MainPageArguments mainPageArguments)
+        {
+            if (mainPageArguments != null)
+                if (mainPageArguments.ShowSetupInformation)
+                    return; // Show the Setup Information dialog
+            await Common.GetSettingsFromServer();
         }
     }
 }

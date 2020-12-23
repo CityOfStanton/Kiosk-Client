@@ -6,11 +6,26 @@
  */
 
 using KioskLibrary.Actions.Settings;
+using System;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace KioskLibrary.Actions
 {
     /// <summary>
     /// A method of displaying some type of supported content.
     /// </summary>
-    public record Action(string Name, ActionType Type, ActionSettings Settings);
+    public class Action
+    {
+        [JsonIgnore, XmlIgnore]
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public ActionType Type { get; set; }
+        public ActionSettings Settings { get; set; }
+
+        public Action()
+        {
+            this.Id = Guid.NewGuid();
+        }
+    }
 }
