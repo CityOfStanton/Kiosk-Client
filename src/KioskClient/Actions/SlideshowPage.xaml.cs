@@ -1,5 +1,4 @@
 ﻿using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 
 namespace KioskClient.Actions
 {
@@ -12,7 +11,5 @@ namespace KioskClient.Actions
         {
             this.InitializeComponent();
         }
-
-        private void Page_KeyUp(object sender, KeyRoutedEventArgs e) => Common.CommonKeyUp(sender, e);
     }
 }

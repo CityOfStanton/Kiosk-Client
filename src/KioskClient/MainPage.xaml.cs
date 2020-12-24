@@ -7,6 +7,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -24,33 +25,33 @@ namespace KioskClient
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        MainPageArguments currentMainPageArguments = null;
         public MainPage()
         {
             this.InitializeComponent();
+
+            Window.Current.CoreWindow.KeyDown -= Common.CommonKeyUp; // Remove any pre-existing Common.CommonKeyUp handlers
+            Window.Current.CoreWindow.KeyDown += Common.CommonKeyUp; // Add a single Common.CommonKeyUp handler
+
+            ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
         }
 
-        protected async override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            if (e.Parameter is MainPageArguments)
-                await EvaluateMainPageArguments(e.Parameter as MainPageArguments);
-        }
+        protected override void OnNavigatedTo(NavigationEventArgs e) => currentMainPageArguments = e.Parameter as MainPageArguments;
 
         private async Task EvaluateMainPageArguments(MainPageArguments mainPageArguments)
         {
-            if (mainPageArguments != null)
+            if (mainPageArguments != null && mainPageArguments is MainPageArguments)
                 if (mainPageArguments.ShowSetupInformation)
-                    return; // Show the Setup Information dialog
-
-            var orchestration = await Common.GetSettingsFromServer();
-            if (orchestration != null)
-                Common.LoadNextAction(orchestration, null, this.Frame);
+                    this.Frame.Navigate(typeof(Settings));
+                else
+                    return;
             else
-                this.Frame.Navigate(typeof(Settings));
+                await Common.LoadOrchestration();
         }
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            await EvaluateMainPageArguments(null);
+            await EvaluateMainPageArguments(currentMainPageArguments);
         }
     }
 }

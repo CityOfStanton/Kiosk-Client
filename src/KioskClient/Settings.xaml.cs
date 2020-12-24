@@ -5,8 +5,10 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Serialization;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -21,11 +23,33 @@ namespace KioskClient
         {
             InitializeComponent();
 
-            var settingsUri = Common.GetSettingsUri();
-            tbSettingsUri.Text = settingsUri?.AbsoluteUri ?? "";
+            ApplicationView.GetForCurrentView().ExitFullScreenMode();
         }
 
-        private async void btnSave_Click(object sender, RoutedEventArgs e)
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            var settingsUri = Common.GetSettingsUri();
+
+            if (!string.IsNullOrEmpty(settingsUri?.AbsoluteUri))
+            {
+                tbSettingsUri.Text = settingsUri.AbsoluteUri;
+                await VerifyURI();
+            }
+        }
+
+        /// <summary>
+        /// Remove the KeyDown binding for this page
+        /// </summary>
+        protected override void OnNavigatedTo(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= Common.CommonKeyUp;
+
+        /// <summary>
+        /// Add the KeyDown binding back when we leave
+        /// </summary>
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown += Common.CommonKeyUp;
+
+        private async void btnVerify_Click(object sender, RoutedEventArgs e) => await VerifyURI();
+
+        private async System.Threading.Tasks.Task VerifyURI()
         {
             (bool isValid, string message) = await Common.VerifySettingsUri(tbSettingsUri.Text);
             tbValidation.Text = message;
@@ -35,7 +59,7 @@ namespace KioskClient
         private async void btnStart_Click(object sender, RoutedEventArgs e)
         {
             Common.SaveSettingsUri(tbSettingsUri.Text);
-            await Common.GetSettingsFromServer();
+            await Common.LoadOrchestration();
         }
 
         private Orchistration ComposeExampleOrchistration()

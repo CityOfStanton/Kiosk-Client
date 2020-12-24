@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -52,8 +52,8 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-            <TextBox x:Name="tbSettingsUri" Margin="20,0" HorizontalAlignment="Stretch" PlaceholderText="Settings URI" TextWrapping="Wrap" VerticalAlignment="Top" Height="85" FontSize="36"/>
-            <Button x:Name="btnSave" Grid.Column="1" Content="Verify" VerticalAlignment="Top" FontSize="48" Width="162" Click="btnSave_Click" />
+            <TextBox x:Name="tbSettingsUri" Margin="20,0,20,0" PlaceholderText="Settings URI" TextWrapping="Wrap" VerticalAlignment="Top" Height="62" FontSize="36"/>
+            <Button x:Name="btnSave" Grid.Column="1" Content="Verify" VerticalAlignment="Top" FontSize="36" Width="162" Click="btnVerify_Click" Height="62" />
             <ScrollViewer Grid.Row="1" Grid.ColumnSpan="2" >
                 <TextBlock x:Name="tbValidation" FontSize="36" Margin="20" HorizontalAlignment="Center" />
             </ScrollViewer>

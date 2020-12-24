@@ -8,9 +8,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Windows.Storage;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 using Windows.Web.Http;
 using Action = KioskLibrary.Actions.Action;
 
@@ -18,64 +18,98 @@ namespace KioskClient
 {
     public class Common
     {
-        public static void CommonKeyUp(object sender, KeyRoutedEventArgs e)
+        public static void CommonKeyUp(object sender, Windows.UI.Core.KeyEventArgs args)
         {
-            if (e.Key == Windows.System.VirtualKey.Home || e.Key == Windows.System.VirtualKey.Escape)
+            if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
             {
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(MainPage), new MainPageArguments(showSetupInformation: true));
             }
         }
 
-        public async static Task<Orchistration> GetSettingsFromServer()
+        public async static Task<Orchistration> GetSettings()
         {
-            // Get server URI from local store
+            // Get URI from local store
             var localSettings = ApplicationData.Current.LocalSettings;
             var settingsUri = localSettings.Values[Constants.SystemUriSetting];
 
             if (settingsUri != null)
             {
-                // Retreive settings from server
-                var client = new HttpClient();
-                var result = await client.GetAsync(new Uri(settingsUri.ToString()));
+                Orchistration actionSettings = null;
+                var settingsUriPath = settingsUri.ToString();
+                var uri = new Uri(settingsUriPath);
+                string body = null;
 
-                if (result.StatusCode == HttpStatusCode.Ok)
+                if (uri.IsFile)
                 {
-                    var body = await result.Content.ReadAsStringAsync();
-                    Orchistration actionSettings = null;
-
-                    try
+                    if (File.Exists(settingsUriPath))
                     {
-                        var options = new JsonSerializerOptions()
-                        {
-                            AllowTrailingCommas = true,
-                            PropertyNameCaseInsensitive = true
-                        };
-
-                        actionSettings = JsonSerializer.Deserialize<Orchistration>(body);
-                    }
-                    catch (JsonException)
-                    {
-                        using var sr = new StringReader(body);
+                        StreamReader sr = null;
                         try
                         {
-                            actionSettings = new XmlSerializer(typeof(Orchistration)).Deserialize(sr) as Orchistration;
+                            sr = new StreamReader(settingsUriPath);
+                            body = sr.ReadToEnd();
                         }
-                        catch { }
                         finally
                         {
-                            sr.Close();
+                            sr?.Close();
                         }
                     }
-
-                    return actionSettings;
                 }
+                else
+                {
+                    // Retreive settings from server
+                    var client = new HttpClient();
+                    var result = await client.GetAsync(uri);
+
+                    if (result.StatusCode == HttpStatusCode.Ok)
+                        body = await result.Content.ReadAsStringAsync();
+                }
+
+                try
+                {
+                    var options = new JsonSerializerOptions()
+                    {
+                        AllowTrailingCommas = true,
+                        PropertyNameCaseInsensitive = true
+                    };
+
+                    actionSettings = JsonSerializer.Deserialize<Orchistration>(body, options);
+                }
+                catch (JsonException)
+                {
+                    using var sr = new StringReader(body);
+                    try
+                    {
+                        actionSettings = new XmlSerializer(typeof(Orchistration)).Deserialize(sr) as Orchistration;
+                    }
+                    catch { }
+                    finally
+                    {
+                        sr.Close();
+                    }
+                }
+
+                return actionSettings;
             }
 
             return null;
         }
 
-        public static void LoadNextAction(Orchistration orchestration, Action action, Frame frame)
+        public static async Task LoadOrchestration()
+        {
+            var orchestration = await GetSettings();
+            var rootFrame = Window.Current.Content as Frame;
+            if (orchestration != null)
+            {
+                ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
+                LoadNextAction(orchestration, null, rootFrame);
+            }
+            else
+                rootFrame.Navigate(typeof(Settings));
+        }
+
+        private static void LoadNextAction(Orchistration orchestration, Action action, Frame frame)
         {
             if (orchestration.Actions.Any())
                 if (orchestration.Actions.Count == 1)
@@ -116,11 +150,19 @@ namespace KioskClient
         {
             try
             {
-                var client = new HttpClient();
                 var uri = new Uri(settingsUri);
-                var result = await client.GetAsync(uri);
+                if (uri.IsFile)
+                    if (File.Exists(settingsUri))
+                        return (true, "File exists!");
+                    else
+                        return (false, "File does not exist!");
+                else
+                {
+                    var client = new HttpClient();
+                    var result = await client.GetAsync(uri);
 
-                return (result.StatusCode == HttpStatusCode.Ok, "URI is valid!");
+                    return (result.StatusCode == HttpStatusCode.Ok, "URI is valid!");
+                }
             }
             catch (Exception ex)
             {
