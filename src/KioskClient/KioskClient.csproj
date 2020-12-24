@@ -120,10 +120,10 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Actions\Image.xaml.cs">
+    <Compile Include="Actions\ImagePage.xaml.cs">
       <DependentUpon>Image.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Actions\Website.xaml.cs">
+    <Compile Include="Actions\WebsitePage.xaml.cs">
       <DependentUpon>Website.xaml</DependentUpon>
     </Compile>
     <Compile Include="App.xaml.cs">
@@ -208,11 +208,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="Actions\Image.xaml">
+    <Page Include="Actions\ImagePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Actions\Website.xaml">
+    <Page Include="Actions\WebsitePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

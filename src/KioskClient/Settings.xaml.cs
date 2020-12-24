@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Xml.Serialization;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -39,9 +40,10 @@ namespace KioskClient
 
         private Orchistration ComposeExampleOrchistration()
         {
-            Orchistration orchistration = new Orchistration();
-
-            orchistration.Lifecycle = LifecycleBehavior.ContnuousLoop;
+            Orchistration orchistration = new Orchistration
+            {
+                Lifecycle = LifecycleBehavior.ContinuousLoop
+            };
 
             orchistration.Actions.Add(new ImageAction(
                 "Show a single image",
@@ -78,8 +80,10 @@ namespace KioskClient
 
         private async void btnJSON_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new Windows.Storage.Pickers.FileSavePicker();
-            savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            var savePicker = new Windows.Storage.Pickers.FileSavePicker
+            {
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary
+            };
             savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
             savePicker.SuggestedFileName = "Settings.json";
 
@@ -88,7 +92,7 @@ namespace KioskClient
             {
                 Orchistration orchistration = ComposeExampleOrchistration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = System.Text.Json.JsonSerializer.Serialize(orchistration, options: new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+                var fileText = JsonSerializer.Serialize(orchistration, options: new JsonSerializerOptions() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
@@ -96,8 +100,10 @@ namespace KioskClient
 
         private async void btnXML_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new Windows.Storage.Pickers.FileSavePicker();
-            savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            var savePicker = new Windows.Storage.Pickers.FileSavePicker
+            {
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary
+            };
             savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
             savePicker.SuggestedFileName = "Settings.xml";
 

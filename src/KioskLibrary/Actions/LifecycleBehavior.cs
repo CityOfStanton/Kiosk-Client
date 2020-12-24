@@ -9,7 +9,7 @@ namespace KioskLibrary.Actions
 {
     public enum LifecycleBehavior
     {
-        ContnuousLoop,
+        ContinuousLoop,
         SingleRun
     }
 }

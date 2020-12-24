@@ -5,15 +5,27 @@
  * www.stantonky.gov
  */
 
+using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Action = KioskLibrary.Actions.Action;
 
 namespace KioskLibrary.Converters
 {
+    public static class StringExtension
+    {
+        public static string ToCamelCase(this string stringToConvert)
+        {
+            if (stringToConvert.Length > 1)
+                return stringToConvert[0].ToString().ToLowerInvariant() + stringToConvert.Substring(1);
+            return stringToConvert;
+        }
+    }
+
     public class ActionConverter : JsonConverter<Action>
     {
         public override bool CanConvert(Type typeToConvert) =>
@@ -46,9 +58,36 @@ namespace KioskLibrary.Converters
             throw new JsonException();
         }
 
-        public override void Write(Utf8JsonWriter writer, Action Action, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Action action, JsonSerializerOptions options)
         {
-            // No-op. Required to implement, but unused as of now.
+            writer.WriteStartObject();
+            writer.WriteString(nameof(action.Name).ToCamelCase(), action.Name);
+
+            if (action.Duration.HasValue)
+                writer.WriteString(nameof(action.Duration).ToCamelCase(), action.Duration.Value.ToString());
+
+            if (action.GetType() == typeof(ImageAction))
+            {
+                var a = action as ImageAction;
+                writer.WriteString(nameof(a.Path).ToCamelCase(), a.Path);
+                writer.WriteString(nameof(a.Stretch).ToCamelCase(), a.Stretch.ToString());
+            }
+            else if (action.GetType() == typeof(WebsiteAction))
+            {
+                var a = action as WebsiteAction;
+                writer.WriteString(nameof(a.Path).ToCamelCase(), a.Path);
+            }
+            else if (action.GetType() == typeof(SlideshowAction))
+            {
+                var a = action as SlideshowAction;
+                writer.WriteString(nameof(a.Order).ToCamelCase(), a.Order.ToString());
+                writer.WriteStartArray(nameof(a.Images));
+                foreach (var i in a.Images)
+                    Write(writer, i, options);
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndObject();
         }
 
         private static Action DeduceAction(List<KeyValuePair<string, string>> objectProperties)
@@ -93,9 +132,7 @@ namespace KioskLibrary.Converters
                     { // This method may fail on system objects (such as TaskResults).
                         p.SetValue(toReturn, ConvertStringToType(p.PropertyType, property.Value), null);
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch { }
-#pragma warning restore CA1031 // Do not catch general exception types
                 }
             }
 

@@ -41,8 +41,10 @@ namespace KioskClient
                 if (mainPageArguments.ShowSetupInformation)
                     return; // Show the Setup Information dialog
 
-            var settings = await Common.GetSettingsFromServer();
-            if(settings == null)
+            var orchestration = await Common.GetSettingsFromServer();
+            if (orchestration != null)
+                Common.LoadNextAction(orchestration, null, this.Frame);
+            else
                 this.Frame.Navigate(typeof(Settings));
         }
 

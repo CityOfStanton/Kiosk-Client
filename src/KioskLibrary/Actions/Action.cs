@@ -5,6 +5,7 @@
  * www.stantonky.gov
  */
 
+using KioskLibrary.Converters;
 using System;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -17,6 +18,7 @@ namespace KioskLibrary.Actions
     [XmlInclude(typeof(ImageAction))]
     [XmlInclude(typeof(SlideshowAction))]
     [XmlInclude(typeof(WebsiteAction))]
+    [JsonConverter(typeof(ActionConverter))]
     public abstract class Action
     {
         [JsonIgnore, XmlIgnore]

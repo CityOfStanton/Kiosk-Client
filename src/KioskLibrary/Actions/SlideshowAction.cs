@@ -6,6 +6,7 @@
  */
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace KioskLibrary.Actions
 {
@@ -15,6 +16,7 @@ namespace KioskLibrary.Actions
     public class SlideshowAction : Action
     {
         public List<ImageAction> Images { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Ordering Order { get; set; } = Ordering.Sequential;
 
         public SlideshowAction() { }

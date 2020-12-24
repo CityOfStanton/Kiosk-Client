@@ -5,6 +5,8 @@
  * www.stantonky.gov
  */
 
+using System.Text.Json.Serialization;
+
 namespace KioskLibrary.Actions
 {
     /// <summary>
@@ -13,6 +15,7 @@ namespace KioskLibrary.Actions
     public class ImageAction : Action
     {
         public string Path { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Windows.UI.Xaml.Media.Stretch Stretch { get; set; }
 
         public ImageAction() { }

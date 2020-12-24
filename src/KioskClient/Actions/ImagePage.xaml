@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="KioskClient.Actions.Website"
+    x:Class="KioskClient.Actions.ImagePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:KioskClient.Actions"
@@ -9,6 +9,6 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" KeyUp="Page_KeyUp">
 
     <Grid>
-        <WebView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <Image x:Name="imgDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     </Grid>
 </Page>
