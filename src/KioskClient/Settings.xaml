@@ -32,9 +32,15 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="5*" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Text="The Settings URI must be a location that is accessible to the client. This location will have the JSON/XML Action commands that controls what this Kiosk Client will display. For more information, check out our wiki section Action files." TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="24" TextTrimming="WordEllipsis" />
+            <TextBlock Text="The Settings URI must be a location that is accessible to the client. This location will have the JSON/XML Action commands that controls what this Kiosk Client will display. For more information, check out our wiki section Action files. To get started, click one of the &quot;Generate Example Settings File&quot; buttons below." TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="24" TextTrimming="WordEllipsis" />
             <HyperlinkButton  Grid.Row="1" Content="Action Files Wiki" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+            <StackPanel Grid.Row="2" HorizontalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Text="Generate Example Settings File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" FontSize="24" TextTrimming="WordEllipsis" />
+                <Button x:Name="btnJSON" Content="JSON" FontSize="24" Margin="20,0" Click="btnJSON_Click"/>
+                <Button x:Name="btnXML" Content="XML" FontSize="24" Margin="20,0" Click="btnXML_Click" />
+            </StackPanel>
         </Grid>
 
         <Grid Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Center">
@@ -42,10 +48,16 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="180" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
             <TextBox x:Name="tbSettingsUri" Margin="20,0" HorizontalAlignment="Stretch" PlaceholderText="Settings URI" TextWrapping="Wrap" VerticalAlignment="Top" Height="85" FontSize="48"/>
-            <Button x:Name="btnSave" Grid.Column="1" Content="Save" VerticalAlignment="Top" FontSize="48" Width="162" Click="btnSave_Click" />
+            <Button x:Name="btnSave" Grid.Column="1" Content="Verify" VerticalAlignment="Top" FontSize="48" Width="162" Click="btnSave_Click" />
+            <ScrollViewer Grid.Row="1" Grid.ColumnSpan="2" >
+                <TextBlock x:Name="tbValidation" FontSize="36" Margin="20" HorizontalAlignment="Center" />
+            </ScrollViewer>
         </Grid>
-
-        <Button x:Name="btnStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="72" Width="263" Click="btnStart_Click" />
+        <Button x:Name="btnStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="72" Width="263" Click="btnStart_Click" IsEnabled="False" />
     </Grid>
 </Page>

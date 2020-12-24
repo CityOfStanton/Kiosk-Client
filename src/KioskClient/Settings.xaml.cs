@@ -1,18 +1,11 @@
-﻿using System;
+﻿using KioskLibrary.Actions;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Storage;
+using System.Text;
+using System.Xml.Serialization;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -25,20 +18,101 @@ namespace KioskClient
     {
         public Settings()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             var settingsUri = Common.GetSettingsUri();
             tbSettingsUri.Text = settingsUri?.AbsoluteUri ?? "";
         }
 
-        private void btnSave_Click(object sender, RoutedEventArgs e)
+        private async void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            Common.SaveSettingsUri(tbSettingsUri.Text);
+            (bool isValid, string message) = await Common.VerifySettingsUri(tbSettingsUri.Text);
+            tbValidation.Text = message;
+            btnStart.IsEnabled = isValid;
         }
 
         private async void btnStart_Click(object sender, RoutedEventArgs e)
         {
+            Common.SaveSettingsUri(tbSettingsUri.Text);
             await Common.GetSettingsFromServer();
+        }
+
+        private Orchistration ComposeExampleOrchistration()
+        {
+            Orchistration orchistration = new Orchistration();
+
+            orchistration.Lifecycle = LifecycleBehavior.ContnuousLoop;
+
+            orchistration.Actions.Add(new ImageAction(
+                "Show a single image",
+                30,
+                "https://some-uri.com/images/the-image-to-show.jpg",
+                Windows.UI.Xaml.Media.Stretch.Uniform));
+
+            orchistration.Actions.Add(new SlideshowAction(
+                "Show a slideshow",
+                null,
+                new List<ImageAction>()
+                {
+                    new ImageAction(
+                        "Show the first image in the slideshow for 40 seconds.",
+                        40,
+                        "https://some-uri.com/images/slideshow1/slideshow-image1.jpg",
+                        Windows.UI.Xaml.Media.Stretch.Fill),
+                    new ImageAction(
+                        "Show the second image in the slideshow for 50 seconds.",
+                        50,
+                        "https://some-uri.com/images/slideshow1/slideshow-image2.jpg",
+                        Windows.UI.Xaml.Media.Stretch.UniformToFill)
+                },
+                Ordering.Sequential));
+
+            orchistration.Actions.Add(new WebsiteAction(
+                "Display the website",
+                120,
+                "https://some-uri.com"
+                ));
+
+            return orchistration;
+        }
+
+        private async void btnJSON_Click(object sender, RoutedEventArgs e)
+        {
+            var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+            savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
+            savePicker.SuggestedFileName = "Settings.json";
+
+            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                Orchistration orchistration = ComposeExampleOrchistration();
+                Windows.Storage.CachedFileManager.DeferUpdates(file);
+                var fileText = System.Text.Json.JsonSerializer.Serialize(orchistration, options: new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });
+                await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
+                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+            }
+        }
+
+        private async void btnXML_Click(object sender, RoutedEventArgs e)
+        {
+            var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+            savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
+            savePicker.SuggestedFileName = "Settings.xml";
+
+            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                Orchistration orchistration = ComposeExampleOrchistration();
+                Windows.Storage.CachedFileManager.DeferUpdates(file);
+                var sb = new StringBuilder();
+                var sw = new StringWriter(sb);
+                new XmlSerializer(typeof(Orchistration)).Serialize(sw, orchistration);
+                sw.Close();
+                await Windows.Storage.FileIO.WriteTextAsync(file, sb.ToString());
+                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+            }
         }
     }
 }

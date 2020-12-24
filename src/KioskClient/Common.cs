@@ -74,6 +74,22 @@ namespace KioskClient
             return null;
         }
 
+        public async static Task<(bool, string)> VerifySettingsUri(string settingsUri)
+        {
+            try
+            {
+                var client = new HttpClient();
+                var uri = new Uri(settingsUri);
+                var result = await client.GetAsync(uri);
+
+                return (result.StatusCode == HttpStatusCode.Ok, "URI is valid!");
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
+        }
+
         public static void SaveSettingsUri(string settingsUri)
         {
             var localSettings = ApplicationData.Current.LocalSettings;

@@ -5,7 +5,6 @@
  * www.stantonky.gov
  */
 
-using KioskLibrary.Actions.Settings;
 using System;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -15,17 +14,25 @@ namespace KioskLibrary.Actions
     /// <summary>
     /// A method of displaying some type of supported content.
     /// </summary>
-    public class Action
+    [XmlInclude(typeof(ImageAction))]
+    [XmlInclude(typeof(SlideshowAction))]
+    [XmlInclude(typeof(WebsiteAction))]
+    public abstract class Action
     {
         [JsonIgnore, XmlIgnore]
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public ActionType Type { get; set; }
-        public ActionSettings Settings { get; set; }
+        public int? Duration { get; set; }
 
         public Action()
         {
-            this.Id = Guid.NewGuid();
+            Id = Guid.NewGuid();
+        }
+
+        public Action(string name, int? duration)
+        {
+            Name = name;
+            Duration = duration;
         }
     }
 }

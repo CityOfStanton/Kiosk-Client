@@ -122,12 +122,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Actions\Action.cs" />
-    <Compile Include="Actions\Settings\ActionSettings.cs" />
-    <Compile Include="Actions\ActionType.cs" />
-    <Compile Include="Actions\Settings\SlideshowImageSettings.cs" />
-    <Compile Include="Actions\Settings\SlideshowSettings.cs" />
-    <Compile Include="Actions\Settings\ImageSettings.cs" />
-    <Compile Include="Actions\Settings\WebsiteSettings.cs" />
+    <Compile Include="Actions\LifecycleBehavior.cs" />
+    <Compile Include="Actions\Ordering.cs" />
+    <Compile Include="Actions\Orchistration.cs" />
+    <Compile Include="Actions\SlideshowAction.cs" />
+    <Compile Include="Actions\ImageAction.cs" />
+    <Compile Include="Actions\WebsiteAction.cs" />
     <Compile Include="IsExternalInit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\KioskLibrary.rd.xml" />
