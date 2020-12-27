@@ -158,6 +158,9 @@ namespace KioskLibrary.Converters
             if (propertyType == typeof(int))
                 return int.Parse(value);
 
+            if (propertyType.IsEnum)
+                return Enum.Parse(propertyType, value);
+
             return value;
         }
     }

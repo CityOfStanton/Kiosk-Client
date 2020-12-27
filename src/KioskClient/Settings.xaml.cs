@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Windows.Storage.Pickers;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -32,7 +34,7 @@ namespace KioskClient
 
             if (!string.IsNullOrEmpty(settingsUri?.AbsoluteUri))
             {
-                tbSettingsUri.Text = settingsUri.AbsoluteUri;
+                tbURLPath.Text = settingsUri.AbsoluteUri;
                 await VerifyURI();
             }
         }
@@ -47,18 +49,18 @@ namespace KioskClient
         /// </summary>
         protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown += Common.CommonKeyUp;
 
-        private async void btnVerify_Click(object sender, RoutedEventArgs e) => await VerifyURI();
+        private async void ButtonVerify_Click(object sender, RoutedEventArgs e) => await VerifyURI();
 
-        private async System.Threading.Tasks.Task VerifyURI()
+        private async Task VerifyURI()
         {
-            (bool isValid, string message) = await Common.VerifySettingsUri(tbSettingsUri.Text);
+            (bool isValid, string message) = await Common.VerifySettingsUri(tbURLPath.Text);
             tbValidation.Text = message;
-            btnStart.IsEnabled = isValid;
+            ButtonStart.IsEnabled = isValid;
         }
 
-        private async void btnStart_Click(object sender, RoutedEventArgs e)
+        private async void ButtonStart_Click(object sender, RoutedEventArgs e)
         {
-            Common.SaveSettingsUri(tbSettingsUri.Text);
+            Common.SaveSettingsUri(tbURLPath.Text);
             await Common.LoadOrchestration();
         }
 
@@ -102,11 +104,11 @@ namespace KioskClient
             return orchistration;
         }
 
-        private async void btnJSON_Click(object sender, RoutedEventArgs e)
+        private async void ButtonJSON_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new Windows.Storage.Pickers.FileSavePicker
+            var savePicker = new FileSavePicker
             {
-                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
             savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
             savePicker.SuggestedFileName = "Settings.json";
@@ -116,17 +118,17 @@ namespace KioskClient
             {
                 Orchistration orchistration = ComposeExampleOrchistration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = JsonSerializer.Serialize(orchistration, options: new JsonSerializerOptions() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                var fileText = JsonSerializer.Serialize(orchistration, options: Common.DefaultJsonOptions);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
         }
 
-        private async void btnXML_Click(object sender, RoutedEventArgs e)
+        private async void ButtonXML_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new Windows.Storage.Pickers.FileSavePicker
+            var savePicker = new FileSavePicker
             {
-                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
             savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
             savePicker.SuggestedFileName = "Settings.xml";
@@ -143,6 +145,29 @@ namespace KioskClient
                 await Windows.Storage.FileIO.WriteTextAsync(file, sb.ToString());
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
+        }
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var openPicker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.PicturesLibrary
+            };
+            openPicker.FileTypeFilter.Add(".json");
+            openPicker.FileTypeFilter.Add(".xml");
+
+            var file = await openPicker.PickSingleFileAsync();
+            if (file != null)
+            {
+                tbURLPath.Text = file.Path;
+                await VerifyURI();
+            }
+        }
+
+        private void ToggleSwitch_InputMode_Toggled(object sender, RoutedEventArgs e)
+        {
+            tbValidation.Text = "";
         }
     }
 }

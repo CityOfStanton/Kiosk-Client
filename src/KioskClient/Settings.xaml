@@ -16,6 +16,9 @@
     </Page.Resources>
 
     <Grid x:Name="mainGrid" Background="#FF267B30">
+        <Grid.Resources>
+            <local:InvertBooleanConverter x:Key="InvertBoolean" />
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
@@ -34,30 +37,46 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Text="The Settings URI must be a location that is accessible to the client. This location will have the JSON/XML Action commands that controls what this Kiosk Client will display. For more information, check out our wiki section Action files. To get started, click one of the &quot;Generate Example Settings File&quot; buttons below." TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="24" TextTrimming="WordEllipsis" />
-            <HyperlinkButton  Grid.Row="1" Content="Action Files Wiki" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+            <TextBlock Text="The Settings URI must be a location that is accessible to the client. This location will have the JSON/XML Action commands that controls what this Kiosk Client will display. For more information, check out our wiki section Action files. To get started, click one of the &quot;Generate Example Settings File&quot; buttons below." TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextTrimming="WordEllipsis" Style="{ThemeResource TitleTextBlockStyle}" />
+            <HyperlinkButton Grid.Row="1" Content="Action Files Wiki" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{ThemeResource TextBlockButtonStyle}" />
             <StackPanel Grid.Row="2" HorizontalAlignment="Center" Orientation="Horizontal">
-                <TextBlock Text="Generate Example Settings File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" FontSize="24" TextTrimming="WordEllipsis" />
-                <Button x:Name="btnJSON" Content="JSON" FontSize="24" Margin="20,0" Click="btnJSON_Click"/>
-                <Button x:Name="btnXML" Content="XML" FontSize="24" Margin="20,0" Click="btnXML_Click" />
+                <TextBlock Text="Generate Example Settings File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                <Button x:Name="ButtonJSON" Content="JSON" Margin="20,0" Click="ButtonJSON_Click" Style="{ThemeResource ButtonRevealStyle}"/>
+                <Button x:Name="ButtonXML" Content="XML" Margin="20,0" Click="ButtonXML_Click" Style="{ThemeResource ButtonRevealStyle}" />
             </StackPanel>
         </Grid>
 
         <Grid Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="180" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-            <TextBox x:Name="tbSettingsUri" Margin="20,0,20,0" PlaceholderText="Settings URI" TextWrapping="Wrap" VerticalAlignment="Top" Height="62" FontSize="36"/>
-            <Button x:Name="btnSave" Grid.Column="1" Content="Verify" VerticalAlignment="Top" FontSize="36" Width="162" Click="btnVerify_Click" Height="62" />
-            <ScrollViewer Grid.Row="1" Grid.ColumnSpan="2" >
-                <TextBlock x:Name="tbValidation" FontSize="36" Margin="20" HorizontalAlignment="Center" />
+            <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" Margin="20,0,0,0" OnContent="File" OffContent="URL" HorizontalAlignment="Center" VerticalAlignment="Center" Toggled="ToggleSwitch_InputMode_Toggled"/>
+            <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="tbURLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=OneWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button x:Name="ButtonVerify" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Content="Verify" Margin="0,0,20,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Click="ButtonVerify_Click" Style="{ThemeResource ButtonRevealStyle}" />
+            </Grid>
+            <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="ButtonLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Mode=OneWay}" Grid.Row="1" Grid.Column="0" Content="Load File" VerticalAlignment="Center" HorizontalAlignment="Stretch" Click="ButtonVerify_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,20,0" />
+            </Grid>
+            <ScrollViewer Grid.Row="2" Grid.ColumnSpan="2" >
+                <TextBlock x:Name="tbValidation" Margin="20" HorizontalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}" />
             </ScrollViewer>
         </Grid>
-        <Button x:Name="btnStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="72" Width="263" Click="btnStart_Click" IsEnabled="False" />
+        <Button x:Name="ButtonStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" Click="ButtonStart_Click" IsEnabled="False" Style="{ThemeResource ButtonRevealStyle}" />
     </Grid>
 </Page>

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Windows.Storage;
@@ -24,6 +25,24 @@ namespace KioskClient
             {
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(MainPage), new MainPageArguments(showSetupInformation: true));
+            }
+        }
+
+        public static JsonSerializerOptions DefaultJsonOptions
+        {
+            get
+            {
+                return new JsonSerializerOptions()
+                {
+                    AllowTrailingCommas = true,
+                    WriteIndented = true,
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    Converters =
+                    {
+                        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                    }
+                };
             }
         }
 
@@ -68,13 +87,7 @@ namespace KioskClient
 
                 try
                 {
-                    var options = new JsonSerializerOptions()
-                    {
-                        AllowTrailingCommas = true,
-                        PropertyNameCaseInsensitive = true
-                    };
-
-                    actionSettings = JsonSerializer.Deserialize<Orchistration>(body, options);
+                    actionSettings = JsonSerializer.Deserialize<Orchistration>(body, DefaultJsonOptions);
                 }
                 catch (JsonException)
                 {
