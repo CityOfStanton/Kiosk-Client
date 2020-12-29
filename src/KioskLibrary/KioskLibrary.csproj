@@ -122,13 +122,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Actions\Action.cs" />
-    <Compile Include="Actions\Settings\ActionSettings.cs" />
-    <Compile Include="Actions\ActionType.cs" />
-    <Compile Include="Actions\Settings\SlideshowImageSettings.cs" />
-    <Compile Include="Actions\Settings\SlideshowSettings.cs" />
-    <Compile Include="Actions\Settings\ImageSettings.cs" />
-    <Compile Include="Actions\Settings\WebsiteSettings.cs" />
+    <Compile Include="Orchestration\LifecycleBehavior.cs" />
+    <Compile Include="Common\Ordering.cs" />
+    <Compile Include="Orchestration\Orchestration.cs" />
+    <Compile Include="Actions\SlideshowAction.cs" />
+    <Compile Include="Actions\ImageAction.cs" />
+    <Compile Include="Actions\WebsiteAction.cs" />
+    <Compile Include="Converters\ActionConverter.cs" />
     <Compile Include="IsExternalInit.cs" />
+    <Compile Include="Orchestration\PollingInterval.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\KioskLibrary.rd.xml" />
   </ItemGroup>
@@ -139,6 +141,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="City of Stanton.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
+    <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
