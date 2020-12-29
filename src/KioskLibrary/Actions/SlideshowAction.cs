@@ -5,6 +5,7 @@
  * www.stantonky.gov
  */
 
+using KioskLibrary.Actions.Common;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 

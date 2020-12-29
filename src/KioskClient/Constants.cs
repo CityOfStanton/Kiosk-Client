@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KioskClient
+﻿namespace KioskClient
 {
     public class Constants
     {
-        public static string SystemUriSetting = "#SettingsURI";
+        public static string CurrentOrchestration = "#CurrentOrchestration";
+        public static string SettingsViewModel = "#SettingsViewModel";
+        public static string CurrentOrchestrationURI = "#CurrentOrchestrationURI";
     }
 }

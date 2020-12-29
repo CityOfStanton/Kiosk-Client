@@ -1,5 +1,8 @@
 ﻿using KioskClient.Actions;
+using KioskClient.ViewModels;
 using KioskLibrary.Actions;
+using KioskLibrary.Actions.Common;
+using KioskLibrary.Actions.Orchestration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -46,83 +49,98 @@ namespace KioskClient
             }
         }
 
-        public async static Task<Orchistration> GetSettings()
+        internal static T GetFromStorage<T>(string setting)
         {
-            // Get URI from local store
             var localSettings = ApplicationData.Current.LocalSettings;
-            var settingsUri = localSettings.Values[Constants.SystemUriSetting];
-
-            if (settingsUri != null)
-            {
-                Orchistration actionSettings = null;
-                var settingsUriPath = settingsUri.ToString();
-                var uri = new Uri(settingsUriPath);
-                string body = null;
-
-                if (uri.IsFile)
-                {
-                    if (File.Exists(settingsUriPath))
-                    {
-                        StreamReader sr = null;
-                        try
-                        {
-                            sr = new StreamReader(settingsUriPath);
-                            body = sr.ReadToEnd();
-                        }
-                        finally
-                        {
-                            sr?.Close();
-                        }
-                    }
-                }
+            if (localSettings.Values[setting] != null)
+                if (typeof(T).IsPrimitive)
+                    return (T)localSettings.Values[setting];
                 else
-                {
-                    // Retreive settings from server
-                    var client = new HttpClient();
-                    var result = await client.GetAsync(uri);
+                    return Deserialize<T>(localSettings.Values[setting].ToString());
+            return default;
+        }
 
-                    if (result.StatusCode == HttpStatusCode.Ok)
-                        body = await result.Content.ReadAsStringAsync();
-                }
+        internal static void SaveToStorage(string setting, object toSave)
+        {
+            var localSettings = ApplicationData.Current.LocalSettings;
+            if (toSave != null)
+                if (toSave.GetType().IsPrimitive)
+                    localSettings.Values[setting] = toSave;
+                else
+                    localSettings.Values[setting] = Serialize(toSave);
+        }
 
+        private static T Deserialize<T>(string toDeserialize) => JsonSerializer.Deserialize<T>(toDeserialize, DefaultJsonOptions);
+
+        private static string Serialize(object toSerialize) => JsonSerializer.Serialize(toSerialize, DefaultJsonOptions);
+
+        public async static Task<Orchestration> GetOrchestrationFromURL(Uri uri)
+        {
+            try
+            {
+                var client = new HttpClient();
+                var result = await client.GetAsync(uri);
+                if (result.StatusCode == HttpStatusCode.Ok)
+                    return ConvertStringToOrchestration(await result.Content.ReadAsStringAsync());
+
+            }
+            catch { }
+
+            return null;
+        }
+
+        public static Orchestration ConvertStringToOrchestration(string body)
+        {
+            try
+            {
+                // Try to parse the text as JSON
+                return JsonSerializer.Deserialize<Orchestration>(body, DefaultJsonOptions);
+            }
+            catch (JsonException)
+            {
+                // Try to parse the text as XML
+                using var sr = new StringReader(body);
                 try
                 {
-                    actionSettings = JsonSerializer.Deserialize<Orchistration>(body, DefaultJsonOptions);
+                    return new XmlSerializer(typeof(Orchestration)).Deserialize(sr) as Orchestration;
                 }
-                catch (JsonException)
+                catch { }
+                finally
                 {
-                    using var sr = new StringReader(body);
-                    try
-                    {
-                        actionSettings = new XmlSerializer(typeof(Orchistration)).Deserialize(sr) as Orchistration;
-                    }
-                    catch { }
-                    finally
-                    {
-                        sr.Close();
-                    }
+                    sr.Close();
                 }
-
-                return actionSettings;
             }
 
             return null;
         }
 
-        public static async Task LoadOrchestration()
+        public async static Task StartOrchestration()
         {
-            var orchestration = await GetSettings();
             var rootFrame = Window.Current.Content as Frame;
+
+            // Load Orchestration from Storage
+            var orchestration = GetFromStorage<Orchestration>(Constants.CurrentOrchestration);
+            var orchestrationPath = GetFromStorage<string>(Constants.CurrentOrchestrationURI);
+
+            // If we are pulling from a URL, pull a new orchestration and set up polling
+            // If we are pulling from a file, use the orchestration from Storage
+            if (!string.IsNullOrEmpty(orchestrationPath))
+                if (Uri.TryCreate(orchestrationPath, UriKind.Absolute, out var orchestrationUri))
+                    orchestration = await GetOrchestrationFromURL(orchestrationUri);
+                else
+                    rootFrame.Navigate(typeof(Settings));
+
+            // Invoke the orchestration
             if (orchestration != null)
             {
                 ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
-                LoadNextAction(orchestration, null, rootFrame);
+                EvaluateNextAction(orchestration, null, rootFrame);
             }
             else
                 rootFrame.Navigate(typeof(Settings));
         }
 
-        private static void LoadNextAction(Orchistration orchestration, Action action, Frame frame)
+        private static void EvaluateNextAction(Orchestration orchestration, Action action, Frame frame)
         {
             if (orchestration.Actions.Any())
                 if (orchestration.Actions.Count == 1)
@@ -164,38 +182,15 @@ namespace KioskClient
             try
             {
                 var uri = new Uri(settingsUri);
-                if (uri.IsFile)
-                    if (File.Exists(settingsUri))
-                        return (true, "File exists!");
-                    else
-                        return (false, "File does not exist!");
-                else
-                {
-                    var client = new HttpClient();
-                    var result = await client.GetAsync(uri);
+                var client = new HttpClient();
+                var result = await client.GetAsync(uri);
 
-                    return (result.StatusCode == HttpStatusCode.Ok, "URI is valid!");
-                }
+                return (result.StatusCode == HttpStatusCode.Ok, "Settings URL is valid!");
             }
             catch (Exception ex)
             {
                 return (false, ex.Message);
             }
-        }
-
-        public static void SaveSettingsUri(string settingsUri)
-        {
-            var localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values[Constants.SystemUriSetting] = settingsUri;
-        }
-
-        public static Uri GetSettingsUri()
-        {
-            var localSettings = ApplicationData.Current.LocalSettings;
-            var settingsUri = localSettings.Values[Constants.SystemUriSetting];
-            if (!string.IsNullOrEmpty(settingsUri?.ToString()))
-                return new Uri(settingsUri?.ToString());
-            return null;
         }
     }
 }

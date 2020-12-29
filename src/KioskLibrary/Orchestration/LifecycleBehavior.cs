@@ -5,7 +5,7 @@
  * www.stantonky.gov
  */
 
-namespace KioskLibrary.Actions
+namespace KioskLibrary.Actions.Orchestration
 {
     public enum LifecycleBehavior
     {

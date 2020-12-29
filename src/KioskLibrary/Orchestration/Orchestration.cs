@@ -1,16 +1,17 @@
-﻿/*  
+﻿/*
  * Copyright 2020
  * City of Stanton
  * Stanton, Kentucky
  * www.stantonky.gov
  */
 
+using KioskLibrary.Actions.Common;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace KioskLibrary.Actions
+namespace KioskLibrary.Actions.Orchestration
 {
-    public class Orchistration
+    public class Orchestration
     {
         public List<Action> Actions { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -18,9 +19,9 @@ namespace KioskLibrary.Actions
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Ordering Order { get; set; } = Ordering.Sequential;
 
-        public Orchistration() { Actions = new List<Action>(); }
+        public Orchestration() { Actions = new List<Action>(); }
 
-        public Orchistration(List<Action> actions, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential)
+        public Orchestration(List<Action> actions, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential)
         {
             Actions = actions;
             Lifecycle = lifecycle;

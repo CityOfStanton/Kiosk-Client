@@ -121,16 +121,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Actions\ImagePage.xaml.cs">
-      <DependentUpon>Image.xaml</DependentUpon>
+      <DependentUpon>ImagePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Actions\SlideshowPage.xaml.cs">
+      <DependentUpon>SlideshowPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Actions\WebsitePage.xaml.cs">
-      <DependentUpon>Website.xaml</DependentUpon>
+      <DependentUpon>WebsitePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="InvertBooleanConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -139,6 +143,8 @@
     <Compile Include="Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="ViewModels\ViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -211,6 +217,10 @@
     <Page Include="Actions\ImagePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Actions\SlideshowPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Actions\WebsitePage.xaml">
       <SubType>Designer</SubType>

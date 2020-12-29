@@ -6,9 +6,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
         <ResourceDictionary>
+            <local:InvertBooleanConverter x:Key="InvertBoolean" />
+            <Flyout x:Name="Button_Flyout">
+                <TextBlock Text="{x:Bind Path=State.PathValidationMessage, Mode=OneWay}" Margin="0,0,20,0" />
+            </Flyout>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Base.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -16,9 +20,6 @@
     </Page.Resources>
 
     <Grid x:Name="mainGrid" Background="#FF267B30">
-        <Grid.Resources>
-            <local:InvertBooleanConverter x:Key="InvertBoolean" />
-        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
@@ -54,29 +55,30 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-            <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" Margin="20,0,0,0" OnContent="File" OffContent="URL" HorizontalAlignment="Center" VerticalAlignment="Center" Toggled="ToggleSwitch_InputMode_Toggled"/>
+            <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" Margin="20,0,0,0" OnContent="File" OffContent="URL" HorizontalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" VerticalAlignment="Center" />
             <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="tbURLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=OneWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" />
-                <Button x:Name="ButtonVerify" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Content="Verify" Margin="0,0,20,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Click="ButtonVerify_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <TextBox x:Name="tbURLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
+                <Button x:Name="Button_UrlLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Content="Load" Margin="20,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                <ComboBox x:Name="ComboBox_PollingInterval" ItemsSource="{x:Bind PollingIntervals}" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}}" Margin="0,20,0,0" Grid.Row="1" PlaceholderText="Polling Interval" SelectionChanged="ComboBox_PollingInterval_SelectionChanged" />
             </Grid>
             <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Button x:Name="ButtonLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Mode=OneWay}" Grid.Row="1" Grid.Column="0" Content="Load File" VerticalAlignment="Center" HorizontalAlignment="Stretch" Click="ButtonVerify_Click" Style="{ThemeResource ButtonRevealStyle}" />
-                <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,20,0" />
+                <Button x:Name="Button_FileLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode}" Margin="0,20,0,0" Grid.Column="0" Content="Load File" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" Width="75" />
+                <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Margin="20,20,20,0" Text="{x:Bind Path=State.LocalPath}" />
             </Grid>
-            <ScrollViewer Grid.Row="2" Grid.ColumnSpan="2" >
-                <TextBlock x:Name="tbValidation" Margin="20" HorizontalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}" />
-            </ScrollViewer>
         </Grid>
-        <Button x:Name="ButtonStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" Click="ButtonStart_Click" IsEnabled="False" Style="{ThemeResource ButtonRevealStyle}" />
+        <Button x:Name="ButtonStart"  Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" Content="Start" VerticalAlignment="Center" HorizontalAlignment="Center" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
     </Grid>
 </Page>
