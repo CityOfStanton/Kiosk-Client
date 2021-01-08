@@ -122,16 +122,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Actions\Action.cs" />
+    <Compile Include="Common\Constants.cs" />
+    <Compile Include="DataSerialization\Converter.cs" />
     <Compile Include="Orchestration\LifecycleBehavior.cs" />
     <Compile Include="Common\Ordering.cs" />
-    <Compile Include="Orchestration\Orchestration.cs" />
-    <Compile Include="Actions\SlideshowAction.cs" />
+    <Compile Include="Orchestration\OrchestrationInstance.cs" />
     <Compile Include="Actions\ImageAction.cs" />
     <Compile Include="Actions\WebsiteAction.cs" />
     <Compile Include="Converters\ActionConverter.cs" />
     <Compile Include="IsExternalInit.cs" />
+    <Compile Include="Orchestration\Orchestrator.cs" />
     <Compile Include="Orchestration\PollingInterval.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Storage\ApplicationStorage.cs" />
     <EmbeddedResource Include="Properties\KioskLibrary.rd.xml" />
   </ItemGroup>
   <ItemGroup>

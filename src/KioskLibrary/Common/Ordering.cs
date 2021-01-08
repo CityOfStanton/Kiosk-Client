@@ -5,7 +5,7 @@
  * www.stantonky.gov
  */
 
-namespace KioskLibrary.Actions.Common
+namespace KioskLibrary.Common
 {
     public enum Ordering
     {

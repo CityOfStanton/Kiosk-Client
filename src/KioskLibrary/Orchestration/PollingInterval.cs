@@ -9,6 +9,8 @@ namespace KioskLibrary.Orchestration
 {
     public class PollingInterval
     {
+        public PollingInterval() { }
+
         public PollingInterval(string name, int seconds)
         {
             Name = name;

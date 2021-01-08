@@ -13,14 +13,26 @@ namespace KioskLibrary.Actions
     public class WebsiteAction
         : Action
     {
-        public string Path{ get; set; }
+        public string Path { get; set; }
+
+        public bool AutoScroll { get; set; }
+
+        public int? ScrollDuration { get; set; }
+
+        public double? ScrollInterval { get; set; }
+
+        public int? ScrollResetDelay { get; set; }
 
         public WebsiteAction() { }
 
-        public WebsiteAction(string name, int? duration, string path)
+        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay)
             : base(name, duration)
         {
             Path = path;
+            AutoScroll = autoScroll;
+            ScrollDuration = scrollDuration;
+            ScrollInterval = scrollInterval;
+            ScrollResetDelay = scrollResetDelay;
         }
     }
 }

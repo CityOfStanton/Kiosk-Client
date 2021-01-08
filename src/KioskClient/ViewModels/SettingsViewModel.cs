@@ -1,5 +1,4 @@
-﻿using KioskLibrary.Actions.Orchestration;
-using KioskLibrary.Orchestration;
+﻿using KioskLibrary.Orchestration;
 using System.Collections.Generic;
 
 namespace KioskClient.ViewModels
@@ -53,8 +52,8 @@ namespace KioskClient.ViewModels
             get { return Orchestration != null ; }
         }
 
-        private Orchestration _orchestration;
-        public Orchestration Orchestration
+        private OrchestrationInstance _orchestration;
+        public OrchestrationInstance Orchestration
         {
             get { return _orchestration; }
             set { _orchestration = value; NotifyPropertyChanged(); }

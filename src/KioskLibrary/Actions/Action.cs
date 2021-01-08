@@ -16,7 +16,6 @@ namespace KioskLibrary.Actions
     /// A method of displaying some type of supported content.
     /// </summary>
     [XmlInclude(typeof(ImageAction))]
-    [XmlInclude(typeof(SlideshowAction))]
     [XmlInclude(typeof(WebsiteAction))]
     [JsonConverter(typeof(ActionConverter))]
     public abstract class Action
