@@ -50,6 +50,13 @@
         <uap:SplashScreen BackgroundColor="white"  Image="Assets\AppIcon\SplashScreen.png"/>
         <uap:LockScreen Notification="badge" BadgeLogo="Assets\BadgeLogo.png"/>
       </uap:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="OrchestrationPollingManager.OrchestrationUpdateTask">
+          <BackgroundTasks>
+            <Task Type="timer"/>
+          </BackgroundTasks>
+        </Extension>
+      </Extensions>
     </Application>
   </Applications>
 
