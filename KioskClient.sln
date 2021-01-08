@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskClient", "src\KioskCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskLibrary", "src\KioskLibrary\KioskLibrary.csproj", "{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrchestrationPollingManager", "OrchestrationPollingManager\OrchestrationPollingManager.csproj", "{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,26 @@ Global
 		{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}.Release|x64.Build.0 = Release|x64
 		{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}.Release|x86.ActiveCfg = Release|x86
 		{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}.Release|x86.Build.0 = Release|x86
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|ARM.ActiveCfg = Debug|ARM
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|ARM.Build.0 = Debug|ARM
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|ARM64.Build.0 = Debug|ARM64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|x64.ActiveCfg = Debug|x64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|x64.Build.0 = Debug|x64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|x86.ActiveCfg = Debug|x86
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Debug|x86.Build.0 = Debug|x86
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|ARM.ActiveCfg = Release|ARM
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|ARM.Build.0 = Release|ARM
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|ARM64.ActiveCfg = Release|ARM64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|ARM64.Build.0 = Release|ARM64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|x64.ActiveCfg = Release|x64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|x64.Build.0 = Release|x64
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|x86.ActiveCfg = Release|x86
+		{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
