@@ -1,4 +1,4 @@
-﻿using KioskClient.ViewModels;
+﻿using KioskLibrary.ViewModels;
 using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
@@ -15,10 +15,12 @@ using KioskLibrary.Storage;
 using Windows.Web.Http;
 using KioskLibrary.Common;
 using KioskLibrary.DataSerialization;
-using KioskLibrary;
-using System.Linq;
+using KioskLibrary.PageArguments;
+using KioskClient.Pages;
+using KioskLibrary.Helpers;
+using System.Threading.Tasks;
 
-namespace KioskClient.Pages
+namespace KioskLibrary.Pages
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -26,28 +28,13 @@ namespace KioskClient.Pages
     public sealed partial class Settings : Page
     {
         public SettingsViewModel State { get; set; }
-        public List<PollingInterval> PollingIntervals
-        {
-            get
-            {
-                return new List<PollingInterval>()
-                {
-                    new PollingInterval("Never", -1),
-                    new PollingInterval("15 Minutes", 900),
-                    new PollingInterval("30 Minutes", 1800),
-                    new PollingInterval("45 Minutes", 2700),
-                    new PollingInterval("1 Hour", 3600),
-                    new PollingInterval("2 Hours", 7200),
-                    new PollingInterval("4 Hours", 14400),
-                    new PollingInterval("12 Hours", 43200),
-                    new PollingInterval("1 Day", 86400)
-                };
-            }
-        }
+        SettingsPageArguments currentPageArguments = null;
 
         public Settings()
         {
             State = new SettingsViewModel();
+            State.PropertyChanged += State_PropertyChanged;
+
             try
             {
                 State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.SettingsViewModel);
@@ -55,14 +42,34 @@ namespace KioskClient.Pages
             catch { }
 
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
-
             InitializeComponent();
+        }
+
+        private void State_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "PathValidationMessage")
+                Log(State.PathValidationMessage);
         }
 
         /// <summary>
         /// Remove the KeyDown binding for this page
         /// </summary>
-        protected override void OnNavigatedTo(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
+            currentPageArguments = e.Parameter as SettingsPageArguments;
+
+            if (currentPageArguments != null)
+                if (currentPageArguments.Log != null)
+                    foreach (var error in currentPageArguments.Log)
+                        Log(error);
+        }
+
+        private void Log(string message)
+        {
+            var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
+            ListBox_Log.Items.Add($"{currentTime} - {message}");
+        }
 
         /// <summary>
         /// Add the KeyDown binding back when we leave
@@ -71,14 +78,53 @@ namespace KioskClient.Pages
 
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
-            (bool isValid, string message) = await Orchestrator.VerifyOrchestrationInstance(State.UriPath, HttpStatusCode.Ok);
+            OrchestrationInstance tmpOrchestrationInstance = null;
+
+            (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
             State.PathValidationMessage = message;
-            State.IsUriPathVerified = isValid;
+            tmpOrchestrationInstance = await Orchestrator.GetOrchestrationInstance(new Uri(State.UriPath));
 
             if (isValid)
-                State.Orchestration = await Orchestrator.GetOrchestrationInstance(new Uri(State.UriPath));
+                await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
+            else
+            {
+                Log($"Unable to resolve: {State.UriPath}");
+                Log("Orchestration failed validation!");
+            }
+        }
 
-            Button_Flyout.ShowAt(sender as FrameworkElement);
+        private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
+        {
+            Log("Validating orchestration...");
+
+            if (orchestrationInstance == null)
+                Log("Orchestration has no content or is corrupt.");
+            else
+            {
+                (bool status, List<string> errors) = await orchestrationInstance.ValidateAsync();
+                if (status)
+                {
+                    State.Orchestration = orchestrationInstance;
+                    Log("Orchestration valid!");
+
+                    if (orchestrationSource == OrchestrationSource.File)
+                        State.IsLocalPathVerified = true;
+                    else
+                        State.IsUriPathVerified = true;
+                }
+                else
+                {
+                    foreach (var error in errors)
+                        Log(error);
+
+                    if (orchestrationSource == OrchestrationSource.File)
+                        State.IsLocalPathVerified = false;
+                    else
+                        State.IsUriPathVerified = false;
+
+                    Log("Orchestration failed validation!");
+                }
+            }
         }
 
         private async void Button_FileLoad_Click(object sender, RoutedEventArgs e)
@@ -95,7 +141,6 @@ namespace KioskClient.Pages
             var file = await openPicker.PickSingleFileAsync();
             if (file != null)
             {
-                State.IsLocalPathVerified = true;
                 State.LocalPath = file.Path;
                 var fileStream = await file.OpenStreamForReadAsync();
                 var sr = new StreamReader(fileStream);
@@ -103,10 +148,10 @@ namespace KioskClient.Pages
                 sr.Close();
                 fileStream.Close();
 
-                LoadOrchestration(content);
+                var orchestration = Orchestrator.ConvertStringToOrchestrationInstance(content);
+                State.Orchestration = orchestration;
 
-                State.PathValidationMessage = "File verified.";
-                Button_Flyout.ShowAt(sender as FrameworkElement);
+                await ValidateOrchestration(orchestration, OrchestrationSource.File);
             }
         }
 
@@ -121,9 +166,10 @@ namespace KioskClient.Pages
         private void Save()
         {
             ApplicationStorage.SaveToStorage(Constants.SettingsViewModel, State);
-            ApplicationStorage.SaveToStorage(Constants.PollingInterval, State.PollingInterval);
             ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationURI, State.UriPath);
             ApplicationStorage.SaveToStorage(Constants.CurrentOrchestration, State.Orchestration);
+            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
+            Log("Orchestration saved!");
         }
 
         private void Start()
@@ -132,22 +178,13 @@ namespace KioskClient.Pages
             rootFrame.Navigate(typeof(MainPage));
         }
 
-        private void LoadOrchestration(string content)
-        {
-            var orchestration = Orchestrator.ConvertStringToOrchestrationInstance(content);
-            State.Orchestration = orchestration;
-        }
-
-        private void ComboBox_PollingInterval_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            State.PollingInterval = (sender as ComboBox).SelectedItem as PollingInterval;
-        }
-
         #region Examples
         private OrchestrationInstance ComposeExampleOrchestration()
         {
             OrchestrationInstance orchestration = new OrchestrationInstance
             {
+                PollingIntervalMinutes = 15,
+                Order = Ordering.Sequential,
                 Lifecycle = LifecycleBehavior.ContinuousLoop
             };
 
@@ -213,11 +250,5 @@ namespace KioskClient.Pages
             }
         }
         #endregion
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (ComboBox_PollingInterval != null && State.PollingInterval != null)
-                ComboBox_PollingInterval.SelectedItem = ComboBox_PollingInterval.Items?.FirstOrDefault(x => (x as PollingInterval).Seconds == State.PollingInterval.Seconds);
-        }
     }
 }

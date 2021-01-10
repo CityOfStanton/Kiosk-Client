@@ -1,5 +1,4 @@
-﻿using KioskLibrary.Actions;
-using KioskLibrary.Common;
+﻿using KioskLibrary.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +15,7 @@ using KioskLibrary.Storage;
 using KioskLibrary.DataSerialization;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
+using KioskLibrary.PageArguments;
 
 namespace KioskLibrary
 {
@@ -26,14 +26,15 @@ namespace KioskLibrary
         private Frame _rootFrame;
         private OrchestrationInstance _orchestrationInstance;
         private DispatcherTimer _durationtime;
-        private DispatcherTimer _pollingTimer;
         private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
 
         public delegate void OrchestrationStartedDelegate();
+        public delegate void OrchestrationInvalidDelegate(List<string> errors);
 
         public event OrchestrationStartedDelegate OrchestrationStarted;
+        public event OrchestrationInvalidDelegate OrchestrationInvalid;
 
         public Orchestrator(Type settings, Dictionary<Type, Type> actionToFrameMap, Frame rootFrame)
         {
@@ -49,10 +50,6 @@ namespace KioskLibrary
             _durationtime = new DispatcherTimer();
             _durationtime.Interval = TimeSpan.FromSeconds(1.0);
             _durationtime.Tick += Durationtime_Tick;
-
-            _pollingTimer = new DispatcherTimer();
-            _pollingTimer.Interval = TimeSpan.FromSeconds(30.0);
-            _pollingTimer.Tick += PollingTime_Tick;
         }
 
         public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri)
@@ -67,22 +64,6 @@ namespace KioskLibrary
             catch { }
 
             return null;
-        }
-
-        public async static Task<(bool, string)> VerifyOrchestrationInstance(string settingsUri, HttpStatusCode expectedResult)
-        {
-            try
-            {
-                var uri = new Uri(settingsUri);
-                var client = new HttpClient();
-                var result = await client.GetAsync(uri);
-
-                return (result.StatusCode == expectedResult, "URL is valid!");
-            }
-            catch (Exception ex)
-            {
-                return (false, ex.Message);
-            }
         }
 
         public static OrchestrationInstance ConvertStringToOrchestrationInstance(string body)
@@ -112,7 +93,6 @@ namespace KioskLibrary
 
         public static async Task GetNextOrchestration()
         {
-
             // Get the Settings URI
             var currentOrchestrationURI = ApplicationStorage.GetFromStorage<string>(Constants.CurrentOrchestrationURI);
 
@@ -128,13 +108,29 @@ namespace KioskLibrary
 
         public async Task StartOrchestration()
         {
+            var orchestrationSource = ApplicationStorage.GetFromStorage<OrchestrationSource>(Constants.CurrentOrchestrationSource);
+
             _durationCounter = 0;
 
-            await LoadOrchestration();
+            _orchestrationInstance = await LoadOrchestration(orchestrationSource);
 
-            // Invoke the OrchestrationInstance
             if (_orchestrationInstance != null)
             {
+                _orchestrationInstance.OrchestrationSource = orchestrationSource;
+
+                (bool status, List<string> errors) = await _orchestrationInstance.ValidateAsync();
+
+                if (!status)
+                {
+                    if (OrchestrationInvalid != null)
+                        OrchestrationInvalid(errors);
+
+                    return;
+                }
+
+                if (orchestrationSource == OrchestrationSource.URL)
+                    ApplicationStorage.SaveToStorage(Constants.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
+
                 if (OrchestrationStarted != null)
                     OrchestrationStarted();
 
@@ -152,25 +148,32 @@ namespace KioskLibrary
                 }
             }
             else
-                _rootFrame.Navigate(_settingsPage);
+                _rootFrame.Navigate(_settingsPage, new SettingsPageArguments(new List<string>() { "No valid orchestration was loaded." }));
         }
 
-        private async Task LoadOrchestration()
+        public void StopOrchestration()
         {
-            // Load OrchestrationInstance from Storage. If we're loading from a file, this will be the Orchestration we will use.
-            _orchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.CurrentOrchestration);
-
-            var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.CurrentOrchestrationURI);
-
-            // If we are pulling from a URL, pull a new OrchestrationInstance and set up polling
-            // If we are pulling from a file, use the OrchestrationInstance from Storage
-            if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
-                if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
-                    _orchestrationInstance = await GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
-
-            // We don't need the 'else' here since this case indicates that we have completed our Lifecycle before we have polled for a new Orchestration instance
+            if (_durationtime != null)
+                _durationtime.Stop();
         }
 
+        private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource)
+        {
+            OrchestrationInstance toReturn = null;
+
+            if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
+                toReturn = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.CurrentOrchestration);
+            else if (orchestrationSource == OrchestrationSource.URL) // Load OrchestrationInstance from the web.
+            {
+                var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.CurrentOrchestrationURI);
+                if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
+                    if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
+                        toReturn = await GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
+            }
+
+            return toReturn;
+        }
+        
         private void PopulateRandomSequenceOfActions(List<Action> remainingActions)
         {
             if (remainingActions.Any())
@@ -187,6 +190,14 @@ namespace KioskLibrary
 
         private async Task EvaluateNextAction()
         {
+            var endOrchestration = ApplicationStorage.GetFromStorage<bool>(Constants.EndOrchestration);
+            if (endOrchestration)
+            {
+                ApplicationStorage.SaveToStorage(Constants.EndOrchestration, false);
+                StopOrchestration();
+                return;
+            }
+
             if (_orchestrationSequence.Any()) // We have actions to execute
             {
                 if (_currentAction == null)
@@ -201,6 +212,7 @@ namespace KioskLibrary
                 // After we have set the _currentAction, we can assess the duration
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
                 {
+                    ApplicationStorage.SaveToStorage(Constants.EndOrchestration, false);
                     _durationCounter = 0;
                     _durationtime.Start();
                 }
@@ -215,11 +227,11 @@ namespace KioskLibrary
                 CoreApplication.Exit();
         }
 
-        private void Durationtime_Tick(object sender, object e)
+        private async void Durationtime_Tick(object sender, object e)
         {
             if (_currentAction?.Duration != null && _currentAction.Duration.HasValue == true)
                 if (_durationCounter >= _currentAction.Duration.Value)
-                    EvaluateNextAction().Wait();
+                    await EvaluateNextAction();
 
             _durationCounter++;
         }

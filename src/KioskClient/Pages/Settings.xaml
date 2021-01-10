@@ -1,18 +1,15 @@
 ﻿<Page
-    x:Class="KioskClient.Pages.Settings"
+    x:Class="KioskLibrary.Pages.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:KioskClient"
+    xmlns:local="using:KioskLibrary"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local1="using:KioskClient.Converters"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local1="using:KioskLibrary.Converters"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
         <ResourceDictionary>
             <local1:InvertBooleanConverter x:Key="InvertBoolean" />
-            <Flyout x:Name="Button_Flyout">
-                <TextBlock Text="{x:Bind Path=State.PathValidationMessage, Mode=OneWay}" Margin="0,0,20,0" />
-            </Flyout>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Resources/Base.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -21,42 +18,54 @@
 
     <Grid x:Name="mainGrid">
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="50*" />
             <ColumnDefinition Width="50*" />
         </Grid.ColumnDefinitions>
-        <ContentControl x:Name="ccLogo"  Grid.RowSpan="2" Grid.Column="0" Grid.Row="0" Template="{StaticResource MainLogo}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        
+        <ContentControl x:Name="ccLogo" Grid.RowSpan="2" Grid.Column="0" Grid.Row="0" Template="{StaticResource MainLogo}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-        <Grid Grid.Column="1"  Grid.RowSpan="2" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <TextBlock Text="The Settings URI must be a location that is accessible to the client. This location will have the JSON/XML Action commands that controls what this Kiosk Client will display. For more information, check out our wiki section Action files. To get started, click one of the &quot;Generate Example Settings File&quot; buttons below." TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextTrimming="WordEllipsis" Style="{ThemeResource TitleTextBlockStyle}" />
-            <HyperlinkButton Grid.Row="1" Content="Action Files Wiki" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{ThemeResource TextBlockButtonStyle}" />
-            <StackPanel Grid.Row="2" HorizontalAlignment="Center" Orientation="Horizontal">
-                <TextBlock Text="Generate Example Settings File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                <Button x:Name="ButtonJSON" Content="JSON" Margin="20,0" Click="ButtonJSON_Click" Style="{ThemeResource ButtonRevealStyle}"/>
-                <Button x:Name="ButtonXML" Content="XML" Margin="20,0" Click="ButtonXML_Click" Style="{ThemeResource ButtonRevealStyle}" />
+        <Grid Grid.Column="1"  Grid.Row="0" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <StackPanel Orientation="Vertical">
+                <ScrollViewer VerticalScrollMode="Enabled">
+                    <TextBlock TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" >
+                        Welcome to Kiosk Client. 
+                        To get started, generate an <Bold>Example Orchestration File </Bold> by selecting either the JSON or XML button. 
+                        Once generated, you can edit the file to customize your specific scenario according to the <Hyperlink NavigateUri="https://github.com/CityOfStanton/Kiosk-Client/wiki">Orchestration File Wiki</Hyperlink>.
+                        You can test your file by loading it using the <Bold>Load File</Bold> button.
+                        Once you are satisfied, you can save the file to a publicly available location on the web.
+                        Specify the URL in the <Bold>Orchestration URL</Bold> field and click the <Bold>Save</Bold> button.
+                        Now you're good to go.
+                        Click the <Bold>Save</Bold> button to save your current configuration.
+                        It will begin the next time you open the app.
+                        You can click the <Bold>Start</Bold> button to start immediately.
+                        Note that when using an Orchestration URL, the app will check for updates based on the <Bold>PollingIntervalMinutes</Bold> field in the Orchestration File.
+                        If you are running an Orchestration from a local file, then the file will not be updated until you manually load a new Orchestration File.
+                    </TextBlock>
+                </ScrollViewer>
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,20">
+                    <TextBlock Text="Generate Example Orcherstration File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <Button x:Name="ButtonJSON" Content="JSON" Margin="20,0" Click="ButtonJSON_Click" Style="{ThemeResource ButtonRevealStyle}"/>
+                    <Button x:Name="ButtonXML" Content="XML" Margin="20,0" Click="ButtonXML_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                </StackPanel>
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Center">
+        <Grid Grid.Column="1"  Grid.Row="1" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" Margin="20,0,0,0" OnContent="File" OffContent="URL" HorizontalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" VerticalAlignment="Center" />
+            <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" OnContent="File" OffContent="URL" HorizontalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" VerticalAlignment="Center" />
             <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -67,8 +76,7 @@
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
                 <TextBox x:Name="tbURLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
-                <Button x:Name="Button_UrlLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Content="Load" Margin="20,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" />
-                <ComboBox x:Name="ComboBox_PollingInterval" ItemsSource="{x:Bind PollingIntervals}" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}}" Margin="0,20,0,0" Grid.Row="1" PlaceholderText="Polling Interval" SelectionChanged="ComboBox_PollingInterval_SelectionChanged" />
+                <Button x:Name="Button_UrlLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Content="Load" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" />
             </Grid>
             <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
@@ -79,9 +87,22 @@
                 <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Margin="20,20,20,0" Text="{x:Bind Path=State.LocalPath}" />
             </Grid>
         </Grid>
-        <StackPanel Orientation="Horizontal" Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" >
-            <Button x:Name="ButtonSave" Content="Save" Margin="20,0" Click="ButtonSave_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
-            <Button x:Name="ButtonStart" Content="Start" Margin="20,0" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
+
+        <Grid Grid.ColumnSpan="2" Margin="20" Grid.Column="0" Grid.Row="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="Log:" TextWrapping="WrapWholeWords" VerticalAlignment="Top" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,10" />
+            <ListBox x:Name="ListBox_Log" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
+
+        <StackPanel Orientation="Vertical" Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 20" >
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+                <Button x:Name="ButtonSave" Content="Save" Margin="20,0" Click="ButtonSave_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
+                <Button x:Name="ButtonStart" Content="Start" Margin="20,0" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
+            </StackPanel>
+            <TextBlock Text="Press the Escape key or the Home key to return to this screen." TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,10,0,0"/>
         </StackPanel>
     </Grid>
 </Page>

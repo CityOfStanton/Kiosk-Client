@@ -7,9 +7,9 @@
 
 namespace KioskLibrary.Common
 {
-    public enum OrchestrationSource
+    public enum Ordering
     {
-        URL,
-        File
+        Sequential,
+        Random
     }
 }

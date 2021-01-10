@@ -33,15 +33,15 @@ namespace OrchestrationPollingManager
 
         private async static Task<bool> RegisterOrchestrationInstanceUpdaterHelper()
         {
-            var pollingInterval = ApplicationStorage.GetFromStorage<PollingInterval>(Constants.PollingInterval);
+            var pollingInterval = ApplicationStorage.GetFromStorage<int>(Constants.PollingInterval);
 
-            if (pollingInterval != null && pollingInterval.Seconds > 0)
+            if (pollingInterval > 0)
             {
                 await BackgroundExecutionManager.RequestAccessAsync();
                 var btb = new BackgroundTaskBuilder();
                 btb.Name = _taskName;
                 btb.TaskEntryPoint = typeof(OrchestrationUpdateTask).FullName;
-                var tt = new TimeTrigger(Convert.ToUInt32(Math.Round(Convert.ToDecimal(pollingInterval.Seconds / 60), 0)), false);
+                var tt = new TimeTrigger(Convert.ToUInt32(pollingInterval), false);
                 btb.SetTrigger(tt);
                 btb.Register();
                 return true;

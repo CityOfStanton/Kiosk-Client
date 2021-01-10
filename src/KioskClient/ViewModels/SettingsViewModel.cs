@@ -1,7 +1,7 @@
 ﻿using KioskLibrary.Orchestration;
 using System.Collections.Generic;
 
-namespace KioskClient.ViewModels
+namespace KioskLibrary.ViewModels
 {
     public class SettingsViewModel : ViewModel
     {
@@ -66,22 +66,15 @@ namespace KioskClient.ViewModels
             set { _uriPollingInterval = value; NotifyPropertyChanged(); }
         }
 
-        private PollingInterval _pollingInterval;
-        public PollingInterval PollingInterval
-        {
-            get { return _pollingInterval; }
-            set { _pollingInterval = value; NotifyPropertyChanged(); }
-        }
-
         public bool CanStart
         {
             get
             {
                 return DoesOrchestrationHaveContent
                     && 
-                        ((PollingInterval != null && IsUriPathVerified.HasValue && IsUriPathVerified.Value) 
+                        ((!IsLocalFile && IsUriPathVerified.HasValue && IsUriPathVerified.Value) 
                         || 
-                        (IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
+                        (IsLocalFile && IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
             }
         }
 
@@ -92,9 +85,6 @@ namespace KioskClient.ViewModels
         }
 
         public SettingsViewModel()
-            : base(new List<string>() { nameof(CanStart) })
-        {
-            
-        }
+            : base(new List<string>() { nameof(CanStart) }) { }
     }
 }

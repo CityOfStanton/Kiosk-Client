@@ -1,4 +1,5 @@
-﻿using KioskLibrary.Actions;
+﻿using KioskClient.Pages;
+using KioskLibrary.Actions;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -6,7 +7,7 @@ using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace KioskClient.Pages.Actions
+namespace KioskLibrary.Pages.Actions
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -25,6 +26,9 @@ namespace KioskClient.Pages.Actions
             InitializeComponent();
             _scrollingTimer = new DispatcherTimer();
             wvDisplay.LoadCompleted += WvDisplay_LoadCompleted;
+
+            wvDisplay.KeyDown += PagesHelper.CommonKeyUp;
+            this.KeyDown += PagesHelper.CommonKeyUp;
         }
 
         private async void WvDisplay_LoadCompleted(object sender, NavigationEventArgs e)

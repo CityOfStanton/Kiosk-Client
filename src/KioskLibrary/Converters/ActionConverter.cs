@@ -1,5 +1,5 @@
 ﻿/*  
- * Copyright 2020
+ * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
  * www.stantonky.gov
@@ -125,6 +125,16 @@ namespace KioskLibrary.Converters
             {
                 var a = action as WebsiteAction;
                 writer.WriteString(nameof(a.Path).ToCamelCase(), a.Path);
+                writer.WriteBoolean(nameof(a.AutoScroll).ToCamelCase(), a.AutoScroll);
+
+                if(a.ScrollDuration.HasValue)
+                    writer.WriteNumber(nameof(a.ScrollDuration).ToCamelCase(), a.ScrollDuration.Value);
+
+                if (a.ScrollInterval.HasValue)
+                    writer.WriteNumber(nameof(a.ScrollInterval).ToCamelCase(), a.ScrollInterval.Value);
+
+                if (a.ScrollResetDelay.HasValue)
+                    writer.WriteNumber(nameof(a.ScrollResetDelay).ToCamelCase(), a.ScrollResetDelay.Value);
             }
 
             writer.WriteEndObject();

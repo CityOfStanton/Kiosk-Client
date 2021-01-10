@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace KioskClient.ViewModels
+namespace KioskLibrary.ViewModels
 {
     public abstract class ViewModel : INotifyPropertyChanged
     {

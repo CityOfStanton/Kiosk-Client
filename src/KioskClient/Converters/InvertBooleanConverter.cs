@@ -1,7 +1,7 @@
 ﻿using System;
 using Windows.UI.Xaml.Data;
 
-namespace KioskClient.Converters
+namespace KioskLibrary.Converters
 {
     public class InvertBooleanConverter : IValueConverter
     {
