@@ -89,8 +89,8 @@ jobs:
         BuildMode: StoreUpload
         Configuration: Debug
 
-    - name: Remove all PFX files
-      run: Get-ChildItem . -recurse -include *.pfx | remove-item
+    # - name: Remove all PFX files
+    #   run: Get-ChildItem . -recurse -include *.pfx | remove-item
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
