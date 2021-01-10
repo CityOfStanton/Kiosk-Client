@@ -53,20 +53,20 @@ jobs:
     #   - http://www.dotnetapp.com/github-actions-for-uwp-apps-the-good-and-the-bad-and-the-ugly/
     #   - https://github.com/microsoft/github-actions-for-desktop-apps#workflows
 
-    - name: Decode PFX
-      run: |
-        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BASE64_ENCODED_CODE_SIGNING_PFX }}")
-        $currentDirectory = Get-Location
-        $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Project_Directory -AdditionalChildPath $env:SigningCertificate
-        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
-        $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Library_Directory -AdditionalChildPath $env:SigningCertificate
-        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+    # - name: Decode PFX
+    #   run: |
+    #     $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BASE64_ENCODED_CODE_SIGNING_PFX }}")
+    #     $currentDirectory = Get-Location
+    #     $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Project_Directory -AdditionalChildPath $env:SigningCertificate
+    #     [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+    #     $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Library_Directory -AdditionalChildPath $env:SigningCertificate
+    #     [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
 
-    - name: Install PFX
-      run : |
-        $currentDirectory = Get-Location
-        $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Project_Directory -AdditionalChildPath $env:SigningCertificate
-        .\tools\SnInstallPfx.exe $certificatePath "${{ secrets.CODE_SIGNING_PFX_PASSWORD }}" $env:PFX_Container_Name
+    # - name: Install PFX
+    #   run : |
+    #     $currentDirectory = Get-Location
+    #     $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Project_Directory -AdditionalChildPath $env:SigningCertificate
+    #     .\tools\SnInstallPfx.exe $certificatePath "${{ secrets.CODE_SIGNING_PFX_PASSWORD }}" $env:PFX_Container_Name
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -82,7 +82,8 @@ jobs:
     # 📚 https://git.io/JvXDl
 
     - name: Build Solution
-      run: MSBuild.exe KioskClient.sln /p:UseSharedCompilation=false /p:Platform=x86 /p:AppxBundle=$env:AppxBundle /p:AppxBundlePlatforms="x86|x64" /p:PackageCertificateKeyFile=$env:SigningCertificate /p:PackageCertificatePassword="${{ secrets.CODE_SIGNING_PFX_PASSWORD }}" /restore
+      # run: MSBuild.exe KioskClient.sln /p:UseSharedCompilation=false /p:Platform=x86 /p:AppxBundle=$env:AppxBundle /p:AppxBundlePlatforms="x86|x64" /p:PackageCertificateKeyFile=$env:SigningCertificate /p:PackageCertificatePassword="${{ secrets.CODE_SIGNING_PFX_PASSWORD }}" /restore
+      run: MSBuild.exe KioskClient.sln /p:UseSharedCompilation=false /p:Platform=x86 /p:AppxBundle=$env:AppxBundle /p:AppxBundlePlatforms="x86|x64" /restore
       env:
         AppxBundle: Always
         BuildMode: StoreUpload
