@@ -1,11 +1,11 @@
 ﻿/*  
- * Copyright 2020
+ * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
  * www.stantonky.gov
  */
 
-namespace KioskLibrary.Actions.Orchestration
+namespace KioskLibrary.Orchestration
 {
     public enum LifecycleBehavior
     {

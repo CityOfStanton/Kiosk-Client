@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
-namespace KioskClient.Actions
+namespace KioskLibrary.Pages.Actions
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -13,7 +13,7 @@ namespace KioskClient.Actions
     {
         public ImagePage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

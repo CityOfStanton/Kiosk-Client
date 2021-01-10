@@ -1,8 +1,7 @@
-﻿using KioskLibrary.Actions.Orchestration;
-using KioskLibrary.Orchestration;
+﻿using KioskLibrary.Orchestration;
 using System.Collections.Generic;
 
-namespace KioskClient.ViewModels
+namespace KioskLibrary.ViewModels
 {
     public class SettingsViewModel : ViewModel
     {
@@ -53,8 +52,8 @@ namespace KioskClient.ViewModels
             get { return Orchestration != null ; }
         }
 
-        private Orchestration _orchestration;
-        public Orchestration Orchestration
+        private OrchestrationInstance _orchestration;
+        public OrchestrationInstance Orchestration
         {
             get { return _orchestration; }
             set { _orchestration = value; NotifyPropertyChanged(); }
@@ -67,22 +66,15 @@ namespace KioskClient.ViewModels
             set { _uriPollingInterval = value; NotifyPropertyChanged(); }
         }
 
-        private PollingInterval _pollingInterval;
-        public PollingInterval PollingInterval
-        {
-            get { return _pollingInterval; }
-            set { _pollingInterval = value; NotifyPropertyChanged(); }
-        }
-
         public bool CanStart
         {
             get
             {
                 return DoesOrchestrationHaveContent
                     && 
-                        ((PollingInterval != null && IsUriPathVerified.HasValue && IsUriPathVerified.Value) 
+                        ((!IsLocalFile && IsUriPathVerified.HasValue && IsUriPathVerified.Value) 
                         || 
-                        (IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
+                        (IsLocalFile && IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
             }
         }
 
@@ -93,9 +85,6 @@ namespace KioskClient.ViewModels
         }
 
         public SettingsViewModel()
-            : base(new List<string>() { nameof(CanStart) })
-        {
-            
-        }
+            : base(new List<string>() { nameof(CanStart) }) { }
     }
 }

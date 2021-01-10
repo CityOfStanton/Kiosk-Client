@@ -1,5 +1,5 @@
 ﻿/*  
- * Copyright 2020
+ * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
  * www.stantonky.gov
@@ -7,7 +7,9 @@
 
 using KioskLibrary.Converters;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace KioskLibrary.Actions
@@ -16,7 +18,6 @@ namespace KioskLibrary.Actions
     /// A method of displaying some type of supported content.
     /// </summary>
     [XmlInclude(typeof(ImageAction))]
-    [XmlInclude(typeof(SlideshowAction))]
     [XmlInclude(typeof(WebsiteAction))]
     [JsonConverter(typeof(ActionConverter))]
     public abstract class Action
@@ -35,6 +36,13 @@ namespace KioskLibrary.Actions
         {
             Name = name;
             Duration = duration;
+        }
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async virtual Task<(bool, string, List<string>)> ValidateAsync()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        {
+            throw new NotImplementedException();
         }
     }
 }

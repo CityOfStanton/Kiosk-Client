@@ -1,5 +1,5 @@
 ﻿/*  
- * Copyright 2020
+ * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
  * www.stantonky.gov
@@ -34,11 +34,13 @@ namespace KioskLibrary.Converters
         public override Action Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
-            {
                 throw new JsonException();
-            }
 
-            var properties = new List<KeyValuePair<string, string>>();
+            var properties = new List<KeyValuePair<string, object>>();
+            var tmpArray = new List<object>();
+            var tmpArrayPropertyName = "";
+            var loadToArray = false;
+
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndObject)
@@ -49,9 +51,56 @@ namespace KioskLibrary.Converters
                     var propertyName = reader.GetString().ToUpperInvariant();
 
                     reader.Read();
-                    var value = reader.GetString();
 
-                    properties.Add(new KeyValuePair<string, string>(propertyName, value));
+                    if (reader.TokenType == JsonTokenType.String
+                        || reader.TokenType == JsonTokenType.Number
+                        || reader.TokenType == JsonTokenType.False
+                        || reader.TokenType == JsonTokenType.Null
+                        || reader.TokenType == JsonTokenType.True)
+                    {
+                        if (loadToArray)
+                            tmpArray.Add(propertyName);
+                        else
+                        {
+                            object value = null;
+
+                            if (reader.TokenType == JsonTokenType.Number)
+                                value = reader.GetDouble();
+                            else if (reader.TokenType == JsonTokenType.String)
+                                value = reader.GetString();
+                            else if (reader.TokenType == JsonTokenType.False)
+                                value = false;
+                            else if (reader.TokenType == JsonTokenType.True)
+                                value = true;
+
+                            properties.Add(new KeyValuePair<string, object>(propertyName, value));
+                        }
+                    }
+
+                    if (reader.TokenType == JsonTokenType.StartArray)
+                    {
+                        loadToArray = true;
+                        tmpArrayPropertyName = propertyName;
+                    }
+                }
+
+                if (reader.TokenType == JsonTokenType.EndArray)
+                {
+                    loadToArray = false;
+
+                    var tmp = new List<object>();
+                    foreach (var c in tmpArray)
+                        tmp.Add(c);
+
+                    properties.Add(new KeyValuePair<string, object>(tmpArrayPropertyName, tmp));
+
+                    tmpArrayPropertyName = "";
+                }
+
+                if (reader.TokenType == JsonTokenType.StartObject)
+                {
+                    var childAction = Read(ref reader, typeToConvert, options);
+                    tmpArray.Add(childAction);
                 }
             }
 
@@ -64,7 +113,7 @@ namespace KioskLibrary.Converters
             writer.WriteString(nameof(action.Name).ToCamelCase(), action.Name);
 
             if (action.Duration.HasValue)
-                writer.WriteString(nameof(action.Duration).ToCamelCase(), action.Duration.Value.ToString());
+                writer.WriteNumber(nameof(action.Duration).ToCamelCase(), action.Duration.Value);
 
             if (action.GetType() == typeof(ImageAction))
             {
@@ -76,21 +125,22 @@ namespace KioskLibrary.Converters
             {
                 var a = action as WebsiteAction;
                 writer.WriteString(nameof(a.Path).ToCamelCase(), a.Path);
-            }
-            else if (action.GetType() == typeof(SlideshowAction))
-            {
-                var a = action as SlideshowAction;
-                writer.WriteString(nameof(a.Order).ToCamelCase(), a.Order.ToString());
-                writer.WriteStartArray(nameof(a.Images));
-                foreach (var i in a.Images)
-                    Write(writer, i, options);
-                writer.WriteEndArray();
+                writer.WriteBoolean(nameof(a.AutoScroll).ToCamelCase(), a.AutoScroll);
+
+                if(a.ScrollDuration.HasValue)
+                    writer.WriteNumber(nameof(a.ScrollDuration).ToCamelCase(), a.ScrollDuration.Value);
+
+                if (a.ScrollInterval.HasValue)
+                    writer.WriteNumber(nameof(a.ScrollInterval).ToCamelCase(), a.ScrollInterval.Value);
+
+                if (a.ScrollResetDelay.HasValue)
+                    writer.WriteNumber(nameof(a.ScrollResetDelay).ToCamelCase(), a.ScrollResetDelay.Value);
             }
 
             writer.WriteEndObject();
         }
 
-        private static Action DeduceAction(List<KeyValuePair<string, string>> objectProperties)
+        private static Action DeduceAction(List<KeyValuePair<string, object>> objectProperties)
         {
             var TypeToProperties = new Dictionary<Type, List<string>>(); // A map of a Type to a list of its properties
             var TypeToScore = new Dictionary<Type, int>(); // A map of a Type to the number of properties that exist on the object to test
@@ -129,8 +179,21 @@ namespace KioskLibrary.Converters
                 {
                     var property = objectProperties.First(x => x.Key == p.Name.ToUpperInvariant());
                     try
-                    { // This method may fail on system objects (such as TaskResults).
-                        p.SetValue(toReturn, ConvertStringToType(p.PropertyType, property.Value), null);
+                    {
+                        if (property.Value is List<object>)
+                        {
+                            System.Collections.IList listProperty = Activator.CreateInstance(p.PropertyType) as System.Collections.IList;
+
+                            foreach (var c in (property.Value as List<object>))
+                                listProperty.Add(c);
+
+                            p.SetValue(toReturn, listProperty, null);
+                        }
+                        else
+                        {
+                            // This method may fail on system objects (such as TaskResults).
+                            p.SetValue(toReturn, ConvertStringToType(p.PropertyType, property.Value?.ToString()), null);
+                        }
                     }
                     catch { }
                 }
@@ -155,8 +218,13 @@ namespace KioskLibrary.Converters
             if (propertyType == typeof(int))
                 return int.Parse(value);
 
-            if (propertyType == typeof(int))
-                return int.Parse(value);
+            if (propertyType == typeof(int?))
+                if (value != null)
+                    return int.Parse(value);
+
+            if (propertyType == typeof(double?))
+                if (value != null)
+                    return double.Parse(value);
 
             if (propertyType.IsEnum)
                 return Enum.Parse(propertyType, value);

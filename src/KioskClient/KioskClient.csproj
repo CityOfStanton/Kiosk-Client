@@ -18,9 +18,6 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
-    <PackageCertificateThumbprint>7E99F8985852D55D73D57BB0D5F5E456CE2770AD</PackageCertificateThumbprint>
-    <PackageCertificateKeyFile />
-    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -120,27 +117,22 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Actions\ImagePage.xaml.cs">
+    <Compile Include="Pages\Actions\ImagePage.xaml.cs">
       <DependentUpon>ImagePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Actions\SlideshowPage.xaml.cs">
-      <DependentUpon>SlideshowPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Actions\WebsitePage.xaml.cs">
+    <Compile Include="Pages\Actions\WebsitePage.xaml.cs">
       <DependentUpon>WebsitePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Common.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="InvertBooleanConverter.cs" />
+    <Compile Include="Converters\InvertBooleanConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainPageArguments.cs" />
+    <Compile Include="Pages\PagesHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Settings.xaml.cs">
+    <Compile Include="Pages\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\SettingsViewModel.cs" />
@@ -214,15 +206,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="Actions\ImagePage.xaml">
+    <Page Include="Pages\Actions\ImagePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Actions\SlideshowPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Actions\WebsitePage.xaml">
+    <Page Include="Pages\Actions\WebsitePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -230,7 +218,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Settings.xaml">
+    <Page Include="Pages\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -252,6 +240,10 @@
     <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\OrchestrationPollingManager\OrchestrationPollingManager.csproj">
+      <Project>{10e836ff-0d71-4c2d-93f0-bbfe0e466e79}</Project>
+      <Name>OrchestrationPollingManager</Name>
+    </ProjectReference>
     <ProjectReference Include="..\KioskLibrary\KioskLibrary.csproj">
       <Project>{3a33dd7f-a863-43d1-a2c0-8ee46cfae78f}</Project>
       <Name>KioskLibrary</Name>
