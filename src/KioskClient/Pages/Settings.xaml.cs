@@ -1,4 +1,12 @@
-﻿using KioskLibrary.ViewModels;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskLibrary.ViewModels;
 using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
@@ -32,14 +40,17 @@ namespace KioskLibrary.Pages
 
         public Settings()
         {
-            State = new SettingsViewModel();
-            State.PropertyChanged += State_PropertyChanged;
-
             try
             {
                 State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.SettingsViewModel);
+
+                if(State == null)
+                    State = new SettingsViewModel();
             }
             catch { }
+
+            State.PropertyChanged += State_PropertyChanged;
+
 
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();

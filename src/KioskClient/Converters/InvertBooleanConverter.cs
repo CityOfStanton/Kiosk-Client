@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using System;
 using Windows.UI.Xaml.Data;
 
 namespace KioskLibrary.Converters

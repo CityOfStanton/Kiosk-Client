@@ -1,6 +1,13 @@
-﻿using KioskLibrary;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskLibrary;
 using KioskLibrary.Common;
-using KioskLibrary.Orchestration;
 using KioskLibrary.Storage;
 using System;
 using System.Linq;
@@ -17,7 +24,7 @@ namespace OrchestrationPollingManager
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             var deferral = taskInstance.GetDeferral();
-            
+
             await Orchestrator.GetNextOrchestration();
 
             deferral.Complete();

@@ -1,4 +1,12 @@
-﻿<Application
+﻿<!--
+  Copyright 2021
+  City of Stanton
+  Stanton, Kentucky
+  www.stantonky.gov
+  github.com/CityOfStanton
+-->
+
+<Application
     x:Class="KioskLibrary.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

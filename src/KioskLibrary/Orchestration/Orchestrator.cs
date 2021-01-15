@@ -1,4 +1,12 @@
-﻿using KioskLibrary.Common;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskLibrary.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -173,7 +181,7 @@ namespace KioskLibrary
 
             return toReturn;
         }
-        
+
         private void PopulateRandomSequenceOfActions(List<Action> remainingActions)
         {
             if (remainingActions.Any())
