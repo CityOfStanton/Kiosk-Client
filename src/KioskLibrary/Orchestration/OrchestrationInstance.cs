@@ -3,6 +3,7 @@
  * City of Stanton
  * Stanton, Kentucky
  * www.stantonky.gov
+ * github.com/CityOfStanton
  */
 
 using KioskLibrary.Actions;

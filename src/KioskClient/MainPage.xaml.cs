@@ -1,10 +1,17 @@
-﻿using KioskLibrary.PageArguments;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskLibrary.PageArguments;
 using KioskLibrary.Pages;
 using KioskLibrary.Pages.Actions;
 using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -20,8 +27,9 @@ namespace KioskLibrary
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private MainPageArguments currentPageArguments = null;
-        private DispatcherTimer _buttonTimer;
+        private MainPageArguments _currentPageArguments = null;
+        private DispatcherTimer _loadCompletionTime;
+        private Orchestrator _orchestrator;
 
         public MainPage()
         {
@@ -30,25 +38,24 @@ namespace KioskLibrary
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp; // Remove any pre-existing Common.CommonKeyUp handlers
             Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp; // Add a single Common.CommonKeyUp handler
 
-            _buttonTimer = new DispatcherTimer();
-            _buttonTimer.Interval = TimeSpan.FromSeconds(3);
-            _buttonTimer.Tick += _buttonTimer_Tick;
-            _buttonTimer.Start();
+            _loadCompletionTime = new DispatcherTimer();
+            _loadCompletionTime.Interval = TimeSpan.FromSeconds(2);
+            _loadCompletionTime.Tick += _loadCompletionTime_Tick;
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
         }
 
-        private void _buttonTimer_Tick(object sender, object e)
+        private async void _loadCompletionTime_Tick(object sender, object e)
         {
-            Button_Settings.Visibility = Visibility.Visible;
-            _buttonTimer.Stop();
+            _loadCompletionTime.Stop();
+            await _orchestrator.StartOrchestration();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e) => currentPageArguments = e.Parameter as MainPageArguments;
+        protected override void OnNavigatedTo(NavigationEventArgs e) => _currentPageArguments = e.Parameter as MainPageArguments;
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => _buttonTimer.Stop();
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => _loadCompletionTime.Stop();
 
-        private async Task EvaluateMainPageArguments(MainPageArguments mainPageArguments)
+        private void EvaluateMainPageArguments(MainPageArguments mainPageArguments)
         {
             if (mainPageArguments != null && mainPageArguments is MainPageArguments)
                 if (mainPageArguments.ShowSetupInformation)
@@ -62,11 +69,11 @@ namespace KioskLibrary
                 actionToFrameMap.Add(typeof(ImageAction), typeof(ImagePage));
                 actionToFrameMap.Add(typeof(WebsiteAction), typeof(WebsitePage));
 
-                var orchestrator = new Orchestrator(typeof(Settings), actionToFrameMap, Frame);
-                orchestrator.OrchestrationStarted += RegisterUpdater;
-                orchestrator.OrchestrationInvalid += OrchestrationInvalid;
+                _orchestrator = new Orchestrator(typeof(Settings), actionToFrameMap, Frame);
+                _orchestrator.OrchestrationStarted += RegisterUpdater;
+                _orchestrator.OrchestrationInvalid += OrchestrationInvalid;
 
-                await orchestrator.StartOrchestration();
+                _loadCompletionTime.Start();
             }
         }
 
@@ -81,13 +88,14 @@ namespace KioskLibrary
             await OrchestrationPollingManager.OrchestrationUpdateTask.RegisterOrchestrationInstanceUpdater();
         }
 
-        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            await EvaluateMainPageArguments(currentPageArguments);
+            EvaluateMainPageArguments(_currentPageArguments);
         }
 
         private void Button_Settings_Click(object sender, RoutedEventArgs e)
         {
+            _loadCompletionTime.Stop();
             Frame.Navigate(typeof(Settings));
         }
     }

@@ -1,4 +1,12 @@
-﻿using KioskLibrary.Orchestration;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskLibrary.Orchestration;
 using System.Collections.Generic;
 
 namespace KioskLibrary.ViewModels
@@ -66,14 +74,21 @@ namespace KioskLibrary.ViewModels
             set { _uriPollingInterval = value; NotifyPropertyChanged(); }
         }
 
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get { return _isLoading; }
+            set { _isLoading = value; NotifyPropertyChanged(); }
+        }
+
         public bool CanStart
         {
             get
             {
                 return DoesOrchestrationHaveContent
-                    && 
-                        ((!IsLocalFile && IsUriPathVerified.HasValue && IsUriPathVerified.Value) 
-                        || 
+                    &&
+                        ((!IsLocalFile && IsUriPathVerified.HasValue && IsUriPathVerified.Value)
+                        ||
                         (IsLocalFile && IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
             }
         }

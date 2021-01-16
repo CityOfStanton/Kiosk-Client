@@ -15,6 +15,7 @@ namespace KioskLibrary.Pages.Actions
     public sealed partial class WebsitePage : Page
     {
         private DispatcherTimer _scrollingTimer;
+        private DispatcherTimer _settingsButtonTimer;
         private WebsiteAction _webstiteAction;
         private double _currentTick;
         private double _totalTicks;
@@ -25,27 +26,35 @@ namespace KioskLibrary.Pages.Actions
         {
             InitializeComponent();
             _scrollingTimer = new DispatcherTimer();
-            wvDisplay.LoadCompleted += WvDisplay_LoadCompleted;
-
-            wvDisplay.KeyDown += PagesHelper.CommonKeyUp;
-            this.KeyDown += PagesHelper.CommonKeyUp;
+            _settingsButtonTimer = new DispatcherTimer();
+            Webview_Display.LoadCompleted += WvDisplay_LoadCompleted;
         }
 
         private async void WvDisplay_LoadCompleted(object sender, NavigationEventArgs e)
         {
-            var heightString = await wvDisplay.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
+            var heightString = await Webview_Display.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
             if (!string.IsNullOrEmpty(heightString))
                 if (double.TryParse(heightString, out var height))
                 {
                     _webviewContentHeight = height;
                     _scrollingTimer.Start();
                 }
+
+            _settingsButtonTimer.Interval = TimeSpan.FromSeconds(5);
+            _settingsButtonTimer.Tick += _settingsTimer_Tick;
+            _settingsButtonTimer.Start();
+        }
+
+        private void _settingsTimer_Tick(object sender, object e)
+        {
+            _settingsButtonTimer.Stop();
+            Button_Settings.Visibility = Visibility.Collapsed;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             _webstiteAction = e.Parameter as WebsiteAction;
-            wvDisplay.Source = new Uri(_webstiteAction.Path);
+            Webview_Display.Source = new Uri(_webstiteAction.Path);
 
             if (!_webstiteAction.ScrollInterval.HasValue || _webstiteAction.ScrollInterval.Value <= 0)
                 _webstiteAction.ScrollInterval = 1;
@@ -73,10 +82,15 @@ namespace KioskLibrary.Pages.Actions
                 _currentTick = 0;
 
                 // Scroll to top
-                await wvDisplay.InvokeScriptAsync("eval", new string[] { _scrollToTopString });
+                await Webview_Display.InvokeScriptAsync("eval", new string[] { _scrollToTopString });
             }
             else if (_webviewContentHeight > 0) // Scroll a bit
-                await wvDisplay.InvokeScriptAsync("eval", new string[] { $"window.scrollTo(0,{(_currentTick / _totalTicks) * _webviewContentHeight});" });
+                await Webview_Display.InvokeScriptAsync("eval", new string[] { $"window.scrollTo(0,{(_currentTick / _totalTicks) * _webviewContentHeight});" });
+        }
+
+        private void Button_Settings_Click(object sender, RoutedEventArgs e)
+        {
+            PagesHelper.GoToSettings();
         }
     }
 }

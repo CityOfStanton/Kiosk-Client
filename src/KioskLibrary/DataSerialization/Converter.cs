@@ -1,4 +1,12 @@
-﻿using System.Text.Json;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace KioskLibrary.DataSerialization

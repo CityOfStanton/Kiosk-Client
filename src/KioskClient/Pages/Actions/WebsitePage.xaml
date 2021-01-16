@@ -8,7 +8,8 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid>
-        <WebView x:Name="wvDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+    <Grid x:Name="Grid_Main" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <WebView x:Name="Webview_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.ZIndex="0"/>
+        <Button x:Name="Button_Settings" Content="Settings" Background="Transparent" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,20" Canvas.ZIndex="1" Click="Button_Settings_Click" Opacity=".2"/>
     </Grid>
 </Page>
