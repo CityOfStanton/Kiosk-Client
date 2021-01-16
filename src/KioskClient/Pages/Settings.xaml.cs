@@ -89,6 +89,7 @@ namespace KioskLibrary.Pages
 
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
+            State.IsLoading = true;
             OrchestrationInstance tmpOrchestrationInstance = null;
 
             (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
@@ -107,6 +108,7 @@ namespace KioskLibrary.Pages
                     Log($"Unable to resolve: {State.UriPath}");
                 Log("Orchestration failed validation!");
             }
+            State.IsLoading = false;
         }
 
         private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
@@ -157,6 +159,7 @@ namespace KioskLibrary.Pages
             var file = await openPicker.PickSingleFileAsync();
             if (file != null)
             {
+                State.IsLoading = true;
                 State.LocalPath = file.Path;
                 var fileStream = await file.OpenStreamForReadAsync();
                 var sr = new StreamReader(fileStream);
@@ -168,6 +171,7 @@ namespace KioskLibrary.Pages
                 State.Orchestration = orchestration;
 
                 await ValidateOrchestration(orchestration, OrchestrationSource.File);
+                State.IsLoading = false;
             }
         }
 
