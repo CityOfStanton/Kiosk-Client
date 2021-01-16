@@ -18,8 +18,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using KioskClient.Pages;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
-
 namespace KioskLibrary
 {
     /// <summary>
@@ -31,6 +29,9 @@ namespace KioskLibrary
         private DispatcherTimer _loadCompletionTime;
         private Orchestrator _orchestrator;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public MainPage()
         {
             InitializeComponent();
@@ -45,15 +46,15 @@ namespace KioskLibrary
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e) => _currentPageArguments = e.Parameter as MainPageArguments;
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => _loadCompletionTime.Stop();
+
         private async void _loadCompletionTime_Tick(object sender, object e)
         {
             _loadCompletionTime.Stop();
             await _orchestrator.StartOrchestration();
         }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e) => _currentPageArguments = e.Parameter as MainPageArguments;
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => _loadCompletionTime.Stop();
 
         private void EvaluateMainPageArguments(MainPageArguments mainPageArguments)
         {

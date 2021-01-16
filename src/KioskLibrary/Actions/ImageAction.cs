@@ -24,15 +24,28 @@ namespace KioskLibrary.Actions
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Stretch Stretch { get; set; }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ImageAction() { }
 
-        public ImageAction(string name, int? durationSeconds, string path, Windows.UI.Xaml.Media.Stretch stretch)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="name">The name of the action</param>
+        /// <param name="durationSeconds">The duration of the action</param>
+        /// <param name="path">The path to the iamge</param>
+        /// <param name="stretch">The <see cref="Stretch" /> to apply to the image</param>
+        public ImageAction(string name, int? durationSeconds, string path, Stretch stretch)
             : base(name, durationSeconds)
         {
             Path = path;
             Stretch = stretch;
         }
 
+        /// <summary>
+        /// Validates the action
+        /// </summary>
         public async override Task<(bool, string, List<string>)> ValidateAsync()
         {
             (bool isValid, string message) = await HttpHelper.ValidateURI(Path, HttpStatusCode.Ok);

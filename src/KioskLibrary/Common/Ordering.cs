@@ -8,6 +8,9 @@
 
 namespace KioskLibrary.Common
 {
+    /// <summary>
+    /// The source of an <see cref="OrchestrationInstance" />
+    /// </summary>
     public enum OrchestrationSource
     {
         URL,

@@ -35,9 +35,12 @@ namespace KioskLibrary.Pages
     /// </summary>
     public sealed partial class Settings : Page
     {
-        public SettingsViewModel State { get; set; }
-        SettingsPageArguments currentPageArguments = null;
+        private SettingsViewModel State { get; set; }
+        private SettingsPageArguments currentPageArguments = null;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public Settings()
         {
             try
@@ -51,11 +54,15 @@ namespace KioskLibrary.Pages
 
             State.PropertyChanged += State_PropertyChanged;
 
-
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Handles the PropertyChanged event for anything in the <see cref="State" />
+        /// </summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The event arguments</param>
         private void State_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "PathValidationMessage")
@@ -76,16 +83,16 @@ namespace KioskLibrary.Pages
                         Log(error);
         }
 
+        /// <summary>
+        /// Add the KeyDown binding back when we leave
+        /// </summary>
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp;
+
         private void Log(string message)
         {
             var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
             ListBox_Log.Items.Add($"{currentTime} - {message}");
         }
-
-        /// <summary>
-        /// Add the KeyDown binding back when we leave
-        /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp;
 
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
@@ -103,7 +110,7 @@ namespace KioskLibrary.Pages
             }
             else
             {
-                State.Orchestration = null;
+                State.OrchestrationInstance = null;
                 if (!string.IsNullOrEmpty(State.UriPath))
                     Log($"Unable to resolve: {State.UriPath}");
                 Log("Orchestration failed validation!");
@@ -122,7 +129,7 @@ namespace KioskLibrary.Pages
                 (bool status, List<string> errors) = await orchestrationInstance.ValidateAsync();
                 if (status)
                 {
-                    State.Orchestration = orchestrationInstance;
+                    State.OrchestrationInstance = orchestrationInstance;
                     Log("Orchestration valid!");
 
                     if (orchestrationSource == OrchestrationSource.File)
@@ -168,7 +175,7 @@ namespace KioskLibrary.Pages
                 fileStream.Close();
 
                 var orchestration = Orchestrator.ConvertStringToOrchestrationInstance(content);
-                State.Orchestration = orchestration;
+                State.OrchestrationInstance = orchestration;
 
                 await ValidateOrchestration(orchestration, OrchestrationSource.File);
                 State.IsLoading = false;
@@ -187,7 +194,7 @@ namespace KioskLibrary.Pages
         {
             ApplicationStorage.SaveToStorage(Constants.SettingsViewModel, State);
             ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationURI, State.UriPath);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestration, State.Orchestration);
+            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestration, State.OrchestrationInstance);
             ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
             Log("Orchestration saved!");
         }

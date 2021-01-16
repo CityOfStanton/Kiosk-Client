@@ -1,16 +1,22 @@
-﻿using KioskClient.Pages;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskClient.Pages;
 using KioskLibrary.Actions;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
-
 namespace KioskLibrary.Pages.Actions
 {
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// A page for displaying a website
     /// </summary>
     public sealed partial class WebsitePage : Page
     {

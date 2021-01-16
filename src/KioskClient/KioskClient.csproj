@@ -240,13 +240,13 @@
     <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\OrchestrationPollingManager\OrchestrationPollingManager.csproj">
-      <Project>{10e836ff-0d71-4c2d-93f0-bbfe0e466e79}</Project>
-      <Name>OrchestrationPollingManager</Name>
-    </ProjectReference>
     <ProjectReference Include="..\KioskLibrary\KioskLibrary.csproj">
       <Project>{3a33dd7f-a863-43d1-a2c0-8ee46cfae78f}</Project>
       <Name>KioskLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OrchestrationPollingManager\OrchestrationPollingManager.csproj">
+      <Project>{10e836ff-0d71-4c2d-93f0-bbfe0e466e79}</Project>
+      <Name>OrchestrationPollingManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

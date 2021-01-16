@@ -20,13 +20,16 @@ using Windows.UI.Xaml.Controls;
 using Windows.Web.Http;
 using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
-using KioskLibrary.DataSerialization;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
 using KioskLibrary.PageArguments;
+using KioskLibrary.Helpers;
 
 namespace KioskLibrary
 {
+    /// <summary>
+    /// Processes an <see cref="OrchestrationInstance" />
+    /// </summary>
     public class Orchestrator
     {
         private Dictionary<Type, Type> _actionToFrameMap;
@@ -38,16 +41,36 @@ namespace KioskLibrary
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
 
+        /// <summary>
+        /// Delegate used for <see cref="Orchestrator.OrchestrationStarted" />
+        /// </summary>
         public delegate void OrchestrationStartedDelegate();
+
+        /// <summary>
+        /// Delegate used for <see cref="Orchestrator.OrchestrationInvalid" />
+        /// </summary>
         public delegate void OrchestrationInvalidDelegate(List<string> errors);
 
+        /// <summary>
+        /// Event that's raised when the orchestration starts
+        /// </summary>
         public event OrchestrationStartedDelegate OrchestrationStarted;
+
+        /// <summary>
+        /// Event that's raised when the orchestration is invalid
+        /// </summary>
         public event OrchestrationInvalidDelegate OrchestrationInvalid;
 
-        public Orchestrator(Type settings, Dictionary<Type, Type> actionToFrameMap, Frame rootFrame)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="settingsPage">The settings page</param>
+        /// <param name="actionToFrameMap">A map of actions and their corresponding pages</param>
+        /// <param name="rootFrame">The root frame that can be used for navigating</param>
+        public Orchestrator(Type settingsPage, Dictionary<Type, Type> actionToFrameMap, Frame rootFrame)
         {
             _actionToFrameMap = actionToFrameMap;
-            _settingsPage = settings;
+            _settingsPage = settingsPage;
             _rootFrame = rootFrame;
 
             _orchestrationInstance = null;
@@ -60,6 +83,11 @@ namespace KioskLibrary
             _durationtime.Tick += Durationtime_Tick;
         }
 
+        /// <summary>
+        /// Gets the <see cref="OrchestrationInstance" /> from the specified <paramref name="uri" />
+        /// </summary>
+        /// <param name="uri">The URI where the <see cref="OrchestrationInstance" /> is stored</param>
+        /// <returns>An <see cref="OrchestrationInstance" /> if the it could be retrieved, else <see cref="null"/></returns>
         public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri)
         {
             try
@@ -74,17 +102,22 @@ namespace KioskLibrary
             return null;
         }
 
-        public static OrchestrationInstance ConvertStringToOrchestrationInstance(string body)
+        /// <summary>
+        /// Converts a string to an instance of <see cref="OrchestrationInstance" />
+        /// </summary>
+        /// <param name="orchestrationInstanceAsString">The <see cref="OrchestrationInstance" /> as a <see cref="string" /></param>
+        /// <returns>An <see cref="OrchestrationInstance" /> if the it could be parsed, else <see cref="null"/></returns>
+        public static OrchestrationInstance ConvertStringToOrchestrationInstance(string orchestrationInstanceAsString)
         {
             try
             {
                 // Try to parse the text as JSON
-                return Serialization.Deserialize<OrchestrationInstance>(body);
+                return SerializationHelper.Deserialize<OrchestrationInstance>(orchestrationInstanceAsString);
             }
             catch (JsonException)
             {
                 // Try to parse the text as XML
-                using var sr = new StringReader(body);
+                using var sr = new StringReader(orchestrationInstanceAsString);
                 try
                 {
                     return new XmlSerializer(typeof(OrchestrationInstance)).Deserialize(sr) as OrchestrationInstance;
@@ -99,10 +132,13 @@ namespace KioskLibrary
             return null;
         }
 
+        /// <summary>
+        /// Gets the updated <see cref="OrchestrationInstance" /> from the web
+        /// </summary>
         public static async Task GetNextOrchestration()
         {
             // Get the Settings URI
-            var currentOrchestrationURI = ApplicationStorage.GetFromStorage<string>(Constants.CurrentOrchestrationURI);
+            var currentOrchestrationURI = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
 
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
@@ -110,13 +146,17 @@ namespace KioskLibrary
                 var nextOrchestration = await GetOrchestrationInstance(new Uri(currentOrchestrationURI));
 
                 // Save to the 'NextOrchestration'
-                ApplicationStorage.SaveToStorage(Constants.NextOrchestration, nextOrchestration);
+                ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
             }
         }
 
+        /// <summary>
+        /// Starts processing the current <see cref="OrchestrationInstance" />
+        /// </summary>
+        /// <returns></returns>
         public async Task StartOrchestration()
         {
-            var orchestrationSource = ApplicationStorage.GetFromStorage<OrchestrationSource>(Constants.CurrentOrchestrationSource);
+            var orchestrationSource = ApplicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.CurrentOrchestrationSource);
 
             _durationCounter = 0;
 
@@ -137,7 +177,7 @@ namespace KioskLibrary
                 }
 
                 if (orchestrationSource == OrchestrationSource.URL)
-                    ApplicationStorage.SaveToStorage(Constants.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
+                    ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
 
                 if (OrchestrationStarted != null)
                     OrchestrationStarted();
@@ -146,7 +186,7 @@ namespace KioskLibrary
 
                 if (_orchestrationInstance.Actions.Any())
                 {
-                    // Populate the _orchestrationSequence with a sequrnce of actions to take
+                    // Populate the _orchestrationSequence with a sequence of actions to take
                     if (_orchestrationInstance.Order == Ordering.Sequential)
                         _orchestrationSequence = new List<Action>(_orchestrationInstance.Actions);
                     else
@@ -159,6 +199,9 @@ namespace KioskLibrary
                 _rootFrame.Navigate(_settingsPage, new SettingsPageArguments(new List<string>() { "No valid orchestration was loaded." }));
         }
 
+        /// <summary>
+        /// Stop processing the current <see cref="OrchestrationInstance" />
+        /// </summary>
         public void StopOrchestration()
         {
             if (_durationtime != null)
@@ -170,10 +213,10 @@ namespace KioskLibrary
             OrchestrationInstance toReturn = null;
 
             if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
-                toReturn = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.CurrentOrchestration);
+                toReturn = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.CurrentOrchestration);
             else if (orchestrationSource == OrchestrationSource.URL) // Load OrchestrationInstance from the web.
             {
-                var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.CurrentOrchestrationURI);
+                var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
                 if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
                         toReturn = await GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
@@ -198,10 +241,10 @@ namespace KioskLibrary
 
         private async Task EvaluateNextAction()
         {
-            var endOrchestration = ApplicationStorage.GetFromStorage<bool>(Constants.EndOrchestration);
+            var endOrchestration = ApplicationStorage.GetFromStorage<bool>(Constants.ApplicationStorage.EndOrchestration);
             if (endOrchestration)
             {
-                ApplicationStorage.SaveToStorage(Constants.EndOrchestration, false);
+                ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
                 StopOrchestration();
                 return;
             }
@@ -220,7 +263,7 @@ namespace KioskLibrary
                 // After we have set the _currentAction, we can assess the duration
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
                 {
-                    ApplicationStorage.SaveToStorage(Constants.EndOrchestration, false);
+                    ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
                     _durationCounter = 0;
                     _durationtime.Start();
                 }
@@ -246,16 +289,16 @@ namespace KioskLibrary
 
         private async void PollingTime_Tick(object sender, object e)
         {
-            var nextOrchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.NextOrchestration);
+            var nextOrchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.NextOrchestration);
 
             if (nextOrchestrationInstance != null)
             {
-                var currentOrchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.CurrentOrchestration);
+                var currentOrchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.CurrentOrchestration);
 
-                var serializedNextOrchestrationInstance = Serialization.Serialize(nextOrchestrationInstance);
-                var serializedCurrentOrchestrationInstance = Serialization.Serialize(currentOrchestrationInstance);
+                var serializedNextOrchestrationInstance = SerializationHelper.Serialize(nextOrchestrationInstance);
+                var serializedCurrentOrchestrationInstance = SerializationHelper.Serialize(currentOrchestrationInstance);
 
-                ApplicationStorage.ClearItemFromStorage(Constants.NextOrchestration); // Clear the NextOrchestration
+                ApplicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.NextOrchestration); // Clear the NextOrchestration
 
                 if (serializedNextOrchestrationInstance != serializedCurrentOrchestrationInstance)
                     await StartOrchestration();
