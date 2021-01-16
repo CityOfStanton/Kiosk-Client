@@ -44,7 +44,7 @@ namespace KioskLibrary.Pages
             {
                 State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.SettingsViewModel);
 
-                if(State == null)
+                if (State == null)
                     State = new SettingsViewModel();
             }
             catch { }
@@ -93,13 +93,18 @@ namespace KioskLibrary.Pages
 
             (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
             State.PathValidationMessage = message;
-            tmpOrchestrationInstance = await Orchestrator.GetOrchestrationInstance(new Uri(State.UriPath));
+            State.IsUriPathVerified = isValid;
 
             if (isValid)
+            {
+                tmpOrchestrationInstance = await Orchestrator.GetOrchestrationInstance(new Uri(State.UriPath));
                 await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
+            }
             else
             {
-                Log($"Unable to resolve: {State.UriPath}");
+                State.Orchestration = null;
+                if (!string.IsNullOrEmpty(State.UriPath))
+                    Log($"Unable to resolve: {State.UriPath}");
                 Log("Orchestration failed validation!");
             }
         }
