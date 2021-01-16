@@ -47,7 +47,7 @@ namespace KioskClient.Pages
         /// </summary>
         public static void GoToSettings()
         {
-            ApplicationStorage.SaveToStorage(Constants.EndOrchestration, true);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(MainPage), new MainPageArguments(showSetupInformation: true));
         }

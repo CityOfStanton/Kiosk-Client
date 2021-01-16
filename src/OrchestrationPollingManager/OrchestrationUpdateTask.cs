@@ -50,7 +50,7 @@ namespace OrchestrationPollingManager
 
         private async static Task<bool> RegisterOrchestrationInstanceUpdaterHelper()
         {
-            var pollingInterval = ApplicationStorage.GetFromStorage<int>(Constants.PollingInterval);
+            var pollingInterval = ApplicationStorage.GetFromStorage<int>(Constants.ApplicationStorage.PollingInterval);
 
             if (pollingInterval > 0)
             {

@@ -17,6 +17,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using KioskClient.Pages;
+using KioskClient.Pages.PageArguments;
 
 namespace KioskLibrary
 {
@@ -28,6 +29,7 @@ namespace KioskLibrary
         private MainPageArguments _currentPageArguments = null;
         private DispatcherTimer _loadCompletionTime;
         private Orchestrator _orchestrator;
+        private Dictionary<Type, Type> _actionToFrameMap;
 
         /// <summary>
         /// Constructor
@@ -42,6 +44,10 @@ namespace KioskLibrary
             _loadCompletionTime = new DispatcherTimer();
             _loadCompletionTime.Interval = TimeSpan.FromSeconds(2);
             _loadCompletionTime.Tick += _loadCompletionTime_Tick;
+
+            _actionToFrameMap = new Dictionary<Type, Type>();
+            _actionToFrameMap.Add(typeof(ImageAction), typeof(ImagePage));
+            _actionToFrameMap.Add(typeof(WebsiteAction), typeof(WebsitePage));
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
         }
@@ -65,17 +71,31 @@ namespace KioskLibrary
                     return;
             else
             {
-
-                var actionToFrameMap = new Dictionary<Type, Type>();
-                actionToFrameMap.Add(typeof(ImageAction), typeof(ImagePage));
-                actionToFrameMap.Add(typeof(WebsiteAction), typeof(WebsitePage));
-
-                _orchestrator = new Orchestrator(typeof(Settings), actionToFrameMap, Frame);
+                _orchestrator = new Orchestrator();
                 _orchestrator.OrchestrationStarted += RegisterUpdater;
                 _orchestrator.OrchestrationInvalid += OrchestrationInvalid;
+                _orchestrator.NextAction += _orchestrator_NextAction;
+                _orchestrator.OrchestrationCancelled += _orchestrator_OrchestrationCancelled;
 
                 _loadCompletionTime.Start();
             }
+        }
+
+        private void _orchestrator_OrchestrationCancelled(string reason)
+        {
+            Frame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { reason }));
+        }
+
+        private void _orchestrator_NextAction(Actions.Action action)
+        {
+            Type nextPage;
+
+            if (_actionToFrameMap.ContainsKey(action.GetType()))
+                nextPage = _actionToFrameMap[action.GetType()];
+            else
+                throw new NotSupportedException($"There is no corresponding Page mapped to [{action.GetType().Name}]");
+
+            Frame.Navigate(nextPage, action);
         }
 
         private void OrchestrationInvalid(List<string> errors)

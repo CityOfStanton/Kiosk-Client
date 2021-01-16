@@ -9,20 +9,14 @@
 using KioskLibrary.Common;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.Web.Http;
 using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
-using KioskLibrary.PageArguments;
 using KioskLibrary.Helpers;
 
 namespace KioskLibrary
@@ -32,14 +26,33 @@ namespace KioskLibrary
     /// </summary>
     public class Orchestrator
     {
-        private Dictionary<Type, Type> _actionToFrameMap;
-        private Type _settingsPage;
-        private Frame _rootFrame;
         private OrchestrationInstance _orchestrationInstance;
         private DispatcherTimer _durationtime;
         private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
+
+        /// <summary>
+        /// The delegate for receiving <see cref="Orchestrator.NextAction" /> events
+        /// </summary>
+        /// <param name="action">The next action</param>
+        public delegate void NextActionDelegate(Action action);
+
+        /// <summary>
+        /// Event that's fired when the orchestrator is ready to display a new action
+        /// </summary>
+        public event NextActionDelegate NextAction;
+       
+        /// <summary>
+        /// The delegate for receiving <see cref="Orchestrator.OrchestrationCancelled" /> events
+        /// </summary>
+        /// <param name="reason">The reason for the cancellation</param>
+        public delegate void OrchestrationCancelledDelegate(string reason);
+
+        /// <summary>
+        /// Event that's fired when an orchestration has been cancelled
+        /// </summary>
+        public event OrchestrationCancelledDelegate OrchestrationCancelled;
 
         /// <summary>
         /// Delegate used for <see cref="Orchestrator.OrchestrationStarted" />
@@ -64,15 +77,8 @@ namespace KioskLibrary
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="settingsPage">The settings page</param>
-        /// <param name="actionToFrameMap">A map of actions and their corresponding pages</param>
-        /// <param name="rootFrame">The root frame that can be used for navigating</param>
-        public Orchestrator(Type settingsPage, Dictionary<Type, Type> actionToFrameMap, Frame rootFrame)
+        public Orchestrator()
         {
-            _actionToFrameMap = actionToFrameMap;
-            _settingsPage = settingsPage;
-            _rootFrame = rootFrame;
-
             _orchestrationInstance = null;
             _currentAction = null;
 
@@ -81,55 +87,6 @@ namespace KioskLibrary
             _durationtime = new DispatcherTimer();
             _durationtime.Interval = TimeSpan.FromSeconds(1.0);
             _durationtime.Tick += Durationtime_Tick;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="OrchestrationInstance" /> from the specified <paramref name="uri" />
-        /// </summary>
-        /// <param name="uri">The URI where the <see cref="OrchestrationInstance" /> is stored</param>
-        /// <returns>An <see cref="OrchestrationInstance" /> if the it could be retrieved, else <see cref="null"/></returns>
-        public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri)
-        {
-            try
-            {
-                var client = new HttpClient();
-                var result = await client.GetAsync(uri);
-                if (result.StatusCode == HttpStatusCode.Ok)
-                    return ConvertStringToOrchestrationInstance(await result.Content.ReadAsStringAsync());
-            }
-            catch { }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Converts a string to an instance of <see cref="OrchestrationInstance" />
-        /// </summary>
-        /// <param name="orchestrationInstanceAsString">The <see cref="OrchestrationInstance" /> as a <see cref="string" /></param>
-        /// <returns>An <see cref="OrchestrationInstance" /> if the it could be parsed, else <see cref="null"/></returns>
-        public static OrchestrationInstance ConvertStringToOrchestrationInstance(string orchestrationInstanceAsString)
-        {
-            try
-            {
-                // Try to parse the text as JSON
-                return SerializationHelper.Deserialize<OrchestrationInstance>(orchestrationInstanceAsString);
-            }
-            catch (JsonException)
-            {
-                // Try to parse the text as XML
-                using var sr = new StringReader(orchestrationInstanceAsString);
-                try
-                {
-                    return new XmlSerializer(typeof(OrchestrationInstance)).Deserialize(sr) as OrchestrationInstance;
-                }
-                catch { }
-                finally
-                {
-                    sr.Close();
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -143,7 +100,7 @@ namespace KioskLibrary
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
                 // Get orchestration from Settings URI
-                var nextOrchestration = await GetOrchestrationInstance(new Uri(currentOrchestrationURI));
+                var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI));
 
                 // Save to the 'NextOrchestration'
                 ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
@@ -196,7 +153,8 @@ namespace KioskLibrary
                 }
             }
             else
-                _rootFrame.Navigate(_settingsPage, new SettingsPageArguments(new List<string>() { "No valid orchestration was loaded." }));
+                if(OrchestrationCancelled != null)
+                    OrchestrationCancelled("No valid orchestration was loaded.");
         }
 
         /// <summary>
@@ -219,7 +177,7 @@ namespace KioskLibrary
                 var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
                 if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
-                        toReturn = await GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
+                        toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
             }
 
             return toReturn;
@@ -270,7 +228,8 @@ namespace KioskLibrary
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions
 
-                NavigateToNextActionPage(_currentAction);
+                if(NextAction != null)
+                    NextAction(_currentAction);
             }
             else if (_orchestrationInstance.Lifecycle == LifecycleBehavior.ContinuousLoop) // We don't have any more actions to execute, so we see if we need to start over
                 await StartOrchestration();
@@ -303,18 +262,6 @@ namespace KioskLibrary
                 if (serializedNextOrchestrationInstance != serializedCurrentOrchestrationInstance)
                     await StartOrchestration();
             }
-        }
-
-        private void NavigateToNextActionPage(Action action)
-        {
-            Type nextPage;
-
-            if (_actionToFrameMap.ContainsKey(action.GetType()))
-                nextPage = _actionToFrameMap[action.GetType()];
-            else
-                throw new NotSupportedException($"There is no corresponding Page mapped to [{action.GetType().Name}]");
-
-            _rootFrame.Navigate(nextPage, action);
         }
     }
 }

@@ -22,11 +22,10 @@ using KioskLibrary.Orchestration;
 using KioskLibrary.Storage;
 using Windows.Web.Http;
 using KioskLibrary.Common;
-using KioskLibrary.DataSerialization;
-using KioskLibrary.PageArguments;
 using KioskClient.Pages;
 using KioskLibrary.Helpers;
 using System.Threading.Tasks;
+using KioskClient.Pages.PageArguments;
 
 namespace KioskLibrary.Pages
 {
@@ -45,7 +44,7 @@ namespace KioskLibrary.Pages
         {
             try
             {
-                State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.SettingsViewModel);
+                State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
 
                 if (State == null)
                     State = new SettingsViewModel();
@@ -105,7 +104,7 @@ namespace KioskLibrary.Pages
 
             if (isValid)
             {
-                tmpOrchestrationInstance = await Orchestrator.GetOrchestrationInstance(new Uri(State.UriPath));
+                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath));
                 await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
             }
             else
@@ -174,7 +173,7 @@ namespace KioskLibrary.Pages
                 sr.Close();
                 fileStream.Close();
 
-                var orchestration = Orchestrator.ConvertStringToOrchestrationInstance(content);
+                var orchestration = OrchestrationInstance.ConvertStringToOrchestrationInstance(content);
                 State.OrchestrationInstance = orchestration;
 
                 await ValidateOrchestration(orchestration, OrchestrationSource.File);
@@ -192,10 +191,10 @@ namespace KioskLibrary.Pages
 
         private void Save()
         {
-            ApplicationStorage.SaveToStorage(Constants.SettingsViewModel, State);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationURI, State.UriPath);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestration, State.OrchestrationInstance);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationURI, State.UriPath);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestration, State.OrchestrationInstance);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
             Log("Orchestration saved!");
         }
 
@@ -248,7 +247,7 @@ namespace KioskLibrary.Pages
             {
                 OrchestrationInstance orchestration = ComposeExampleOrchestration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = Serialization.Serialize(orchestration);
+                var fileText = SerializationHelper.Serialize(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }

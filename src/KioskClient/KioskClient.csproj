@@ -130,7 +130,9 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageArguments\MainPageArguments.cs" />
     <Compile Include="Pages\PagesHelper.cs" />
+    <Compile Include="Pages\PageArguments\SettingsPageArguments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Pages\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>

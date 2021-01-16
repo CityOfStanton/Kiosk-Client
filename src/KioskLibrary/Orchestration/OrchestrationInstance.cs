@@ -8,11 +8,17 @@
 
 using KioskLibrary.Actions;
 using KioskLibrary.Common;
+using KioskLibrary.Helpers;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Windows.Web.Http;
+using Action = KioskLibrary.Actions.Action;
 
 namespace KioskLibrary.Orchestration
 {
@@ -69,6 +75,55 @@ namespace KioskLibrary.Orchestration
             Lifecycle = lifecycle;
             Order = order;
             OrchestrationSource = orchestrationSource;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="OrchestrationInstance" /> from the specified <paramref name="uri" />
+        /// </summary>
+        /// <param name="uri">The URI where the <see cref="OrchestrationInstance" /> is stored</param>
+        /// <returns>An <see cref="OrchestrationInstance" /> if the it could be retrieved, else <see cref="null"/></returns>
+        public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri)
+        {
+            try
+            {
+                var client = new HttpClient();
+                var result = await client.GetAsync(uri);
+                if (result.StatusCode == HttpStatusCode.Ok)
+                    return ConvertStringToOrchestrationInstance(await result.Content.ReadAsStringAsync());
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Converts a string to an instance of <see cref="OrchestrationInstance" />
+        /// </summary>
+        /// <param name="orchestrationInstanceAsString">The <see cref="OrchestrationInstance" /> as a <see cref="string" /></param>
+        /// <returns>An <see cref="OrchestrationInstance" /> if the it could be parsed, else <see cref="null"/></returns>
+        public static OrchestrationInstance ConvertStringToOrchestrationInstance(string orchestrationInstanceAsString)
+        {
+            try
+            {
+                // Try to parse the text as JSON
+                return SerializationHelper.Deserialize<OrchestrationInstance>(orchestrationInstanceAsString);
+            }
+            catch (JsonException)
+            {
+                // Try to parse the text as XML
+                using var sr = new StringReader(orchestrationInstanceAsString);
+                try
+                {
+                    return new XmlSerializer(typeof(OrchestrationInstance)).Deserialize(sr) as OrchestrationInstance;
+                }
+                catch { }
+                finally
+                {
+                    sr.Close();
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

@@ -6,7 +6,7 @@
  * github.com/CityOfStanton
  */
 
-namespace KioskLibrary.PageArguments
+namespace KioskClient.Pages.PageArguments
 {
     public class MainPageArguments
     {
