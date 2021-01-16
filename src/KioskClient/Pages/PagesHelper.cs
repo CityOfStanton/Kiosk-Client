@@ -6,10 +6,12 @@
  * github.com/CityOfStanton
  */
 
+using KioskClient.Pages.PageArguments;
 using KioskLibrary;
 using KioskLibrary.Common;
-using KioskLibrary.PageArguments;
+using KioskLibrary.Pages;
 using KioskLibrary.Storage;
+using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -49,7 +51,7 @@ namespace KioskClient.Pages
         {
             ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
             var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(MainPage), new MainPageArguments(showSetupInformation: true));
+            rootFrame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { "Orchestration was cancelled." }));
         }
     }
 }

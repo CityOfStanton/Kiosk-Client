@@ -78,21 +78,25 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
                 <TextBox x:Name="tbURLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
-                <Button x:Name="Button_UrlLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Content="Load" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind Path=State.CanLoadUri, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Content="Load" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                <ProgressRing x:Name="ProgressRing_URL_Loading" IsActive="{x:Bind Path=State.IsUriLoading, Mode=OneWay}" Grid.Column="2" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
             </Grid>
-            <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+            <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Background="Black" Margin="0,20,0,0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Button x:Name="Button_FileLoad" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode}" Margin="0,20,0,0" Grid.Column="0" Content="Load File" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" Width="75" />
-                <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Margin="20,20,20,0" Text="{x:Bind Path=State.LocalPath}" />
+                <Button x:Name="Button_FileLoad" IsEnabled="{x:Bind Path=State.CanLoadFile, Mode=OneWay}" Grid.Column="0" Content="Load File" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" Width="75" />
+                <ProgressRing x:Name="ProgressRing_File_Loading" IsActive="{x:Bind Path=State.IsFileLoading, Mode=OneWay}" Grid.Column="1" Margin="20,0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
+                <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
             </Grid>
         </Grid>
 
@@ -102,7 +106,6 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <ProgressBar x:Name="ProgressBar_Loading" IsIndeterminate="True" Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="15px" Visibility="{x:Bind Path=State.IsLoading, Mode=OneWay}" />
             <TextBlock Grid.Row="1" Text="Log:" TextWrapping="WrapWholeWords" VerticalAlignment="Top" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,10" />
             <ListBox x:Name="ListBox_Log" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>

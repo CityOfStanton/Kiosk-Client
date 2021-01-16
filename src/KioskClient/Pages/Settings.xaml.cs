@@ -91,12 +91,13 @@ namespace KioskLibrary.Pages
         {
             var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
             ListBox_Log.Items.Add($"{currentTime} - {message}");
+            ListBox_Log.SelectedIndex = ListBox_Log.Items.Count - 1;
         }
 
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
-            State.IsLoading = true;
-            OrchestrationInstance tmpOrchestrationInstance = null;
+            State.IsUriLoading = true;
+            OrchestrationInstance tmpOrchestrationInstance;
 
             (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
             State.PathValidationMessage = message;
@@ -114,7 +115,8 @@ namespace KioskLibrary.Pages
                     Log($"Unable to resolve: {State.UriPath}");
                 Log("Orchestration failed validation!");
             }
-            State.IsLoading = false;
+
+            State.IsUriLoading = false;
         }
 
         private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
@@ -165,7 +167,7 @@ namespace KioskLibrary.Pages
             var file = await openPicker.PickSingleFileAsync();
             if (file != null)
             {
-                State.IsLoading = true;
+                State.IsFileLoading = true;
                 State.LocalPath = file.Path;
                 var fileStream = await file.OpenStreamForReadAsync();
                 var sr = new StreamReader(fileStream);
@@ -177,7 +179,7 @@ namespace KioskLibrary.Pages
                 State.OrchestrationInstance = orchestration;
 
                 await ValidateOrchestration(orchestration, OrchestrationSource.File);
-                State.IsLoading = false;
+                State.IsFileLoading = false;
             }
         }
 
@@ -200,6 +202,8 @@ namespace KioskLibrary.Pages
 
         private void Start()
         {
+            // Navigate to the mainpage.
+            // This should trigger the application startup workflow that automatically starts the orchestration.
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(MainPage));
         }

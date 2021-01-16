@@ -23,13 +23,14 @@ namespace KioskLibrary.ViewModels
         private bool? _isLocalPathVerified;
         private string _pathValidationMessage;
         private OrchestrationInstance _orchestrationInstance;
-        private bool _isLoading;
+        private bool _isUriLoading;
+        private bool _isFileLoading;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public SettingsViewModel()
-            : base(new List<string>() { nameof(CanStart) }) { }
+            : base(new List<string>() { nameof(CanStart), nameof(CanLoadFile), nameof(CanLoadUri) }) { }
 
         /// <summary>
         /// The Uri Path
@@ -103,12 +104,21 @@ namespace KioskLibrary.ViewModels
         }
 
         /// <summary>
-        /// Indicates that the UI is in a "loading" state
+        /// Indicates that the Uri is in a "loading" state
         /// </summary>
-        public bool IsLoading
+        public bool IsUriLoading
         {
-            get { return _isLoading; }
-            set { _isLoading = value; NotifyPropertyChanged(); }
+            get { return _isUriLoading; }
+            set { _isUriLoading = value; NotifyPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Indicates that the local file is in a "loading" state
+        /// </summary>
+        public bool IsFileLoading
+        {
+            get { return _isFileLoading; }
+            set { _isFileLoading = value; NotifyPropertyChanged(); }
         }
 
         /// <summary>
@@ -125,5 +135,15 @@ namespace KioskLibrary.ViewModels
                         (IsLocalFile && IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
             }
         }
+
+        /// <summary>
+        /// Whether or not all conditions have been satisfied to load a URI
+        /// </summary>
+        public bool CanLoadUri { get { return !IsUriLoading && !IsLocalFile; } }
+
+        /// <summary>
+        /// Whether or not all conditions have been satisfied to load a local file
+        /// </summary>
+        public bool CanLoadFile { get { return !IsFileLoading && IsLocalFile; } }
     }
 }
