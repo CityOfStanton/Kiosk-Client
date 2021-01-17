@@ -6,9 +6,9 @@
  * github.com/CityOfStanton
  */
 
-using KioskLibrary.DataSerialization;
 using Windows.Foundation;
 using Windows.Storage;
+using KioskLibrary.Helpers;
 
 namespace KioskLibrary.Storage
 {
@@ -35,7 +35,7 @@ namespace KioskLibrary.Storage
                 if (typeof(T).IsPrimitive)
                     return (T)localSettings.Values[setting];
                 else
-                    return Serialization.Deserialize<T>(localSettings.Values[setting].ToString());
+                    return SerializationHelper.Deserialize<T>(localSettings.Values[setting].ToString());
             return default;
         }
 
@@ -57,7 +57,7 @@ namespace KioskLibrary.Storage
                 if (toSave.GetType().IsPrimitive)
                     localSettings.Values[setting] = toSave;
                 else
-                    localSettings.Values[setting] = Serialization.Serialize(toSave);
+                    localSettings.Values[setting] = SerializationHelper.Serialize(toSave);
         }
 
         /// <summary>

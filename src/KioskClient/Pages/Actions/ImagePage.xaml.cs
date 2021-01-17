@@ -1,4 +1,12 @@
-﻿using KioskLibrary.Actions;
+﻿/*
+ * Copyright 2021
+ * City of Stanton
+ * Stanton, Kentucky
+ * www.stantonky.gov
+ * github.com/CityOfStanton
+ */
+
+using KioskLibrary.Actions;
 using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -7,15 +15,22 @@ using Windows.UI.Xaml.Navigation;
 namespace KioskLibrary.Pages.Actions
 {
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// A page for displaying an image
     /// </summary>
     public sealed partial class ImagePage : Page
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ImagePage()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Class that's called when this page has been navigated to.
+        /// </summary>
+        /// <param name="e">Navigation event args</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             var action = e.Parameter as ImageAction;

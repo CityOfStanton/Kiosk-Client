@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskClient", "src\KioskCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskLibrary", "src\KioskLibrary\KioskLibrary.csproj", "{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrchestrationPollingManager", "OrchestrationPollingManager\OrchestrationPollingManager.csproj", "{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrchestrationPollingManager", "src\OrchestrationPollingManager\OrchestrationPollingManager.csproj", "{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

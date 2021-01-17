@@ -8,7 +8,7 @@
 
 using System.Collections.Generic;
 
-namespace KioskLibrary.PageArguments
+namespace KioskClient.Pages.PageArguments
 {
     public class SettingsPageArguments
     {

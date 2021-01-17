@@ -14,17 +14,29 @@ namespace KioskLibrary.ViewModels
 {
     public abstract class ViewModel : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Event that's raised when a property's value has changed
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ViewModel() { }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="lists"></param>
         protected ViewModel(List<string> lists)
         {
             Validators = lists;
         }
 
-        private List<string> Validators { get; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        /// <summary>
+        /// Method that generally handles firing the <see cref="PropertyChanged" />
+        /// </summary>
+        /// <param name="propertyName"></param>
         protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -32,5 +44,7 @@ namespace KioskLibrary.ViewModels
             foreach(var v in Validators)
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(v));
         }
+
+        private List<string> Validators { get; }
     }
 }

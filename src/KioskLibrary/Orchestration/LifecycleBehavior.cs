@@ -8,6 +8,9 @@
 
 namespace KioskLibrary.Orchestration
 {
+    /// <summary>
+    /// The lifecycle behavior of an <see cref="OrchestrationInstance" />
+    /// </summary>
     public enum LifecycleBehavior
     {
         ContinuousLoop,

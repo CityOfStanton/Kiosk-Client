@@ -22,11 +22,10 @@ using KioskLibrary.Orchestration;
 using KioskLibrary.Storage;
 using Windows.Web.Http;
 using KioskLibrary.Common;
-using KioskLibrary.DataSerialization;
-using KioskLibrary.PageArguments;
 using KioskClient.Pages;
 using KioskLibrary.Helpers;
 using System.Threading.Tasks;
+using KioskClient.Pages.PageArguments;
 
 namespace KioskLibrary.Pages
 {
@@ -35,14 +34,17 @@ namespace KioskLibrary.Pages
     /// </summary>
     public sealed partial class Settings : Page
     {
-        public SettingsViewModel State { get; set; }
-        SettingsPageArguments currentPageArguments = null;
+        private SettingsViewModel State { get; set; }
+        private SettingsPageArguments currentPageArguments = null;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public Settings()
         {
             try
             {
-                State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.SettingsViewModel);
+                State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
 
                 if (State == null)
                     State = new SettingsViewModel();
@@ -51,11 +53,15 @@ namespace KioskLibrary.Pages
 
             State.PropertyChanged += State_PropertyChanged;
 
-
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Handles the PropertyChanged event for anything in the <see cref="State" />
+        /// </summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The event arguments</param>
         private void State_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "PathValidationMessage")
@@ -76,21 +82,22 @@ namespace KioskLibrary.Pages
                         Log(error);
         }
 
-        private void Log(string message)
-        {
-            var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
-            ListBox_Log.Items.Add($"{currentTime} - {message}");
-        }
-
         /// <summary>
         /// Add the KeyDown binding back when we leave
         /// </summary>
         protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp;
 
+        private void Log(string message)
+        {
+            var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
+            ListBox_Log.Items.Add($"{currentTime} - {message}");
+            ListBox_Log.SelectedIndex = ListBox_Log.Items.Count - 1;
+        }
+
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
-            State.IsLoading = true;
-            OrchestrationInstance tmpOrchestrationInstance = null;
+            State.IsUriLoading = true;
+            OrchestrationInstance tmpOrchestrationInstance;
 
             (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
             State.PathValidationMessage = message;
@@ -98,17 +105,18 @@ namespace KioskLibrary.Pages
 
             if (isValid)
             {
-                tmpOrchestrationInstance = await Orchestrator.GetOrchestrationInstance(new Uri(State.UriPath));
+                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath));
                 await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
             }
             else
             {
-                State.Orchestration = null;
+                State.OrchestrationInstance = null;
                 if (!string.IsNullOrEmpty(State.UriPath))
                     Log($"Unable to resolve: {State.UriPath}");
                 Log("Orchestration failed validation!");
             }
-            State.IsLoading = false;
+
+            State.IsUriLoading = false;
         }
 
         private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
@@ -122,7 +130,7 @@ namespace KioskLibrary.Pages
                 (bool status, List<string> errors) = await orchestrationInstance.ValidateAsync();
                 if (status)
                 {
-                    State.Orchestration = orchestrationInstance;
+                    State.OrchestrationInstance = orchestrationInstance;
                     Log("Orchestration valid!");
 
                     if (orchestrationSource == OrchestrationSource.File)
@@ -159,7 +167,7 @@ namespace KioskLibrary.Pages
             var file = await openPicker.PickSingleFileAsync();
             if (file != null)
             {
-                State.IsLoading = true;
+                State.IsFileLoading = true;
                 State.LocalPath = file.Path;
                 var fileStream = await file.OpenStreamForReadAsync();
                 var sr = new StreamReader(fileStream);
@@ -167,11 +175,11 @@ namespace KioskLibrary.Pages
                 sr.Close();
                 fileStream.Close();
 
-                var orchestration = Orchestrator.ConvertStringToOrchestrationInstance(content);
-                State.Orchestration = orchestration;
+                var orchestration = OrchestrationInstance.ConvertStringToOrchestrationInstance(content);
+                State.OrchestrationInstance = orchestration;
 
                 await ValidateOrchestration(orchestration, OrchestrationSource.File);
-                State.IsLoading = false;
+                State.IsFileLoading = false;
             }
         }
 
@@ -185,15 +193,17 @@ namespace KioskLibrary.Pages
 
         private void Save()
         {
-            ApplicationStorage.SaveToStorage(Constants.SettingsViewModel, State);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationURI, State.UriPath);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestration, State.Orchestration);
-            ApplicationStorage.SaveToStorage(Constants.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationURI, State.UriPath);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestration, State.OrchestrationInstance);
+            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
             Log("Orchestration saved!");
         }
 
         private void Start()
         {
+            // Navigate to the mainpage.
+            // This should trigger the application startup workflow that automatically starts the orchestration.
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(MainPage));
         }
@@ -241,7 +251,7 @@ namespace KioskLibrary.Pages
             {
                 OrchestrationInstance orchestration = ComposeExampleOrchestration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = Serialization.Serialize(orchestration);
+                var fileText = SerializationHelper.Serialize(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }

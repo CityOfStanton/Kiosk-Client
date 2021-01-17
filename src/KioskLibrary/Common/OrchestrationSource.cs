@@ -8,6 +8,9 @@
 
 namespace KioskLibrary.Common
 {
+    /// <summary>
+    /// The order to iterate through a set
+    /// </summary>
     public enum Ordering
     {
         Sequential,
