@@ -97,3 +97,5 @@ steps:
     releaseNotesInput: 'New release!'
     destinationType: 'groups'
     distributionGroupId: '$(distributionGroupId)'
+
+    
