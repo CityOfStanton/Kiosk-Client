@@ -4,8 +4,17 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
-- develop
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    exclude:
+      - README.md
+
+pr:
+  - main
+  - develop
 
 pool:
   vmImage: 'windows-latest'
