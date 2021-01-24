@@ -90,12 +90,10 @@ steps:
 - task: AppCenterDistribute@3
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   inputs:
-    serverEndpoint: 'Visual Studio App Center'
+    serverEndpoint: 'VSAC'
     appSlug: '$(appSlug)'
     appFile: '$(build.artifactstagingdirectory)\AppxPackages\*.appxupload'
     releaseNotesOption: 'input'
     releaseNotesInput: 'New release!'
     destinationType: 'groups'
     distributionGroupId: '$(distributionGroupId)'
-
-    
