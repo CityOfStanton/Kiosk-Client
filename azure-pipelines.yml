@@ -5,6 +5,7 @@
 
 trigger:
 - main
+- develop
 
 pool:
   vmImage: 'windows-latest'
@@ -72,13 +73,15 @@ steps:
     TargetFolder: '$(build.artifactstagingdirectory)'
 
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
+  displayName: 'Publish Artifact: Kiosk Client'
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
+    ArtifactName: "Kiosk Client - $(variables['Build.SourceBranch'])"
 
 - task: AppCenterDistribute@3
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   inputs:
-    serverEndpoint: 'VSAC'
+    serverEndpoint: 'Visual Studio App Center'
     appSlug: '$(appSlug)'
     appFile: '$(build.artifactstagingdirectory)\AppxPackages\*.appxupload'
     releaseNotesOption: 'input'
