@@ -9,7 +9,7 @@
   <Identity
     Name="5999BirchCom.KioskClient"
     Publisher="CN=291573D4-2B42-451F-9AD2-2CCDBBAF6DB9"
-    Version="1.0.10.0" />
+    Version="1.0.15.0" />
 
   <Properties>
     <DisplayName>Kiosk Client</DisplayName>
