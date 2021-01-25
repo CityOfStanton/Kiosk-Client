@@ -63,14 +63,14 @@ steps:
     platform: 'x86'
     solution: '$(solution)'
     configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="x86"'
+    msbuildArgs: '/p:Platform="x86"'
 
 - task: VSBuild@1
   inputs:
     platform: 'x64'
     solution: '$(solution)'
     configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="x64"'
+    msbuildArgs: '/p:Platform="x64"'
 
 - task: VSBuild@1
   inputs:
