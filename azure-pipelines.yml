@@ -1,3 +1,12 @@
+/*
+ * Filename: f:\Dev\Kiosk-Client\azure-pipelines.yml
+ * Path: f:\Dev\Kiosk-Client
+ * Created Date: Monday, January 25th 2021, 1:09:19 am
+ * Author: Chad Birch
+ *
+ * Copyright (c) 2021 Lexmark International, Inc.
+ */
+
 # Universal Windows Platform
 # Build a Universal Windows Platform project using Visual Studio.
 # Add steps that test and distribute an app, save build artifacts, and more:
@@ -23,10 +32,14 @@ variables:
 - group: code-signing
 - name: solution
   value: '**/*.sln'
+- name: deploymentProjectFile
+  value: '**/*.wapproj'
 - name: kioskClientProjectFile
   value: '**/KioskClient.csproj'
 - name: buildConfiguration
   value: 'Release'
+- name: buildPlatform
+  value: 'x86|x64'
 - name: appxPackageDir
   value: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
@@ -44,6 +57,7 @@ steps:
     secureFile: '$(signingCert.secureFilePath)'
 
 - task: PowerShell@2
+  displayName: 'Add PFX to Certificate Store'
   inputs:
     targetType: 'inline'
     script: |
@@ -91,19 +105,35 @@ steps:
 #                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
 #                   /p:PackageCertificatePassword="$(signingCert.password)"'
 
-- task: MSBuild@1
+# - task: MSBuild@1
+#   displayName: 'Package Kiosk Client'
+#   inputs:
+#     solution: '$(deploymentProjectFile)'
+#     msbuildArchitecture: 'x64'
+#     configuration: '$(buildConfiguration)'
+#     clean: true
+#     msbuildArguments: '/p:platform=x64 /p:platform=x86
+#                       /p:AppxBundlePlatforms="x86|x64"
+#                       /p:AppxPackageDir="$(appxPackageDir)"
+#                       /p:AppxPackageSigningEnabled=true
+#                       /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+#                       /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+#                       /p:PackageCertificatePassword="$(signingCert.password)"'
+
+- task: VSBuild@1
   inputs:
+    displayName: 'Package Kiosk Client'
+    platform: 'x64'
     solution: '$(solution)'
-    msbuildArchitecture: 'x64'
     configuration: '$(buildConfiguration)'
-    clean: true
-    msbuildArguments: '/p:platform=x64 /p:platform=x86
-                      /p:AppxBundlePlatforms="x86|x64"
-                      /p:AppxPackageDir="$(appxPackageDir)"
-                      /p:AppxPackageSigningEnabled=true
-                      /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-                      /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-                      /p:PackageCertificatePassword="$(signingCert.password)"'
+    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
+                  /p:AppxBundle=Always
+                  /p:UapAppxPackageBuildMode=StoreUpload
+                  /p:AppxPackageDir="$(appxPackageDir)"
+                  /p:AppxPackageSigningEnabled=true
+                  /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+                  /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+                  /p:PackageCertificatePassword="$(signingCert.password)"'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
