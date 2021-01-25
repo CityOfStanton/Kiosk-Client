@@ -23,8 +23,6 @@ variables:
 - group: code-signing
 - name: solution
   value: '**/*.sln'
-- name: buildPlatform
-  value: 'x86|x64|ARM'
 - name: buildConfiguration
   value: 'Release'
 - name: appxPackageDir
@@ -65,9 +63,23 @@ steps:
     platform: 'x86'
     solution: '$(solution)'
     configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
+    msbuildArgs: '/p:AppxBundlePlatforms="x86"'
+
+
+- task: VSBuild@1
+  inputs:
+    platform: 'x64'
+    solution: '$(solution)'
+    configuration: '$(buildConfiguration)'
+    msbuildArgs: '/p:AppxBundlePlatforms="x64"'
+
+- task: VSBuild@1
+  inputs:
+    platform: 'x64'
+    solution: '$(solution)'
+    configuration: '$(buildConfiguration)'
+    msbuildArgs: '/p:AppxBundlePlatforms="x86|x64"
                   /p:AppxPackageDir="$(appxPackageDir)"
-                  /p:AppxBundle=Always
                   /p:UapAppxPackageBuildMode=StoreAndSideload
                   /p:AppxPackageSigningEnabled=true
                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
