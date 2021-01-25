@@ -74,14 +74,14 @@ steps:
     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal'
 
-- task: VSBuild@1
-  displayName: 'Build Kiosk Client (x64)'
-  inputs:
-    platform: 'x64'
-    solution: '$(kioskClientProjectFile)'
-    configuration: '$(buildConfiguration)'
-    msbuildArgs: '/Fileloggerparameters:verbosity=quiet
-                  /Consoleloggerparameters:verbosity=minimal'
+# - task: VSBuild@1
+#   displayName: 'Build Kiosk Client (x64)'
+#   inputs:
+#     platform: 'x64'
+#     solution: '$(kioskClientProjectFile)'
+#     configuration: '$(buildConfiguration)'
+#     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
+#                   /Consoleloggerparameters:verbosity=minimal'
 
 # - task: VSBuild@1
 #   displayName: 'Build Solution'
@@ -103,7 +103,7 @@ steps:
     msbuildArchitecture: 'x86'
     configuration: '$(buildConfiguration)'
     clean: true
-    msbuildArguments: '/p:AppxBundlePlatforms="x86|x64"
+    msbuildArguments: '/p:AppxBundlePlatforms="x86"
                       /Fileloggerparameters:verbosity=quiet
                       /Consoleloggerparameters:verbosity=minimal
                       /p:AppxPackageDir="$(appxPackageDir)"
