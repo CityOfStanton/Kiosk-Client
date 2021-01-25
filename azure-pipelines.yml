@@ -96,35 +96,37 @@ steps:
 #                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
 #                   /p:PackageCertificatePassword="$(signingCert.password)"'
 
-# - task: MSBuild@1
+- task: MSBuild@1
+  displayName: 'Package Kiosk Client'
+  inputs:
+    solution: '$(deploymentProjectFile)'
+    msbuildArchitecture: 'x64'
+    configuration: '$(buildConfiguration)'
+    clean: true
+    msbuildArguments: '/p:platform=x64 /p:platform=x86
+                      /p:AppxBundlePlatforms="x86|x64"
+                      /Fileloggerparameters:verbosity=quiet
+                      /Consoleloggerparameters:verbosity=minimal
+                      /p:AppxPackageDir="$(appxPackageDir)"
+                      /p:AppxPackageSigningEnabled=true
+                      /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+                      /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+                      /p:PackageCertificatePassword="$(signingCert.password)"'
+
+# - task: VSBuild@1
 #   displayName: 'Package Kiosk Client'
 #   inputs:
-#     solution: '$(deploymentProjectFile)'
-#     msbuildArchitecture: 'x64'
+#     platform: 'x64'
+#     solution: '$(solution)'
 #     configuration: '$(buildConfiguration)'
-#     clean: true
-#     msbuildArguments: '/p:platform=x64 /p:platform=x86
-#                       /p:AppxBundlePlatforms="x86|x64"
-#                       /p:AppxPackageDir="$(appxPackageDir)"
-#                       /p:AppxPackageSigningEnabled=true
-#                       /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-#                       /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-#                       /p:PackageCertificatePassword="$(signingCert.password)"'
-
-- task: VSBuild@1
-  inputs:
-    displayName: 'Package Kiosk Client'
-    platform: 'x64'
-    solution: '$(solution)'
-    configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
-                  /p:AppxBundle=Always
-                  /p:UapAppxPackageBuildMode=StoreUpload
-                  /p:AppxPackageDir="$(appxPackageDir)"
-                  /p:AppxPackageSigningEnabled=true
-                  /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-                  /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-                  /p:PackageCertificatePassword="$(signingCert.password)"'
+#     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
+#                   /p:AppxBundle=Always
+#                   /p:UapAppxPackageBuildMode=StoreUpload
+#                   /p:AppxPackageDir="$(appxPackageDir)"
+#                   /p:AppxPackageSigningEnabled=true
+#                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+#                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+#                   /p:PackageCertificatePassword="$(signingCert.password)"'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
