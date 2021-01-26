@@ -30,7 +30,7 @@ variables:
 - name: buildConfiguration
   value: 'Release'
 - name: buildPlatform
-  value: 'x86|x64'
+  value: 'x86|x64|ARM'
 - name: appxPackageDir
   value: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
@@ -65,14 +65,14 @@ steps:
       $store.Add($cert)
       $store.Close()
 
-- task: VSBuild@1
-  displayName: 'Build Kiosk Client (x86)'
-  inputs:
-    platform: 'x86'
-    solution: '$(kioskClientProjectFile)'
-    configuration: '$(buildConfiguration)'
-    msbuildArgs: '/Fileloggerparameters:verbosity=quiet
-                  /Consoleloggerparameters:verbosity=minimal'
+# - task: VSBuild@1
+#   displayName: 'Build Kiosk Client (x86)'
+#   inputs:
+#     platform: 'x86'
+#     solution: '$(kioskClientProjectFile)'
+#     configuration: '$(buildConfiguration)'
+#     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
+#                   /Consoleloggerparameters:verbosity=minimal'
 
 # - task: VSBuild@1
 #   displayName: 'Build Kiosk Client (x64)'
@@ -96,36 +96,36 @@ steps:
 #                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
 #                   /p:PackageCertificatePassword="$(signingCert.password)"'
 
-- task: MSBuild@1
-  displayName: 'Package Kiosk Client'
-  inputs:
-    solution: '$(deploymentProjectFile)'
-    msbuildArchitecture: 'x86'
-    configuration: '$(buildConfiguration)'
-    clean: true
-    msbuildArguments: '/p:AppxBundlePlatforms="x86"
-                      /Fileloggerparameters:verbosity=quiet
-                      /Consoleloggerparameters:verbosity=minimal
-                      /p:AppxPackageDir="$(appxPackageDir)"
-                      /p:AppxPackageSigningEnabled=true
-                      /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-                      /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-                      /p:PackageCertificatePassword="$(signingCert.password)"'
-
-# - task: VSBuild@1
+# - task: MSBuild@1
 #   displayName: 'Package Kiosk Client'
 #   inputs:
-#     platform: 'x64'
-#     solution: '$(solution)'
+#     solution: '$(deploymentProjectFile)'
+#     msbuildArchitecture: 'x86'
 #     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
-#                   /p:AppxBundle=Always
-#                   /p:UapAppxPackageBuildMode=StoreUpload
-#                   /p:AppxPackageDir="$(appxPackageDir)"
-#                   /p:AppxPackageSigningEnabled=true
-#                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-#                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-#                   /p:PackageCertificatePassword="$(signingCert.password)"'
+#     clean: true
+#     msbuildArguments: '/p:AppxBundlePlatforms="x86"
+#                       /Fileloggerparameters:verbosity=quiet
+#                       /Consoleloggerparameters:verbosity=minimal
+#                       /p:AppxPackageDir="$(appxPackageDir)"
+#                       /p:AppxPackageSigningEnabled=true
+#                       /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+#                       /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+#                       /p:PackageCertificatePassword="$(signingCert.password)"'
+
+- task: VSBuild@1
+  displayName: 'Package Kiosk Client'
+  inputs:
+    platform: 'x86'
+    solution: '$(solution)'
+    configuration: '$(buildConfiguration)'
+    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
+                  /p:AppxPackageDir="$(appxPackageDir)"
+                  /p:AppxBundle=Always
+                  /p:UapAppxPackageBuildMode=StoreUpload
+                  /p:AppxPackageSigningEnabled=true
+                  /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+                  /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+                  /p:PackageCertificatePassword="$(signingCert.password)"'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
