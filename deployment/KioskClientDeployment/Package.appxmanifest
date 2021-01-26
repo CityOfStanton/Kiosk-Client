@@ -8,8 +8,8 @@
 
   <Identity
     Name="5999BirchCom.KioskClient"
-    Publisher="CN=291573D4-2B42-451F-9AD2-2CCDBBAF6DB9"
-    Version="1.0.15.0" />
+    Publisher="CN=Technology Group, O=City of Stanton, C=US"
+    Version="1.0.16.0" />
 
   <Properties>
     <DisplayName>Kiosk Client</DisplayName>

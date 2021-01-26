@@ -8,7 +8,7 @@
 
   <Identity
     Name="98a23b4b-8b3d-4221-8367-917f3102593f"
-    Publisher="CN=City of Stanton"
+    Publisher="CN=Technology Group, O=City of Stanton, C=US"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="98a23b4b-8b3d-4221-8367-917f3102593f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
