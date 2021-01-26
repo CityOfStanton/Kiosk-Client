@@ -6,12 +6,11 @@
  * github.com/CityOfStanton
  */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using static KioskLibrary.Converters.StringExtension;
 
 namespace KioskLibrary.Actions
 {
@@ -20,7 +19,6 @@ namespace KioskLibrary.Actions
     /// </summary>
     [XmlInclude(typeof(ImageAction))]
     [XmlInclude(typeof(WebsiteAction))]
-    [JsonConverter(typeof(ActionConverter))]
     public abstract class Action
     {
         /// <summary>

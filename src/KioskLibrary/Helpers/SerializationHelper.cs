@@ -6,8 +6,8 @@
  * github.com/CityOfStanton
  */
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace KioskLibrary.Helpers
 {
@@ -16,19 +16,16 @@ namespace KioskLibrary.Helpers
     /// </summary>
     public class SerializationHelper
     {
-        private static JsonSerializerOptions DefaultJsonOptions
+        private static JsonSerializerSettings DefaultJsonOptions
         {
             get
             {
-                return new JsonSerializerOptions()
+                return new JsonSerializerSettings()
                 {
-                    AllowTrailingCommas = true,
-                    WriteIndented = true,
-                    PropertyNameCaseInsensitive = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    Converters =
+                    Formatting = Formatting.Indented,
+                    ContractResolver = new DefaultContractResolver
                     {
-                        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                        NamingStrategy = new CamelCaseNamingStrategy()
                     }
                 };
             }
@@ -40,13 +37,13 @@ namespace KioskLibrary.Helpers
         /// <param name="toDeserialize">The string to deserialize</param>
         /// <typeparam name="T">The expected type of the object</typeparam>
         /// <returns>The deserialized object</returns>
-        public static T Deserialize<T>(string toDeserialize) => JsonSerializer.Deserialize<T>(toDeserialize, DefaultJsonOptions);
+        public static T Deserialize<T>(string toDeserialize) => JsonConvert.DeserializeObject<T>(toDeserialize, DefaultJsonOptions);
 
         /// <summary>
         /// Serializes <paramref name="toSerialize" /> as a <see cref="string" />
         /// </summary>
         /// <param name="toSerialize">The object to serialize</param>
         /// <returns>A <see cref="string" /> representation of the object</returns>
-        public static string Serialize(object toSerialize) => JsonSerializer.Serialize(toSerialize, DefaultJsonOptions);
+        public static string Serialize(object toSerialize) => JsonConvert.SerializeObject(toSerialize, DefaultJsonOptions);
     }
 }

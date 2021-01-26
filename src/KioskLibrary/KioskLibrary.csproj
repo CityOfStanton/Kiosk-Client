@@ -132,7 +132,6 @@
     <Compile Include="Orchestration\OrchestrationInstance.cs" />
     <Compile Include="Actions\ImageAction.cs" />
     <Compile Include="Actions\WebsiteAction.cs" />
-    <Compile Include="Converters\ActionConverter.cs" />
     <Compile Include="IsExternalInit.cs" />
     <Compile Include="Orchestration\Orchestrator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -143,13 +142,12 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.11</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="City of Stanton.pfx" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
-    <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
