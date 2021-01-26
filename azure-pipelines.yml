@@ -27,6 +27,8 @@ variables:
   value: '**/*.wapproj'
 - name: kioskClientProjectFile
   value: '**/KioskClient.csproj'
+- name: kioskClientDeploymentProjectFile
+  value: '**/KioskClientDeployment.wapproj'
 - name: buildConfiguration
   value: 'Release'
 - name: buildPlatform
@@ -81,6 +83,15 @@ steps:
     platform: 'x64'
     clean: true
     solution: '$(kioskClientProjectFile)'
+    configuration: '$(buildConfiguration)'
+    msbuildArgs: '/Fileloggerparameters:verbosity=quiet
+                  /Consoleloggerparameters:verbosity=minimal'
+
+- task: VSBuild@1
+  displayName: 'Build Kiosk Client Deployment'
+  inputs:
+    clean: true
+    solution: '$(kioskClientDeploymentProjectFile)'
     configuration: '$(buildConfiguration)'
     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal'
