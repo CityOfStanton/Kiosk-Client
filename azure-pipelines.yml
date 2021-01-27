@@ -90,7 +90,7 @@ steps:
 - task: VSBuild@1
   displayName: 'Build Kiosk Client Deployment'
   inputs:
-    clean: true
+    clean: false
     solution: '$(kioskClientDeploymentProjectFile)'
     configuration: '$(buildConfiguration)'
     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
@@ -125,7 +125,7 @@ steps:
     solution: '$(solution)'
     msbuildArchitecture: 'x86'
     configuration: '$(buildConfiguration)'
-    clean: true
+    clean: false
     msbuildArguments: '/p:AppxBundlePlatforms="x86"
                       /Fileloggerparameters:verbosity=quiet
                       /Consoleloggerparameters:verbosity=minimal
