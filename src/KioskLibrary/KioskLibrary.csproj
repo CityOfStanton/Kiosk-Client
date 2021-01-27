@@ -15,6 +15,8 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <LangVersion>9.0</LangVersion>
   </PropertyGroup>
@@ -131,7 +133,6 @@
     <Compile Include="Orchestration\OrchestrationInstance.cs" />
     <Compile Include="Actions\ImageAction.cs" />
     <Compile Include="Actions\WebsiteAction.cs" />
-    <Compile Include="Converters\ActionConverter.cs" />
     <Compile Include="IsExternalInit.cs" />
     <Compile Include="Orchestration\Orchestrator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -142,13 +143,12 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.11</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="City of Stanton.pfx" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
-    <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

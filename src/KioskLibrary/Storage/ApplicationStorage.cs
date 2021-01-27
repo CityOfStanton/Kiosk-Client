@@ -39,11 +39,6 @@ namespace KioskLibrary.Storage
             return default;
         }
 
-        private static void Current_DataChanged(ApplicationData sender, object args)
-        {
-            throw new System.NotImplementedException();
-        }
-
         /// <summary>
         /// Stores an object in the application storage where the object can be identified by <paramref name="setting"/>.
         /// </summary>

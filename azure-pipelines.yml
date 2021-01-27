@@ -3,18 +3,40 @@
 # Add steps that test and distribute an app, save build artifacts, and more:
 # https://aka.ms/yaml
 
+# Adapted from the following articles:
+  # https://damienaicheh.github.io/uwp/azure/devops/appcenter/2019/09/24/build-sign-and-deploy-your-uwp-application-using-azure-devops-and-appcenter-en.html
+  # https://docs.microsoft.com/en-us/azure/devops/pipelines/apps/windows/universal?view=azure-devops&tabs=vsts
+
 trigger:
-- main
-- develop
+  branches:
+    include:
+    - main
+    - develop
+    - rel/*
+  paths:
+    exclude:
+      - '**/*.md'
+
+pr:
+  branches:
+    include:
+    - main
+    - develop
+    - rel/*
+    exclude:
+      - '**/*.md'
 
 pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'x86|x64|ARM'
-  buildConfiguration: 'Release'
-  appxPackageDir: '$(build.artifactStagingDirectory)\AppxPackages\\'
+- group: code-signing
+- name: solution
+  value: '**/*.sln'
+- name: buildConfiguration
+  value: 'Release'
+- name: appxPackageDir
+  value: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
 steps:
 - task: NuGetToolInstaller@1
@@ -23,12 +45,48 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-- task: VSBuild@1
+- task: DownloadSecureFile@1
+  name: mySecureFile
+  displayName: 'Get the pfx file certificat'
   inputs:
-    platform: 'x86'
+    secureFile: '$(signingCert.secureFilePath)'
+
+- task: PowerShell@2
+  displayName: 'Add PFX to Certificate Store'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Start adding the PFX file to the certificate store."
+
+      $pfxpath = '$(mySecureFile.secureFilePath)'
+      $password = '$(signingCert.password)'
+
+      Add-Type -AssemblyName System.Security
+      $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+      $cert.Import($pfxpath, $password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]"PersistKeySet")
+      $store = new-object system.security.cryptography.X509Certificates.X509Store -argumentlist "MY", CurrentUser
+      $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]"ReadWrite")
+      $store.Add($cert)
+      $store.Close()
+
+- task: VSBuild@1
+  displayName: 'Package Kiosk Client'
+  inputs:
     solution: '$(solution)'
+    msbuildArchitecture: 'x86'
     configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(appxPackageDir)" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload'
+    clean: false
+    msbuildArgs: '/m
+                  /p:platform=x64 /p:platform=x86
+                  /p:AppxBundlePlatforms="x86"
+                  /Fileloggerparameters:verbosity=quiet
+                  /Consoleloggerparameters:verbosity=minimal
+                  /p:AppxPackageDir="$(appxPackageDir)"
+                  /p:AppxPackageSigningEnabled=true
+                  /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+                  /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+                  /p:PackageCertificatePassword="$(signingCert.password)"
+                  -nodeReuse:false'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
@@ -38,7 +96,18 @@ steps:
     TargetFolder: '$(build.artifactstagingdirectory)'
 
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
+  displayName: 'Publish Artifact: Kiosk Client'
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
-    
+    ArtifactName: "Kiosk Client"
+
+- task: AppCenterDistribute@3
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  inputs:
+    serverEndpoint: 'VSAC'
+    appSlug: '$(appSlug)'
+    appFile: '$(build.artifactstagingdirectory)\AppxPackages\*.appxupload'
+    releaseNotesOption: 'input'
+    releaseNotesInput: 'New release!'
+    destinationType: 'groups'
+    distributionGroupId: '$(distributionGroupId)'

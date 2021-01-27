@@ -12,6 +12,9 @@ using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 
 namespace KioskLibrary
 {
@@ -28,6 +31,7 @@ namespace KioskLibrary
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            AppCenter.Start("a68e40e1-eead-431f-b091-34adecad9dbf", typeof(Analytics), typeof(Crashes));
         }
 
         /// <summary>

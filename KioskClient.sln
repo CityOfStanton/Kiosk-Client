@@ -130,7 +130,6 @@ Global
 		{1CB1401D-14A9-4F15-9A3F-81349FAD32D3}.Release|x64.ActiveCfg = Release|x64
 		{1CB1401D-14A9-4F15-9A3F-81349FAD32D3}.Release|x64.Build.0 = Release|x64
 		{1CB1401D-14A9-4F15-9A3F-81349FAD32D3}.Release|x86.ActiveCfg = Release|x86
-		{1CB1401D-14A9-4F15-9A3F-81349FAD32D3}.Release|x86.Build.0 = Release|x86
 		{0D8035A2-404B-42D8-B66C-36EC014F5F26}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{0D8035A2-404B-42D8-B66C-36EC014F5F26}.Debug|ARM.ActiveCfg = Debug|ARM
 		{0D8035A2-404B-42D8-B66C-36EC014F5F26}.Debug|ARM.Build.0 = Debug|ARM
@@ -231,7 +230,6 @@ Global
 		{524D440F-057C-49E4-8C66-C907668F71D1}.Release|x64.Build.0 = Release|x64
 		{524D440F-057C-49E4-8C66-C907668F71D1}.Release|x64.Deploy.0 = Release|x64
 		{524D440F-057C-49E4-8C66-C907668F71D1}.Release|x86.ActiveCfg = Release|x86
-		{524D440F-057C-49E4-8C66-C907668F71D1}.Release|x86.Build.0 = Release|x86
 		{524D440F-057C-49E4-8C66-C907668F71D1}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

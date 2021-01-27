@@ -7,8 +7,9 @@
  */
 
 using KioskLibrary.Helpers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media;
 using Windows.Web.Http;
@@ -21,7 +22,7 @@ namespace KioskLibrary.Actions
     public class ImageAction : Action
     {
         public string Path { get; set; }
-        [JsonConverter(typeof(JsonStringEnumConverter))]
+        [JsonConverter(typeof(StringEnumConverter))]
         public Stretch Stretch { get; set; }
 
         /// <summary>

@@ -17,7 +17,6 @@ using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
-using KioskLibrary.Helpers;
 
 namespace KioskLibrary
 {
@@ -27,7 +26,7 @@ namespace KioskLibrary
     public class Orchestrator
     {
         private OrchestrationInstance _orchestrationInstance;
-        private DispatcherTimer _durationtime;
+        private readonly DispatcherTimer _durationtime;
         private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
@@ -42,7 +41,7 @@ namespace KioskLibrary
         /// Event that's fired when the orchestrator is ready to display a new action
         /// </summary>
         public event NextActionDelegate NextAction;
-       
+
         /// <summary>
         /// The delegate for receiving <see cref="Orchestrator.OrchestrationCancelled" /> events
         /// </summary>
@@ -84,8 +83,10 @@ namespace KioskLibrary
 
             _durationCounter = 0;
 
-            _durationtime = new DispatcherTimer();
-            _durationtime.Interval = TimeSpan.FromSeconds(1.0);
+            _durationtime = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1.0)
+            };
             _durationtime.Tick += Durationtime_Tick;
         }
 
@@ -127,8 +128,7 @@ namespace KioskLibrary
 
                 if (!status)
                 {
-                    if (OrchestrationInvalid != null)
-                        OrchestrationInvalid(errors);
+                    OrchestrationInvalid?.Invoke(errors);
 
                     return;
                 }
@@ -136,8 +136,7 @@ namespace KioskLibrary
                 if (orchestrationSource == OrchestrationSource.URL)
                     ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
 
-                if (OrchestrationStarted != null)
-                    OrchestrationStarted();
+                OrchestrationStarted?.Invoke();
 
                 ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
 
@@ -153,8 +152,7 @@ namespace KioskLibrary
                 }
             }
             else
-                if(OrchestrationCancelled != null)
-                    OrchestrationCancelled("No valid orchestration was loaded.");
+                OrchestrationCancelled?.Invoke("No valid orchestration was loaded.");
         }
 
         /// <summary>
@@ -228,8 +226,7 @@ namespace KioskLibrary
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions
 
-                if(NextAction != null)
-                    NextAction(_currentAction);
+                NextAction?.Invoke(_currentAction);
             }
             else if (_orchestrationInstance.Lifecycle == LifecycleBehavior.ContinuousLoop) // We don't have any more actions to execute, so we see if we need to start over
                 await StartOrchestration();
@@ -244,24 +241,6 @@ namespace KioskLibrary
                     await EvaluateNextAction();
 
             _durationCounter++;
-        }
-
-        private async void PollingTime_Tick(object sender, object e)
-        {
-            var nextOrchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.NextOrchestration);
-
-            if (nextOrchestrationInstance != null)
-            {
-                var currentOrchestrationInstance = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.CurrentOrchestration);
-
-                var serializedNextOrchestrationInstance = SerializationHelper.Serialize(nextOrchestrationInstance);
-                var serializedCurrentOrchestrationInstance = SerializationHelper.Serialize(currentOrchestrationInstance);
-
-                ApplicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.NextOrchestration); // Clear the NextOrchestration
-
-                if (serializedNextOrchestrationInstance != serializedCurrentOrchestrationInstance)
-                    await StartOrchestration();
-            }
         }
     }
 }
