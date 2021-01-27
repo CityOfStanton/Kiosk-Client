@@ -3,6 +3,10 @@
 # Add steps that test and distribute an app, save build artifacts, and more:
 # https://aka.ms/yaml
 
+# Adapted from the following articles:
+  # https://damienaicheh.github.io/uwp/azure/devops/appcenter/2019/09/24/build-sign-and-deploy-your-uwp-application-using-azure-devops-and-appcenter-en.html
+  # https://docs.microsoft.com/en-us/azure/devops/pipelines/apps/windows/universal?view=azure-devops&tabs=vsts
+
 trigger:
   branches:
     include:
@@ -29,16 +33,8 @@ variables:
 - group: code-signing
 - name: solution
   value: '**/*.sln'
-- name: deploymentProjectFile
-  value: '**/*.wapproj'
-- name: kioskClientProjectFile
-  value: '**/KioskClient.csproj'
-- name: kioskClientDeploymentProjectFile
-  value: '**/KioskClientDeployment.wapproj'
 - name: buildConfiguration
   value: 'Release'
-- name: buildPlatform
-  value: 'x86|x64|ARM'
 - name: appxPackageDir
   value: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
@@ -103,7 +99,7 @@ steps:
   displayName: 'Publish Artifact: Kiosk Client'
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
-    ArtifactName: "Kiosk Client - $(Build.SourceBranch)"
+    ArtifactName: "Kiosk Client"
 
 - task: AppCenterDistribute@3
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
