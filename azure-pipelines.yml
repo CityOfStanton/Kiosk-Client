@@ -8,13 +8,19 @@ trigger:
     include:
     - main
     - develop
+    - rel/*
   paths:
     exclude:
       - '**/*.md'
 
 pr:
-  - main
-  - develop
+  branches:
+    include:
+    - main
+    - develop
+    - rel/*
+    exclude:
+      - '**/*.md'
 
 pool:
   vmImage: 'windows-latest'
@@ -67,91 +73,24 @@ steps:
       $store.Add($cert)
       $store.Close()
 
-# - task: VSBuild@1
-#   displayName: 'Build Kiosk Client (x86)'
-#   inputs:
-#     platform: 'x86'
-#     clean: false
-#     solution: '$(kioskClientProjectFile)'
-#     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
-#                   /Consoleloggerparameters:verbosity=minimal'
-
-# - task: VSBuild@1
-#   displayName: 'Build Kiosk Client (x64)'
-#   inputs:
-#     platform: 'x64'
-#     clean: false
-#     solution: '$(kioskClientProjectFile)'
-#     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
-#                   /Consoleloggerparameters:verbosity=minimal'
-
-# - task: VSBuild@1
-#   displayName: 'Build Kiosk Client Deployment'
-#   inputs:
-#     clean: false
-#     solution: '$(kioskClientDeploymentProjectFile)'
-#     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
-#                   /Consoleloggerparameters:verbosity=minimal'
-
-# - task: VSBuild@1
-#   displayName: 'Build Kiosk Client (ARM)'
-#   inputs:
-#     platform: 'ARM'
-#     clean: true
-#     solution: '$(kioskClientProjectFile)'
-#     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/Fileloggerparameters:verbosity=quiet
-#                   /Consoleloggerparameters:verbosity=minimal'
-
-# - task: VSBuild@1
-#   displayName: 'Build Solution'
-#   inputs:
-#     solution: '$(solution)'
-#     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/p:platform=x64 /p:platform=x86
-#                   /p:AppxBundlePlatforms="x86|x64"
-#                   /p:AppxPackageDir="$(appxPackageDir)"
-#                   /p:AppxPackageSigningEnabled=true
-#                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-#                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-#                   /p:PackageCertificatePassword="$(signingCert.password)"'
-
-- task: MSBuild@1
+- task: VSBuild@1
   displayName: 'Package Kiosk Client'
   inputs:
     solution: '$(solution)'
     msbuildArchitecture: 'x86'
     configuration: '$(buildConfiguration)'
     clean: false
-    msbuildArguments: '/m
-                      /p:platform=x64 /p:platform=x86
-                      /p:AppxBundlePlatforms="x86"
-                      /Fileloggerparameters:verbosity=quiet
-                      /Consoleloggerparameters:verbosity=minimal
-                      /p:AppxPackageDir="$(appxPackageDir)"
-                      /p:AppxPackageSigningEnabled=true
-                      /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-                      /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-                      /p:PackageCertificatePassword="$(signingCert.password)"
-                      -nodeReuse:false'
-
-# - task: VSBuild@1
-#   displayName: 'Package Kiosk Client'
-#   inputs:
-#     platform: 'x86'
-#     solution: '$(solution)'
-#     configuration: '$(buildConfiguration)'
-#     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"
-#                   /p:AppxPackageDir="$(appxPackageDir)"
-#                   /p:AppxBundle=Always
-#                   /p:UapAppxPackageBuildMode=StoreUpload
-#                   /p:AppxPackageSigningEnabled=true
-#                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
-#                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
-#                   /p:PackageCertificatePassword="$(signingCert.password)"'
+    msbuildArgs: '/m
+                  /p:platform=x64 /p:platform=x86
+                  /p:AppxBundlePlatforms="x86"
+                  /Fileloggerparameters:verbosity=quiet
+                  /Consoleloggerparameters:verbosity=minimal
+                  /p:AppxPackageDir="$(appxPackageDir)"
+                  /p:AppxPackageSigningEnabled=true
+                  /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
+                  /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
+                  /p:PackageCertificatePassword="$(signingCert.password)"
+                  -nodeReuse:false'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
@@ -164,7 +103,7 @@ steps:
   displayName: 'Publish Artifact: Kiosk Client'
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
-    ArtifactName: "Kiosk Client - $(variables['Build.SourceBranch'])"
+    ArtifactName: "Kiosk Client - $(Build.SourceBranch)"
 
 - task: AppCenterDistribute@3
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
