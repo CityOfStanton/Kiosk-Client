@@ -82,6 +82,7 @@ steps:
                   /Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal
                   /p:AppxPackageDir="$(appxPackageDir)"
+                  /p:UapAppxPackageBuildMode=StoreUpload
                   /p:AppxPackageSigningEnabled=true
                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
