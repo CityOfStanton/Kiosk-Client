@@ -39,8 +39,8 @@ variables:
   value: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
 steps:
+- task: NuGetToolInstaller@1
   displayName: 'Install NuGet'
-  - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2
   displayName: 'NuGet Restore'
