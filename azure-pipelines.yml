@@ -40,14 +40,16 @@ variables:
 
 steps:
 - task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
 
 - task: NuGetCommand@2
+  displayName: 'NuGet Restore'
   inputs:
     restoreSolution: '$(solution)'
 
 - task: DownloadSecureFile@1
   name: mySecureFile
-  displayName: 'Get the pfx file certificat'
+  displayName: 'Get the PFX file certificat'
   inputs:
     secureFile: '$(signingCert.secureFilePath)'
 
@@ -82,6 +84,7 @@ steps:
                   /Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal
                   /p:AppxPackageDir="$(appxPackageDir)"
+                  /p:UapAppxPackageBuildMode=StoreUpload
                   /p:AppxPackageSigningEnabled=true
                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
@@ -102,12 +105,13 @@ steps:
     ArtifactName: "Kiosk Client"
 
 - task: AppCenterDistribute@3
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  displayName: 'Depoly Release Candidate to App Center'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'main'))
   inputs:
     serverEndpoint: 'VSAC'
     appSlug: '$(appSlug)'
     appFile: '$(build.artifactstagingdirectory)\AppxPackages\*.appxupload'
     releaseNotesOption: 'input'
-    releaseNotesInput: 'New release!'
+    releaseNotesInput: 'New Release Candidate build!'
     destinationType: 'groups'
     distributionGroupId: '$(distributionGroupId)'
