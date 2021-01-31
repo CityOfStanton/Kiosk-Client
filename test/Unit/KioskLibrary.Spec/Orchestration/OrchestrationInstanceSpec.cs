@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using System;
 using KioskLibrary.Actions;
 using static CommonTestLibrary.TestUtils;
+using System.Threading.Tasks;
+using KioskLibrary.Helpers;
+using Moq;
+using Windows.Web.Http;
 
 namespace KioskLibrary.Spec.Orchestration
 {
@@ -58,6 +62,40 @@ namespace KioskLibrary.Spec.Orchestration
         {
             var orchestrationInstance = new OrchestrationInstance();
             Assert.IsNotNull(orchestrationInstance.Actions);
+        }
+
+        [TestMethod]
+        public async Task GetOrchestrationInstanceTest()
+        {
+            var path = new Uri($"http://{CreateRandomString()}");
+            var testInstance = new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(),
+                    new WebsiteAction()
+                },
+                CreateRandomNumber(),
+                OrchestrationSource.URL,
+                LifecycleBehavior.SingleRun,
+                Ordering.Sequential
+            );
+            var testInstanceAsString = SerializationHelper.Serialize(testInstance);
+
+            var responseMessage = new HttpResponseMessage(HttpStatusCode.Ok)
+            {
+                Content = new HttpStringContent(testInstanceAsString)
+            };
+
+            var mockHttpClient = new Mock<IHttpHelper>();
+            mockHttpClient
+                .Setup(x => x.GetAsync(It.Is<Uri>(p => p == path)))
+                .Returns(Task.FromResult(responseMessage));
+
+            var result = await OrchestrationInstance.GetOrchestrationInstance(path, mockHttpClient.Object);
+
+            var resultAsString = SerializationHelper.Serialize(result);
+
+            Assert.AreEqual(testInstanceAsString, resultAsString);
         }
     }
 }
