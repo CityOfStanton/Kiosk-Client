@@ -17,6 +17,7 @@ using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
+using KioskLibrary.Helpers;
 
 namespace KioskLibrary
 {
@@ -30,6 +31,8 @@ namespace KioskLibrary
         private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
+        private IHttpHelper _httpHelper;
+
 
         /// <summary>
         /// The delegate for receiving <see cref="Orchestrator.NextAction" /> events
@@ -91,9 +94,19 @@ namespace KioskLibrary
         }
 
         /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
+        public Orchestrator(IHttpHelper httpHelper)
+            : this()
+        {
+            _httpHelper = httpHelper;
+        }
+
+        /// <summary>
         /// Gets the updated <see cref="OrchestrationInstance" /> from the web
         /// </summary>
-        public static async Task GetNextOrchestration()
+        public static async Task GetNextOrchestration(IHttpHelper httpHelper)
         {
             // Get the Settings URI
             var currentOrchestrationURI = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
@@ -101,7 +114,7 @@ namespace KioskLibrary
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
                 // Get orchestration from Settings URI
-                var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI));
+                var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI), httpHelper);
 
                 // Save to the 'NextOrchestration'
                 ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
@@ -118,7 +131,7 @@ namespace KioskLibrary
 
             _durationCounter = 0;
 
-            _orchestrationInstance = await LoadOrchestration(orchestrationSource);
+            _orchestrationInstance = await LoadOrchestration(orchestrationSource, _httpHelper);
 
             if (_orchestrationInstance != null)
             {
@@ -164,7 +177,7 @@ namespace KioskLibrary
                 _durationtime.Stop();
         }
 
-        private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource)
+        private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper)
         {
             OrchestrationInstance toReturn = null;
 
@@ -175,7 +188,7 @@ namespace KioskLibrary
                 var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
                 if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
-                        toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
+                        toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri, httpHelper); // Pull a new instace from the URL
             }
 
             return toReturn;

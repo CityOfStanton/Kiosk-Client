@@ -127,6 +127,7 @@
     <Compile Include="Common\Constants.cs" />
     <Compile Include="Common\OrchestrationSource.cs" />
     <Compile Include="Helpers\HttpHelper.cs" />
+    <Compile Include="Helpers\IHttpHelper.cs" />
     <Compile Include="Helpers\SerializationHelper.cs" />
     <Compile Include="Orchestration\LifecycleBehavior.cs" />
     <Compile Include="Common\Ordering.cs" />

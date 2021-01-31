@@ -8,6 +8,7 @@
 
 using KioskLibrary;
 using KioskLibrary.Common;
+using KioskLibrary.Helpers;
 using KioskLibrary.Storage;
 using System;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace OrchestrationPollingManager
         {
             var deferral = taskInstance.GetDeferral();
 
-            await Orchestrator.GetNextOrchestration();
+            await Orchestrator.GetNextOrchestration(new HttpHelper());
 
             deferral.Complete();
         }
