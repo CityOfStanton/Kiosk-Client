@@ -52,7 +52,7 @@ namespace KioskLibrary.Orchestration
         /// <summary>
         /// A list of <see cref="Action" />s to process
         /// </summary>
-        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Auto)] 
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Auto)]
         public List<Action> Actions { get; set; }
 
         /// <summary>
@@ -81,13 +81,13 @@ namespace KioskLibrary.Orchestration
         /// Gets the <see cref="OrchestrationInstance" /> from the specified <paramref name="uri" />
         /// </summary>
         /// <param name="uri">The URI where the <see cref="OrchestrationInstance" /> is stored</param>
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
         /// <returns>An <see cref="OrchestrationInstance" /> if the it could be retrieved, else <see cref="null"/></returns>
-        public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri)
+        public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri, IHttpHelper httpHelper)
         {
             try
             {
-                var client = new HttpClient();
-                var result = await client.GetAsync(uri);
+                var result = await httpHelper.GetAsync(uri);
                 if (result.StatusCode == HttpStatusCode.Ok)
                     return ConvertStringToOrchestrationInstance(await result.Content.ReadAsStringAsync());
             }

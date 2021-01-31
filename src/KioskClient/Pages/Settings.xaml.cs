@@ -34,8 +34,9 @@ namespace KioskLibrary.Pages
     /// </summary>
     public sealed partial class Settings : Page
     {
-        private SettingsViewModel State { get; set; }
-        private SettingsPageArguments currentPageArguments = null;
+        private SettingsViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
+        private SettingsPageArguments _currentPageArguments;
+        private readonly IHttpHelper _httpHelper;
 
         /// <summary>
         /// Constructor
@@ -58,6 +59,16 @@ namespace KioskLibrary.Pages
         }
 
         /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
+        public Settings(IHttpHelper httpHelper)
+                    : this()
+        {
+            _httpHelper = httpHelper;
+        }
+
+        /// <summary>
         /// Handles the PropertyChanged event for anything in the <see cref="State" />
         /// </summary>
         /// <param name="sender">The sender</param>
@@ -74,11 +85,11 @@ namespace KioskLibrary.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
-            currentPageArguments = e.Parameter as SettingsPageArguments;
+            _currentPageArguments = e.Parameter as SettingsPageArguments;
 
-            if (currentPageArguments != null)
-                if (currentPageArguments.Log != null)
-                    foreach (var error in currentPageArguments.Log)
+            if (_currentPageArguments != null)
+                if (_currentPageArguments.Log != null)
+                    foreach (var error in _currentPageArguments.Log)
                         Log(error);
         }
 
@@ -99,13 +110,13 @@ namespace KioskLibrary.Pages
             State.IsUriLoading = true;
             OrchestrationInstance tmpOrchestrationInstance;
 
-            (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
+            (bool isValid, string message) = await _httpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
             State.PathValidationMessage = message;
             State.IsUriPathVerified = isValid;
 
             if (isValid)
             {
-                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath));
+                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath), _httpHelper);
                 await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
             }
             else

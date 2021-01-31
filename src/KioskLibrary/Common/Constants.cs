@@ -13,6 +13,8 @@ namespace KioskLibrary.Common
     /// </summary>
     public class Constants
     {
+        public static string ValidURIMessage = "URL is valid!";
+
         /// <summary>
         /// Keys used for storing objects in local application storage
         /// </summary>
@@ -25,7 +27,6 @@ namespace KioskLibrary.Common
             public static string SettingsViewModel = "#SettingsViewModel";
             public static string PollingInterval = "#PollingInterval";
             public static string EndOrchestration = "#EndOrchestration";
-
         }
     }
 }
