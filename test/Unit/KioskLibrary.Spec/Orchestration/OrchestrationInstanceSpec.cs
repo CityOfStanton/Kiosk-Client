@@ -10,13 +10,14 @@ using System.Threading.Tasks;
 using KioskLibrary.Helpers;
 using Moq;
 using Windows.Web.Http;
+using Windows.UI.Xaml.Media;
 
 namespace KioskLibrary.Spec.Orchestration
 {
     [TestClass]
     public class OrchestrationInstanceSpec
     {
-        public static IEnumerable<object[]> GetConstructorTestData()
+        public static IEnumerable<object[]> ConstructorTestData()
         {
             var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
             var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
@@ -24,7 +25,7 @@ namespace KioskLibrary.Spec.Orchestration
             var r = new Random();
 
             yield return new object[] {
-                new List<Action>() 
+                new List<Action>()
                 {
                     new ImageAction(),
                     new WebsiteAction()
@@ -77,8 +78,111 @@ namespace KioskLibrary.Spec.Orchestration
             };
         }
 
+        public static IEnumerable<object[]> ValidateAsyncTestData()
+        {
+            var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
+            var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
+            var orderingOptions = Enum.GetValues(typeof(Ordering));
+            var stretchOptions = Enum.GetValues(typeof(Stretch));
+            var r = new Random();
+            var mockHttpHelper = new Mock<IHttpHelper>();
+            var validPath = $"http://{CreateRandomString()}";
+            var invalidPath1 = $"http://{CreateRandomString()}";
+            var invalidPath2 = $"http://{CreateRandomString()}";
+            var invalidMessage1 = CreateRandomString();
+            var invalidMessage2 = CreateRandomString();
+
+            mockHttpHelper
+                .Setup(x => x.ValidateURI(It.Is<string>(u => u == validPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
+                .Returns(Task.FromResult((true, "")));
+
+            mockHttpHelper
+                .Setup(x => x.ValidateURI(It.Is<string>(u => u == invalidPath1), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
+                .Returns(Task.FromResult((false, invalidMessage1)));
+
+            mockHttpHelper
+                .Setup(x => x.ValidateURI(It.Is<string>(u => u == invalidPath2), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
+                .Returns(Task.FromResult((false, invalidMessage2)));
+
+            var orchestrationInstance = new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
+                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
+                },
+                30,
+                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
+                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
+                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+
+            var orchestrationInstanceWithInvalidPollingInterval = new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
+                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
+                },
+                5,
+                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
+                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
+                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+
+            var orchestrationInstanceWithInvalidActions = new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
+                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
+                },
+                30,
+                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
+                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
+                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+
+            var orchestrationInstanceWithInvalidPollingIntervalAndActions = new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
+                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
+                },
+                5,
+                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
+                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
+                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+
+            yield return new object[] {
+                orchestrationInstance,
+                true,
+                new List<string>()
+            };
+
+            yield return new object[] {
+                orchestrationInstanceWithInvalidPollingInterval,
+                false,
+                new List<string>() { Constants.ValidationMessages.InvalidPollingMessage }
+            };
+
+            yield return new object[] {
+                orchestrationInstanceWithInvalidActions,
+                false,
+                new List<string>()
+                {
+                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {invalidMessage2}"
+                }
+            };
+
+            yield return new object[] {
+                orchestrationInstanceWithInvalidPollingIntervalAndActions,
+                false,
+                new List<string>()
+                {
+                    Constants.ValidationMessages.InvalidPollingMessage,
+                    $"{orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions[0].Name}: {invalidMessage1}",
+                    $"{orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions[1].Name}: {invalidMessage2}"}
+            };
+        }
+
         [DataTestMethod]
-        [DynamicData(nameof(GetConstructorTestData), DynamicDataSourceType.Method)]
+        [DynamicData(nameof(ConstructorTestData), DynamicDataSourceType.Method)]
         public void ConstructorTest(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
         {
             var orchestrationInstance = new OrchestrationInstance(actions, pollingInterval, orchestrationSource, lifecycle, order);
@@ -148,6 +252,18 @@ namespace KioskLibrary.Spec.Orchestration
         {
             var result = OrchestrationInstance.ConvertStringToOrchestrationInstance(serializedInstance);
             TestPropertiesForEquality(expectedInstance, result);
+        }
+
+        [DataTestMethod]
+        [DynamicData(nameof(ValidateAsyncTestData), DynamicDataSourceType.Method)]
+        public async Task ValidateAsyncTest(OrchestrationInstance orchestrationInstance, bool isValid, List<string> errors)
+        {
+            var (IsValid, Errors) = await orchestrationInstance.ValidateAsync();
+
+            Assert.AreEqual(isValid, IsValid, $"The validity of the instance is {isValid}");
+            Assert.AreEqual(errors.Count, Errors.Count, $"The number of errors is {errors.Count}");
+            foreach (var error in errors)
+                Assert.IsTrue(Errors.Contains(error), $"The validation result contains '{error}'");
         }
     }
 }

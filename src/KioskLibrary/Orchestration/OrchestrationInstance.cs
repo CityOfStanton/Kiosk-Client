@@ -131,12 +131,12 @@ namespace KioskLibrary.Orchestration
         /// Validates this <see cref="OrchestrationInstance" />
         /// </summary>
         /// <returns>A boolean indicating whether or not this <see cref="OrchestrationInstance" /> is valid as well as a list of errors (if validation fails)</returns>
-        public async Task<(bool, List<string>)> ValidateAsync()
+        public async Task<(bool IsValid, List<string> Errors)> ValidateAsync()
         {
             var errors = new List<string>();
 
             if (PollingIntervalMinutes < 15)
-                errors.Add("OrchestrationInstance: The polling interval cannot be less than 15 minutes.");
+                errors.Add(Constants.ValidationMessages.InvalidPollingMessage);
 
             if (Actions != null)
                 foreach (var a in Actions)

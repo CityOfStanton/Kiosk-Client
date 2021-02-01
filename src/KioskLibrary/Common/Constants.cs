@@ -13,7 +13,11 @@ namespace KioskLibrary.Common
     /// </summary>
     public class Constants
     {
-        public static string ValidURIMessage = "URL is valid!";
+        public class ValidationMessages
+        {
+            public static string ValidURIMessage = "URL is valid!";
+            public static string InvalidPollingMessage = "OrchestrationInstance: The polling interval cannot be less than 15 minutes.";
+        }
 
         /// <summary>
         /// Keys used for storing objects in local application storage

@@ -41,14 +41,14 @@ namespace KioskLibrary.Helpers
         public virtual async Task<HttpResponseMessage> GetAsync(Uri uri) => await _httpClient.GetAsync(uri);
                 
         /// <inheritDoc />
-        public virtual async Task<(bool, string)> ValidateURI(string settingsUri, HttpStatusCode expectedResult)
+        public virtual async Task<(bool IsValid, string Message)> ValidateURI(string settingsUri, HttpStatusCode expectedResult)
         {
             try
             {
                 var uri = new Uri(settingsUri);
                 var result = await GetAsync(uri);
 
-                return (result.StatusCode == expectedResult, Constants.ValidURIMessage);
+                return (result.StatusCode == expectedResult, Constants.ValidationMessages.ValidURIMessage);
             }
             catch (Exception ex)
             {

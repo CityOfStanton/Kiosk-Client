@@ -27,6 +27,6 @@ namespace KioskLibrary.Helpers
         /// <param name="settingsUri">The settings URI</param>
         /// <param name="expectedResult">The expected result</param>
         /// <returns>A boolean indicating whether or nor the validation succeeded as well as a corresponding message</returns>
-        Task<(bool, string)> ValidateURI(string settingsUri, HttpStatusCode expectedResult);
+        Task<(bool IsValid, string Message)> ValidateURI(string settingsUri, HttpStatusCode expectedResult);
     }
 }
