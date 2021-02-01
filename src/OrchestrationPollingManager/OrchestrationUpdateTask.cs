@@ -23,7 +23,7 @@ namespace OrchestrationPollingManager
     /// </summary>
     public sealed class OrchestrationUpdateTask : IBackgroundTask
     {
-        private static string _taskName = "OrchestrationInstanceUpdateTask";
+        private static readonly string _taskName = "OrchestrationInstanceUpdateTask";
 
         /// <summary>
         /// The method called by the background worker framework
@@ -56,9 +56,11 @@ namespace OrchestrationPollingManager
             if (pollingInterval > 0)
             {
                 await BackgroundExecutionManager.RequestAccessAsync();
-                var btb = new BackgroundTaskBuilder();
-                btb.Name = _taskName;
-                btb.TaskEntryPoint = typeof(OrchestrationUpdateTask).FullName;
+                var btb = new BackgroundTaskBuilder
+                {
+                    Name = _taskName,
+                    TaskEntryPoint = typeof(OrchestrationUpdateTask).FullName
+                };
                 var tt = new TimeTrigger(Convert.ToUInt32(pollingInterval), false);
                 btb.SetTrigger(tt);
                 btb.Register();

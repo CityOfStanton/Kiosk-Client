@@ -91,24 +91,6 @@ steps:
                   /p:PackageCertificatePassword="$(signingCert.password)"
                   -nodeReuse:false'
 
-- task: VSTest@2
-  displayName: 'Run Tests'
-  inputs:
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      test\**\*.appx
-      test\**\*.appxrecipe
-    searchFolder: '$(System.DefaultWorkingDirectory)'
-    codeCoverageEnabled: true
-    testRunTitle: 'Run All Tests'
-    
-- task: PublishTestResults@2
-  displayName: 'Publish Tests'
-  inputs:
-    testResultsFormat: 'VSTest'
-    testResultsFiles: '**/TEST-*.xml'
-    testRunTitle: 'Publish Test Results'
-
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
   inputs:
@@ -121,6 +103,27 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
     ArtifactName: "Kiosk Client"
+
+- task: VSTest@2
+  displayName: 'Run Tests'
+  inputs:
+    uiTests: false
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **\Release\**Spec**.appxrecipe
+      **\Release\**Test**.appxrecipe
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    codeCoverageEnabled: true
+    testRunTitle: 'Run All Tests'
+
+- task: PublishTestResults@2
+  displayName: 'Publish Tests'
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/TEST-*.xml'
+    testRunTitle: 'Publish Test Results'
 
 - task: AppCenterDistribute@3
   displayName: 'Depoly Release Candidate to App Center'
