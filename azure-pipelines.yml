@@ -72,7 +72,7 @@ steps:
       $store.Close()
 
 - task: VSBuild@1
-  displayName: 'Package Kiosk Client'
+  displayName: 'Build Kiosk Client'
   inputs:
     solution: '$(solution)'
     msbuildArchitecture: 'x86'
@@ -96,9 +96,8 @@ steps:
   inputs:
     testSelector: 'testAssemblies'
     testAssemblyVer2: |
-      **\*test*.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
+      test\**\*.appx
+      test\**\*.appxrecipe
     searchFolder: '$(System.DefaultWorkingDirectory)'
     codeCoverageEnabled: true
     testRunTitle: 'Run All Tests'
