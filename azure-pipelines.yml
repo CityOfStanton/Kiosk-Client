@@ -91,6 +91,25 @@ steps:
                   /p:PackageCertificatePassword="$(signingCert.password)"
                   -nodeReuse:false'
 
+- task: VSTest@2
+  displayName: 'Run Tests'
+  inputs:
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **\*test*.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    codeCoverageEnabled: true
+    testRunTitle: 'Run All Tests'
+    
+- task: PublishTestResults@2
+  displayName: 'Publish Tests'
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/TEST-*.xml'
+    testRunTitle: 'Publish Test Results'
+
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
   inputs:
