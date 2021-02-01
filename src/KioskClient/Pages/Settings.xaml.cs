@@ -11,8 +11,6 @@ using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml.Serialization;
 using Windows.Storage.Pickers;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -262,7 +260,7 @@ namespace KioskLibrary.Pages
             {
                 OrchestrationInstance orchestration = ComposeExampleOrchestration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = SerializationHelper.Serialize(orchestration);
+                var fileText = SerializationHelper.JSONSerialize(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
@@ -282,11 +280,8 @@ namespace KioskLibrary.Pages
             {
                 OrchestrationInstance orchestration = ComposeExampleOrchestration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var sb = new StringBuilder();
-                var sw = new StringWriter(sb);
-                new XmlSerializer(typeof(OrchestrationInstance)).Serialize(sw, orchestration);
-                sw.Close();
-                await Windows.Storage.FileIO.WriteTextAsync(file, sb.ToString());
+                var serializedString = SerializationHelper.XMLSerialize<OrchestrationInstance>(orchestration);
+                await Windows.Storage.FileIO.WriteTextAsync(file, serializedString);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
         }

@@ -35,7 +35,7 @@ namespace KioskLibrary.Storage
                 if (typeof(T).IsPrimitive)
                     return (T)localSettings.Values[setting];
                 else
-                    return SerializationHelper.Deserialize<T>(localSettings.Values[setting].ToString());
+                    return SerializationHelper.JSONDeserialize<T>(localSettings.Values[setting].ToString());
             return default;
         }
 
@@ -52,7 +52,7 @@ namespace KioskLibrary.Storage
                 if (toSave.GetType().IsPrimitive)
                     localSettings.Values[setting] = toSave;
                 else
-                    localSettings.Values[setting] = SerializationHelper.Serialize(toSave);
+                    localSettings.Values[setting] = SerializationHelper.JSONSerialize(toSave);
         }
 
         /// <summary>

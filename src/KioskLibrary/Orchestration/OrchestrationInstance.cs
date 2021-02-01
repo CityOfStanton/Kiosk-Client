@@ -106,7 +106,7 @@ namespace KioskLibrary.Orchestration
             try
             {
                 // Try to parse the text as JSON
-                return SerializationHelper.Deserialize<OrchestrationInstance>(orchestrationInstanceAsString);
+                return SerializationHelper.JSONDeserialize<OrchestrationInstance>(orchestrationInstanceAsString);
             }
             catch (JsonException)
             {
@@ -114,7 +114,7 @@ namespace KioskLibrary.Orchestration
                 using var sr = new StringReader(orchestrationInstanceAsString);
                 try
                 {
-                    return new XmlSerializer(typeof(OrchestrationInstance)).Deserialize(sr) as OrchestrationInstance;
+                    return SerializationHelper.XMLDeserialize<OrchestrationInstance>(sr);
                 }
                 catch { }
                 finally
@@ -122,6 +122,7 @@ namespace KioskLibrary.Orchestration
                     sr.Close();
                 }
             }
+            catch (ArgumentNullException) { return null; }
 
             return null;
         }

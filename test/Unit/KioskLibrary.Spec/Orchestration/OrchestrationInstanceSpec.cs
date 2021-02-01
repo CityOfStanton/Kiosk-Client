@@ -44,6 +44,39 @@ namespace KioskLibrary.Spec.Orchestration
             };
         }
 
+        public static IEnumerable<object[]> ConvertStringToOrchestrationInstanceTestData()
+        {
+            var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
+            var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
+            var orderingOptions = Enum.GetValues(typeof(Ordering));
+            var r = new Random();
+            var orchestrationInstance = new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(),
+                    new WebsiteAction()
+                },
+                CreateRandomNumber(),
+                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
+                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
+                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+
+            yield return new object[] {
+                orchestrationInstance,
+                SerializationHelper.JSONSerialize(orchestrationInstance)
+            };
+
+            yield return new object[] {
+                orchestrationInstance,
+                SerializationHelper.XMLSerialize(orchestrationInstance)
+            };
+
+            yield return new object[] {
+                null,
+                ""
+            };
+        }
+
         [DataTestMethod]
         [DynamicData(nameof(GetConstructorTestData), DynamicDataSourceType.Method)]
         public void ConstructorTest(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
@@ -79,7 +112,7 @@ namespace KioskLibrary.Spec.Orchestration
                 LifecycleBehavior.SingleRun,
                 Ordering.Sequential
             );
-            var testInstanceAsString = SerializationHelper.Serialize(testInstance);
+            var testInstanceAsString = SerializationHelper.JSONSerialize(testInstance);
 
             var responseMessage = new HttpResponseMessage(HttpStatusCode.Ok)
             {
@@ -93,9 +126,28 @@ namespace KioskLibrary.Spec.Orchestration
 
             var result = await OrchestrationInstance.GetOrchestrationInstance(path, mockHttpClient.Object);
 
-            var resultAsString = SerializationHelper.Serialize(result);
+            TestPropertiesForEquality(testInstance, result);
+        }
 
-            Assert.AreEqual(testInstanceAsString, resultAsString);
+        [TestMethod]
+        public async Task GetOrchestrationInstanceAfterExceptionTest()
+        {
+            var mockHttpClient = new Mock<IHttpHelper>();
+            mockHttpClient
+                .Setup(x => x.GetAsync(It.IsAny<Uri>()))
+                .ThrowsAsync(new Exception());
+
+            var result = await OrchestrationInstance.GetOrchestrationInstance(new Uri($"http://{CreateRandomString()}"), mockHttpClient.Object);
+
+            Assert.IsNull(result);
+        }
+
+        [DataTestMethod]
+        [DynamicData(nameof(ConvertStringToOrchestrationInstanceTestData), DynamicDataSourceType.Method)]
+        public void ConvertStringToOrchestrationInstanceTest(OrchestrationInstance expectedInstance, string serializedInstance)
+        {
+            var result = OrchestrationInstance.ConvertStringToOrchestrationInstance(serializedInstance);
+            TestPropertiesForEquality(expectedInstance, result);
         }
     }
 }
