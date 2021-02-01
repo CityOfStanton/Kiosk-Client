@@ -33,6 +33,8 @@ variables:
 - group: code-signing
 - name: solution
   value: '**/*.sln'
+- name: testConfiguration
+  value: 'Debug'
 - name: buildConfiguration
   value: 'Release'
 - name: appxPackageDir
@@ -72,7 +74,43 @@ steps:
       $store.Close()
 
 - task: VSBuild@1
-  displayName: 'Build Kiosk Client'
+  displayName: 'Build Kiosk Client: $(testConfiguration)'
+  inputs:
+    solution: '$(solution)'
+    msbuildArchitecture: 'x86'
+    configuration: '$(testConfiguration)'
+    clean: false
+    msbuildArgs: '/m
+                  /p:platform=x64 /p:platform=x86
+                  /p:AppxBundlePlatforms="x86"
+                  /Fileloggerparameters:verbosity=quiet
+                  /Consoleloggerparameters:verbosity=minimal
+                  /p:AppxPackageDir="$(appxPackageDir)"
+                  -nodeReuse:false'
+
+- task: VSTest@2
+  displayName: 'Run Tests'
+  inputs:
+    uiTests: false
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **\Release\**Spec**.appxrecipe
+      **\Release\**Test**.appxrecipe
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    codeCoverageEnabled: true
+    testRunTitle: 'Run All Tests'
+
+- task: PublishTestResults@2
+  displayName: 'Publish Tests'
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/TEST-*.xml'
+    testRunTitle: 'Publish Test Results'
+
+- task: VSBuild@1
+  displayName: 'Build Kiosk Client: $(buildConfiguration)'
   inputs:
     solution: '$(solution)'
     msbuildArchitecture: 'x86'
@@ -103,27 +141,6 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
     ArtifactName: "Kiosk Client"
-
-- task: VSTest@2
-  displayName: 'Run Tests'
-  inputs:
-    uiTests: false
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\Release\**Spec**.appxrecipe
-      **\Release\**Test**.appxrecipe
-      !**\*TestAdapter.dll
-      !**\obj\**
-    searchFolder: '$(System.DefaultWorkingDirectory)'
-    codeCoverageEnabled: true
-    testRunTitle: 'Run All Tests'
-
-- task: PublishTestResults@2
-  displayName: 'Publish Tests'
-  inputs:
-    testResultsFormat: 'VSTest'
-    testResultsFiles: '**/TEST-*.xml'
-    testRunTitle: 'Publish Test Results'
 
 - task: AppCenterDistribute@3
   displayName: 'Depoly Release Candidate to App Center'
