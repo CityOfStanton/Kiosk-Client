@@ -94,8 +94,8 @@ steps:
     uiTests: false
     testSelector: 'testAssemblies'
     testAssemblyVer2: |
-      **\Release\**Spec**.appxrecipe
-      **\Release\**Test**.appxrecipe
+      **\**Spec**.appxrecipe
+      **\**Test**.appxrecipe
       !**\*TestAdapter.dll
       !**\obj\**
     searchFolder: '$(System.DefaultWorkingDirectory)'
