@@ -80,9 +80,7 @@ namespace CommonTestLibrary
         public static void TestPropertiesForEquality(object toCompare1, object toCompare2, List<string> excludedProperties = null, bool allowEmptyGuids = false)
         {
             if (null != toCompare1)
-            {
                 CompareObjects(toCompare1, toCompare2, excludedProperties, allowEmptyGuids, false);
-            }
         }
 
         /// <summary>
@@ -95,9 +93,7 @@ namespace CommonTestLibrary
         public static void TestPropertiesForInequality(object toCompare1, object toCompare2, List<string> excludedProperties = null, bool allowEmptyGuids = false)
         {
             if (null != toCompare1)
-            {
                 CompareObjects(toCompare1, toCompare2, excludedProperties, allowEmptyGuids, true);
-            }
         }
 
         private static void CompareObjects(object toCompare1, object toCompare2, List<string> excludedProperties = null, bool allowEmptyGuids = false, bool executedNegativeComparison = false)
@@ -106,39 +102,38 @@ namespace CommonTestLibrary
 
             foreach (PropertyInfo p in properties)
             {
-                if (excludedProperties != null)
-                {
-                    if (!excludedProperties.Contains(p.Name))
-                    {
-                        CompareObjects(toCompare1, toCompare2, allowEmptyGuids, executedNegativeComparison, p);
-                    }
-                }
-                else
-                {
-                    CompareObjects(toCompare1, toCompare2, allowEmptyGuids, executedNegativeComparison, p);
-                }
-            }
-        }
+                var doComparrison = false;
 
-        private static void CompareObjects(object toCompare1, object toCompare2, bool allowEmptyGuids, bool executedNegativeComparison, PropertyInfo p)
-        {
-            if (p.PropertyType == typeof(string) || p.PropertyType == typeof(int) || p.PropertyType == typeof(Guid))
-            {
-                if (p.CanRead && p.CanWrite)
+                if (excludedProperties == null)
+                    doComparrison = true;
+                else if (!excludedProperties.Contains(p.Name))
+                    doComparrison = true;
+
+                if (doComparrison && p.CanRead && p.CanWrite)
                 {
                     var v1 = p.GetValue(toCompare1, null);
                     var v2 = p.GetValue(toCompare2, null);
 
-                    if (!allowEmptyGuids && p.PropertyType == typeof(Guid))
+                    if (p.PropertyType.IsPrimitive)
                     {
-                        Assert.AreNotEqual(Guid.Empty, v1);
-                        Assert.AreNotEqual(Guid.Empty, v2);
-                    }
+                        if (!allowEmptyGuids && p.PropertyType == typeof(Guid))
+                        {
+                            Assert.AreNotEqual(Guid.Empty, v1, "First property is not an empty GUID.");
+                            Assert.AreNotEqual(Guid.Empty, v2, "Second property is not an empty GUID.");
+                        }
 
-                    if (executedNegativeComparison)
-                        Assert.AreNotEqual(v1, v2);
-                    else
-                        Assert.AreEqual(v1, v2);
+                        if (executedNegativeComparison)
+                            Assert.AreNotEqual(v1, v2, "Both properties are not equal.");
+                        else
+                            Assert.AreEqual(v1, v2, "Both properties are equal.");
+                    }
+                    else if (p.PropertyType.IsArray)
+                    {
+                        Assert.AreEqual((v1 as object[]).Length, (v2 as object[]).Length, "Both arrays are of the same length");
+
+                        for (int i = 0; i < (v1 as object[]).Length; i++)
+                            CompareObjects((v1 as object[])[i], (v2 as object[])[i], excludedProperties, allowEmptyGuids, executedNegativeComparison);
+                    }
                 }
             }
         }
