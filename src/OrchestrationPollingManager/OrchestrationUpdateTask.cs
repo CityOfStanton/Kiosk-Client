@@ -33,7 +33,7 @@ namespace OrchestrationPollingManager
         {
             var deferral = taskInstance.GetDeferral();
 
-            await Orchestrator.GetNextOrchestration(new HttpHelper());
+            await Orchestrator.GetNextOrchestration(new HttpHelper(), new ApplicationStorage());
 
             deferral.Complete();
         }
@@ -51,7 +51,7 @@ namespace OrchestrationPollingManager
 
         private async static Task<bool> RegisterOrchestrationInstanceUpdaterHelper()
         {
-            var pollingInterval = ApplicationStorage.GetFromStorage<int>(Constants.ApplicationStorage.PollingInterval);
+            var pollingInterval = new ApplicationStorage().GetFromStorage<int>(Constants.ApplicationStorage.PollingInterval);
 
             if (pollingInterval > 0)
             {

@@ -138,6 +138,7 @@
     <Compile Include="Orchestration\Orchestrator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\ApplicationStorage.cs" />
+    <Compile Include="Storage\IApplicationStorage.cs" />
     <EmbeddedResource Include="Properties\KioskLibrary.rd.xml" />
   </ItemGroup>
   <ItemGroup>

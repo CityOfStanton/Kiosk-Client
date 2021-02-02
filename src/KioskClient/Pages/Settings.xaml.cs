@@ -35,6 +35,7 @@ namespace KioskLibrary.Pages
         private SettingsViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
         private SettingsPageArguments _currentPageArguments;
         private readonly IHttpHelper _httpHelper;
+        private readonly IApplicationStorage _applicationStorage;
 
         /// <summary>
         /// Constructor
@@ -43,7 +44,13 @@ namespace KioskLibrary.Pages
         {
             try
             {
-                State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
+                if (_httpHelper == null)
+                    _httpHelper = new HttpHelper();
+
+                if (_applicationStorage == null)
+                    _applicationStorage = new ApplicationStorage();
+
+                State = _applicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
 
                 if (State == null)
                     State = new SettingsViewModel();
@@ -60,10 +67,12 @@ namespace KioskLibrary.Pages
         /// Constructor
         /// </summary>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        public Settings(IHttpHelper httpHelper)
-                    : this()
+        /// <param name="applicationStorage">The <see cref="IApplicationStorage"/> to use for interacting with local application storage</param>
+        public Settings(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
+            : this()
         {
             _httpHelper = httpHelper;
+            _applicationStorage = applicationStorage;
         }
 
         /// <summary>
@@ -162,7 +171,7 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private async void Button_FileLoad_Click(object sender, RoutedEventArgs e)
+        private async void Button_FileLoad_Click(object _, RoutedEventArgs e)
         {
             var openPicker = new FileOpenPicker
             {
@@ -192,9 +201,9 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private void ButtonSave_Click(object sender, RoutedEventArgs e) => Save();
+        private void ButtonSave_Click(object _, RoutedEventArgs e) => Save();
 
-        private void ButtonStart_Click(object sender, RoutedEventArgs e)
+        private void ButtonStart_Click(object _, RoutedEventArgs e)
         {
             Save();
             Start();
@@ -202,10 +211,10 @@ namespace KioskLibrary.Pages
 
         private void Save()
         {
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationURI, State.UriPath);
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestration, State.OrchestrationInstance);
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationURI, State.UriPath);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestration, State.OrchestrationInstance);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
             Log("Orchestration saved!");
         }
 
@@ -246,7 +255,7 @@ namespace KioskLibrary.Pages
             return orchestration;
         }
 
-        private async void ButtonJSON_Click(object sender, RoutedEventArgs e)
+        private async void ButtonJSON_Click(object _, RoutedEventArgs e)
         {
             var savePicker = new FileSavePicker
             {
@@ -266,7 +275,7 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private async void ButtonXML_Click(object sender, RoutedEventArgs e)
+        private async void ButtonXML_Click(object _, RoutedEventArgs e)
         {
             var savePicker = new FileSavePicker
             {
