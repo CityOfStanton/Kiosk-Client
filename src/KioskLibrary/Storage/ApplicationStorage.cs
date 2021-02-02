@@ -18,7 +18,7 @@ namespace KioskLibrary.Storage
     public class ApplicationStorage : IApplicationStorage
     {
         /// <inheritdoc />
-        public T GetFromStorage<T>(string setting)
+        public virtual T GetFromStorage<T>(string setting)
         {
             var localSettings = ApplicationData.Current.LocalSettings;
             if (localSettings.Values[setting] != null)
@@ -30,7 +30,7 @@ namespace KioskLibrary.Storage
         }
 
         /// <inheritdoc />
-        public void SaveToStorage(string setting, object toSave)
+        public virtual void SaveToStorage(string setting, object toSave)
         {
             var localSettings = ApplicationData.Current.LocalSettings;
             if (toSave != null)
@@ -41,9 +41,9 @@ namespace KioskLibrary.Storage
         }
 
         /// <inheritdoc />
-        public void ClearItemFromStorage(string setting) => SaveToStorage(setting, null);
+        public virtual void ClearItemFromStorage(string setting) => SaveToStorage(setting, null);
 
         /// <inheritdoc />
-        public IAsyncAction ClearStorage() => ApplicationData.Current.ClearAsync();
+        public virtual IAsyncAction ClearStorage() => ApplicationData.Current.ClearAsync();
     }
 }

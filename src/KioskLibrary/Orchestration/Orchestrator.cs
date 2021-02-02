@@ -35,7 +35,7 @@ namespace KioskLibrary
         private readonly IApplicationStorage _applicationStorage;
 
         /// <summary>
-        /// The delegate for receiving <see cref="Orchestrator.NextAction" /> events
+        /// The delegate for receiving <see cref="NextAction" /> events
         /// </summary>
         /// <param name="action">The next action</param>
         public delegate void NextActionDelegate(Action action);
@@ -46,7 +46,7 @@ namespace KioskLibrary
         public event NextActionDelegate NextAction;
 
         /// <summary>
-        /// The delegate for receiving <see cref="Orchestrator.OrchestrationCancelled" /> events
+        /// The delegate for receiving <see cref="OrchestrationCancelled" /> events
         /// </summary>
         /// <param name="reason">The reason for the cancellation</param>
         public delegate void OrchestrationCancelledDelegate(string reason);
@@ -57,12 +57,12 @@ namespace KioskLibrary
         public event OrchestrationCancelledDelegate OrchestrationCancelled;
 
         /// <summary>
-        /// Delegate used for <see cref="Orchestrator.OrchestrationStarted" />
+        /// Delegate used for <see cref="OrchestrationStarted" />
         /// </summary>
         public delegate void OrchestrationStartedDelegate();
 
         /// <summary>
-        /// Delegate used for <see cref="Orchestrator.OrchestrationInvalid" />
+        /// Delegate used for <see cref="OrchestrationInvalid" />
         /// </summary>
         public delegate void OrchestrationInvalidDelegate(List<string> errors);
 

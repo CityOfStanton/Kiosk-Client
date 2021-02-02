@@ -19,49 +19,27 @@ namespace KioskLibrary.Spec.Orchestration
     {
         public static IEnumerable<object[]> ConstructorTestData()
         {
-            var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
-            var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
-            var orderingOptions = Enum.GetValues(typeof(Ordering));
-            var r = new Random();
-
+            var orchestrationInstance = CreateRandomOrchestrationInstance();
             yield return new object[] {
-                new List<Action>()
-                {
-                    new ImageAction(),
-                    new WebsiteAction()
-                },
-                CreateRandomNumber(),
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length))
+                orchestrationInstance.Actions,
+                orchestrationInstance.PollingIntervalMinutes,
+                orchestrationInstance.OrchestrationSource,
+                orchestrationInstance.Lifecycle,
+                orchestrationInstance.Order
             };
 
             yield return new object[] {
                 null,
                 0,
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length))
+                orchestrationInstance.OrchestrationSource,
+                orchestrationInstance.Lifecycle,
+                orchestrationInstance.Order
             };
         }
 
         public static IEnumerable<object[]> ConvertStringToOrchestrationInstanceTestData()
         {
-            var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
-            var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
-            var orderingOptions = Enum.GetValues(typeof(Ordering));
-            var r = new Random();
-            var orchestrationInstance = new OrchestrationInstance(
-                new List<Action>()
-                {
-                    new ImageAction(),
-                    new WebsiteAction()
-                },
-                CreateRandomNumber(),
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
-
+            var orchestrationInstance = CreateRandomOrchestrationInstance();
             yield return new object[] {
                 orchestrationInstance,
                 SerializationHelper.JSONSerialize(orchestrationInstance)
@@ -80,9 +58,6 @@ namespace KioskLibrary.Spec.Orchestration
 
         public static IEnumerable<object[]> ValidateAsyncTestData()
         {
-            var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
-            var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
-            var orderingOptions = Enum.GetValues(typeof(Ordering));
             var stretchOptions = Enum.GetValues(typeof(Stretch));
             var r = new Random();
             var mockHttpHelper = new Mock<IHttpHelper>();
@@ -104,49 +79,35 @@ namespace KioskLibrary.Spec.Orchestration
                 .Setup(x => x.ValidateURI(It.Is<string>(u => u == invalidPath2), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
                 .Returns(Task.FromResult((false, invalidMessage2)));
 
-            var orchestrationInstance = new OrchestrationInstance(
-                new List<Action>()
-                {
-                    new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
-                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
-                },
-                30,
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+            var validImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
+            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
 
-            var orchestrationInstanceWithInvalidPollingInterval = new OrchestrationInstance(
-                new List<Action>()
-                {
-                    new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
-                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
-                },
-                5,
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+            var orchestrationInstance = CreateRandomOrchestrationInstance();
+            orchestrationInstance.Actions.Clear();
+            orchestrationInstance.Actions.Add(validImageAction);
+            orchestrationInstance.Actions.Add(validWebsiteAction);
+            orchestrationInstance.PollingIntervalMinutes = 30;
 
-            var orchestrationInstanceWithInvalidActions = new OrchestrationInstance(
-                new List<Action>()
-                {
-                    new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
-                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
-                },
-                30,
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+            var orchestrationInstanceWithInvalidPollingInterval = CreateRandomOrchestrationInstance();
+            orchestrationInstanceWithInvalidPollingInterval.Actions.Clear();
+            orchestrationInstanceWithInvalidPollingInterval.Actions.Add(validImageAction);
+            orchestrationInstanceWithInvalidPollingInterval.Actions.Add(validWebsiteAction);
+            orchestrationInstanceWithInvalidPollingInterval.PollingIntervalMinutes = 5;
 
-            var orchestrationInstanceWithInvalidPollingIntervalAndActions = new OrchestrationInstance(
-                new List<Action>()
-                {
-                    new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object),
-                    new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object)
-                },
-                5,
-                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
-                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
-                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+            var invalidImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
+            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
+
+            var orchestrationInstanceWithInvalidActions = CreateRandomOrchestrationInstance();
+            orchestrationInstanceWithInvalidActions.Actions.Clear();
+            orchestrationInstanceWithInvalidActions.Actions.Add(invalidImageAction);
+            orchestrationInstanceWithInvalidActions.Actions.Add(invalidWebsiteAction);
+            orchestrationInstanceWithInvalidActions.PollingIntervalMinutes = 30;
+
+            var orchestrationInstanceWithInvalidPollingIntervalAndActions = CreateRandomOrchestrationInstance();
+            orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions.Clear();
+            orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions.Add(invalidImageAction);
+            orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions.Add(invalidWebsiteAction);
+            orchestrationInstanceWithInvalidPollingIntervalAndActions.PollingIntervalMinutes = 5;
 
             yield return new object[] {
                 orchestrationInstance,
@@ -205,17 +166,7 @@ namespace KioskLibrary.Spec.Orchestration
         public async Task GetOrchestrationInstanceTest()
         {
             var path = new Uri($"http://{CreateRandomString()}");
-            var testInstance = new OrchestrationInstance(
-                new List<Action>()
-                {
-                    new ImageAction(),
-                    new WebsiteAction()
-                },
-                CreateRandomNumber(),
-                OrchestrationSource.URL,
-                LifecycleBehavior.SingleRun,
-                Ordering.Sequential
-            );
+            var testInstance = CreateRandomOrchestrationInstance();
             var testInstanceAsString = SerializationHelper.JSONSerialize(testInstance);
 
             var responseMessage = new HttpResponseMessage(HttpStatusCode.Ok)

@@ -6,11 +6,15 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Actions;
+using KioskLibrary.Common;
+using KioskLibrary.Orchestration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Action = KioskLibrary.Actions.Action;
 
 namespace CommonTestLibrary
 {
@@ -69,6 +73,25 @@ namespace CommonTestLibrary
         /// <param name="maximum">The exclusive maximum</param>
         /// <returns>A random number</returns>
         public static int CreateRandomNumber(int minimum = int.MinValue, int maximum = int.MaxValue) { return new Random().Next(minimum, maximum); }
+
+        public static OrchestrationInstance CreateRandomOrchestrationInstance()
+        {
+            var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
+            var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
+            var orderingOptions = Enum.GetValues(typeof(Ordering));
+            var r = new Random();
+
+            return new OrchestrationInstance(
+                new List<Action>()
+                {
+                    new ImageAction(),
+                    new WebsiteAction()
+                },
+                CreateRandomNumber(),
+                (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
+                (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
+                (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));
+        }
 
         /// <summary>
         /// Compare all string, int, and Guid properties of two objects to ensure their equality

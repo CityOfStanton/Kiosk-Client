@@ -7,8 +7,6 @@
  */
 
 using Windows.Foundation;
-using Windows.Storage;
-using KioskLibrary.Helpers;
 
 namespace KioskLibrary.Storage
 {
