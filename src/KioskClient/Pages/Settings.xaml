@@ -57,7 +57,7 @@
                     </TextBlock>
                 </ScrollViewer>
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,20">
-                    <TextBlock Text="Generate Example Orcherstration File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock Text="Generate Example Orchestration File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
                     <Button x:Name="ButtonJSON" Content="JSON" Margin="20,0" Click="ButtonJSON_Click" Style="{ThemeResource ButtonRevealStyle}"/>
                     <Button x:Name="ButtonXML" Content="XML" Margin="20,0" Click="ButtonXML_Click" Style="{ThemeResource ButtonRevealStyle}" />
                 </StackPanel>
