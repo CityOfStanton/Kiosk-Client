@@ -15,7 +15,11 @@ trigger:
     - rel/*
   paths:
     exclude:
+      - 'LICENSE'
       - '**/*.md'
+      - '**/*.ai'
+      - 'logo/*.png'
+      - 'azure-pipelines.yml'
 
 pr:
   branches:
@@ -24,7 +28,11 @@ pr:
     - develop
     - rel/*
     exclude:
+      - 'LICENSE'
       - '**/*.md'
+      - '**/*.ai'
+      - 'logo/*.png'
+      - 'azure-pipelines.yml'
 
 pool:
   vmImage: 'windows-latest'
