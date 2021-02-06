@@ -68,5 +68,7 @@ namespace KioskLibrary.Actions
         {
             throw new NotImplementedException();
         }
+
+        public override string ToString() => $"{Id} | {Name}";
     }
 }

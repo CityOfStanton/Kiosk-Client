@@ -18,6 +18,7 @@ using KioskLibrary.Storage;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
 using KioskLibrary.Helpers;
+using Serilog;
 
 namespace KioskLibrary
 {
@@ -117,13 +118,19 @@ namespace KioskLibrary
         /// </summary>
         public static async Task GetNextOrchestration(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
         {
+            Log.Information("GetNextOrchestration invoked");
+
             // Get the Settings URI
             var currentOrchestrationURI = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
 
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
+                Log.Information("GetNextOrchestration - currentOrchestrationURI: {uri}", currentOrchestrationURI);
+
                 // Get orchestration from Settings URI
                 var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI), httpHelper);
+
+                Log.Information("GetNextOrchestration - nextOrchestration: {nextOrchestration}", SerializationHelper.JSONSerialize(nextOrchestration));
 
                 // Save to the 'NextOrchestration'
                 applicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
@@ -136,6 +143,8 @@ namespace KioskLibrary
         /// <returns></returns>
         public async Task StartOrchestration()
         {
+            Log.Information("StartOrchestration invoked");
+
             var orchestrationSource = _applicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.CurrentOrchestrationSource);
 
             _durationCounter = 0;
@@ -147,6 +156,8 @@ namespace KioskLibrary
                 _orchestrationInstance.OrchestrationSource = orchestrationSource;
 
                 (bool status, List<string> errors) = await _orchestrationInstance.ValidateAsync();
+
+                Log.Information("StartOrchestration - _orchestrationInstance validation: {status} | {errors}", status, errors);
 
                 if (!status)
                 {
@@ -164,7 +175,7 @@ namespace KioskLibrary
                 {
                     ApplicationView.GetForCurrentView()?.TryEnterFullScreenMode();
                 }
-                catch { }
+                catch (Exception ex) { Log.Error(ex, ex.Message); }
 
                 if (_orchestrationInstance.Actions.Any())
                 {
@@ -186,12 +197,16 @@ namespace KioskLibrary
         /// </summary>
         public void StopOrchestration()
         {
+            Log.Information("StopOrchestration - Stopping orchestration");
+
             if (_durationtimer != null)
                 _durationtimer.Start();
         }
 
         private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
         {
+            Log.Information("LoadOrchestration invoked: {source}", orchestrationSource);
+
             OrchestrationInstance toReturn = null;
 
             if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
@@ -203,6 +218,8 @@ namespace KioskLibrary
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
                         toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri, httpHelper); // Pull a new instace from the URL
             }
+
+            Log.Information("LoadOrchestration - result: {instance}", SerializationHelper.JSONSerialize(toReturn));
 
             return toReturn;
         }
@@ -226,6 +243,8 @@ namespace KioskLibrary
             var endOrchestration = _applicationStorage.GetFromStorage<bool>(Constants.ApplicationStorage.EndOrchestration);
             if (endOrchestration)
             {
+                Log.Information("EvaluateNextAction - Orchestration ending");
+
                 _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
                 StopOrchestration();
                 return;
@@ -251,6 +270,8 @@ namespace KioskLibrary
                 }
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions
+
+                Log.Information("EvaluateNextAction - Valling next action: {action}", _currentAction.ToString());
 
                 NextAction?.Invoke(_currentAction);
             }

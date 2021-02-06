@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -17,6 +17,9 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using KioskClient.Pages;
 using KioskClient.Pages.PageArguments;
+using Serilog;
+using Serilog.Formatting.Json;
+using Windows.Storage;
 
 namespace KioskLibrary
 {
@@ -36,6 +39,16 @@ namespace KioskLibrary
         public MainPage()
         {
             InitializeComponent();
+
+            var fileSizeLimit = 50 * 1024 * 1024; // 50 MB
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File(
+                    new JsonFormatter(renderMessage: true),
+                    ApplicationData.Current.LocalCacheFolder.Path + "\\log.json",
+                    fileSizeLimitBytes: fileSizeLimit,
+                    rollingInterval: RollingInterval.Day)
+                    .MinimumLevel.Verbose()
+                    .CreateLogger();
 
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp; // Remove any pre-existing Common.CommonKeyUp handlers
             Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp; // Add a single Common.CommonKeyUp handler
@@ -59,6 +72,8 @@ namespace KioskLibrary
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
+
+            Log.Information("Kiosk Client started");
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e) => _loadSettings = e.Parameter as bool?;
@@ -78,6 +93,8 @@ namespace KioskLibrary
 
         private void NextAction(Actions.Action action)
         {
+            Log.Information("Next Action called: {action}", action.ToString());
+
             Type nextPage;
 
             if (_actionToFrameMap.ContainsKey(action.GetType()))
@@ -90,11 +107,15 @@ namespace KioskLibrary
 
         private void OrchestrationInvalid(List<string> errors)
         {
+            Log.Information("OrchestrationInvalid: {errors}", errors);
+
             Frame.Navigate(typeof(Settings), new SettingsPageArguments(errors));
         }
 
         private async void OrchestrationStarted()
         {
+            Log.Information("OrchestrationStarted invoked");
+
             // Start background task to poll for next OrchestrationInstance
             await OrchestrationPollingManager.OrchestrationUpdateTask.RegisterOrchestrationInstanceUpdater();
         }
@@ -112,6 +133,8 @@ namespace KioskLibrary
 
         private void Button_Settings_Click(object sender, RoutedEventArgs e)
         {
+            Log.Information("Button_Settings_Click Clicked");
+
             _loadCompletionTime.Stop();
             Frame.Navigate(typeof(Settings));
         }
