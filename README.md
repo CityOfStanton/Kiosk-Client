@@ -16,12 +16,12 @@ A simple Universal Windows Platform (UWP) app used to display web-based content 
 ## Features
   * Remotely control the app using a web-based static file or a local file.
     * Displays images
-      * Supports most common formats such as .png and .jpg
+      * Supports most common formats such as .png and .jpg.
     * Displays websites
-      * Customizable, automatic website scrolling
-  * Set timing between actions to allow for a dynamic experience
-  * Designed for use with Windows Kiosk Mode
-  * Minimum permission requirement reduces elevation attack surface
+      * Customizable, automatic website scrolling.
+  * Set timing between actions to allow for a dynamic experience.
+  * Designed for use with Windows Kiosk Mode.
+  * Minimum permission requirement reduces elevation attack surface.
 
 ## Getting Started
 
