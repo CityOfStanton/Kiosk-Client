@@ -10,6 +10,7 @@ using KioskLibrary;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using KioskLibrary.Storage;
+using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ namespace OrchestrationPollingManager
         {
             var deferral = taskInstance.GetDeferral();
 
+            Log.Information("OrchestrationUpdateTask Run invoked");
+
             await Orchestrator.GetNextOrchestration(new HttpHelper(), new ApplicationStorage());
 
             deferral.Complete();
@@ -51,6 +54,8 @@ namespace OrchestrationPollingManager
 
         private async static Task<bool> RegisterOrchestrationInstanceUpdaterHelper()
         {
+            Log.Information("RegisterOrchestrationInstanceUpdaterHelper invoked");
+
             var pollingInterval = new ApplicationStorage().GetFromStorage<int>(Constants.ApplicationStorage.PollingInterval);
 
             if (pollingInterval > 0)

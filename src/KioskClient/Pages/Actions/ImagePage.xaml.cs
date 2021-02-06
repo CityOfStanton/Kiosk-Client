@@ -7,6 +7,8 @@
  */
 
 using KioskLibrary.Actions;
+using KioskLibrary.Helpers;
+using Serilog;
 using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -34,6 +36,9 @@ namespace KioskLibrary.Pages.Actions
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             var action = e.Parameter as ImageAction;
+
+            Log.Information("ImagePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(action));
+
             imgDisplay.Source = new BitmapImage(new Uri(action.Path));
             imgDisplay.Stretch = action.Stretch;
         }

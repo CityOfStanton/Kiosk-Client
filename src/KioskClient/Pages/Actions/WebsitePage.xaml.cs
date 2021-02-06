@@ -8,6 +8,8 @@
 
 using KioskClient.Pages;
 using KioskLibrary.Actions;
+using KioskLibrary.Helpers;
+using Serilog;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -22,7 +24,7 @@ namespace KioskLibrary.Pages.Actions
     {
         private DispatcherTimer _scrollingTimer;
         private DispatcherTimer _settingsButtonTimer;
-        private WebsiteAction _webstiteAction;
+        private WebsiteAction _websiteAction;
         private double _currentTick;
         private double _totalTicks;
         private double _webviewContentHeight;
@@ -59,18 +61,21 @@ namespace KioskLibrary.Pages.Actions
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            _webstiteAction = e.Parameter as WebsiteAction;
-            Webview_Display.Source = new Uri(_webstiteAction.Path);
+            _websiteAction = e.Parameter as WebsiteAction;
 
-            if (!_webstiteAction.ScrollInterval.HasValue || _webstiteAction.ScrollInterval.Value <= 0)
-                _webstiteAction.ScrollInterval = 1;
+            Log.Information("WebsitePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(_websiteAction));
 
-            if (_webstiteAction.AutoScroll && _webstiteAction.ScrollDuration.HasValue)
+            Webview_Display.Source = new Uri(_websiteAction.Path);
+
+            if (!_websiteAction.ScrollInterval.HasValue || _websiteAction.ScrollInterval.Value <= 0)
+                _websiteAction.ScrollInterval = 1;
+
+            if (_websiteAction.AutoScroll && _websiteAction.ScrollDuration.HasValue)
             {
                 _currentTick = 0;
-                _totalTicks = _webstiteAction.ScrollDuration.Value / _webstiteAction.ScrollInterval.Value;
+                _totalTicks = _websiteAction.ScrollDuration.Value / _websiteAction.ScrollInterval.Value;
 
-                _scrollingTimer.Interval = TimeSpan.FromSeconds(_webstiteAction.ScrollInterval.Value);
+                _scrollingTimer.Interval = TimeSpan.FromSeconds(_websiteAction.ScrollInterval.Value);
                 _scrollingTimer.Tick += _scrollingTimer_Tick;
             }
         }
@@ -81,8 +86,8 @@ namespace KioskLibrary.Pages.Actions
         {
             if (++_currentTick >= _totalTicks)
             {
-                if (_webstiteAction.ScrollResetDelay.HasValue)
-                    System.Threading.Thread.Sleep(_webstiteAction.ScrollResetDelay.Value * 1000);
+                if (_websiteAction.ScrollResetDelay.HasValue)
+                    System.Threading.Thread.Sleep(_websiteAction.ScrollResetDelay.Value * 1000);
 
                 // Reset _currentTick
                 _currentTick = 0;
