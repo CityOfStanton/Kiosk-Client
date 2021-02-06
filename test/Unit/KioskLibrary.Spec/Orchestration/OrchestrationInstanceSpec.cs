@@ -87,12 +87,14 @@ namespace KioskLibrary.Spec.Orchestration
             orchestrationInstance.Actions.Add(validImageAction);
             orchestrationInstance.Actions.Add(validWebsiteAction);
             orchestrationInstance.PollingIntervalMinutes = 30;
+            orchestrationInstance.HttpHelper = mockHttpHelper.Object;
 
             var orchestrationInstanceWithInvalidPollingInterval = CreateRandomOrchestrationInstance();
             orchestrationInstanceWithInvalidPollingInterval.Actions.Clear();
             orchestrationInstanceWithInvalidPollingInterval.Actions.Add(validImageAction);
             orchestrationInstanceWithInvalidPollingInterval.Actions.Add(validWebsiteAction);
             orchestrationInstanceWithInvalidPollingInterval.PollingIntervalMinutes = 5;
+            orchestrationInstanceWithInvalidPollingInterval.HttpHelper = mockHttpHelper.Object;
 
             var invalidImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
             var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
@@ -102,12 +104,14 @@ namespace KioskLibrary.Spec.Orchestration
             orchestrationInstanceWithInvalidActions.Actions.Add(invalidImageAction);
             orchestrationInstanceWithInvalidActions.Actions.Add(invalidWebsiteAction);
             orchestrationInstanceWithInvalidActions.PollingIntervalMinutes = 30;
+            orchestrationInstanceWithInvalidActions.HttpHelper = mockHttpHelper.Object;
 
             var orchestrationInstanceWithInvalidPollingIntervalAndActions = CreateRandomOrchestrationInstance();
             orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions.Clear();
             orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions.Add(invalidImageAction);
             orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions.Add(invalidWebsiteAction);
             orchestrationInstanceWithInvalidPollingIntervalAndActions.PollingIntervalMinutes = 5;
+            orchestrationInstanceWithInvalidPollingIntervalAndActions.HttpHelper = mockHttpHelper.Object;
 
             yield return new object[] {
                 orchestrationInstance,

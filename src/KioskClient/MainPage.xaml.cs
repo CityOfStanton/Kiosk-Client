@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -26,9 +26,9 @@ namespace KioskLibrary
     public sealed partial class MainPage : Page
     {
         private bool? _loadSettings = null;
-        private DispatcherTimer _loadCompletionTime;
-        private Orchestrator _orchestrator;
-        private Dictionary<Type, Type> _actionToFrameMap;
+        private readonly DispatcherTimer _loadCompletionTime;
+        private readonly Orchestrator _orchestrator;
+        private readonly Dictionary<Type, Type> _actionToFrameMap;
 
         /// <summary>
         /// Constructor
@@ -40,13 +40,17 @@ namespace KioskLibrary
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp; // Remove any pre-existing Common.CommonKeyUp handlers
             Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp; // Add a single Common.CommonKeyUp handler
 
-            _loadCompletionTime = new DispatcherTimer();
-            _loadCompletionTime.Interval = TimeSpan.FromSeconds(2);
-            _loadCompletionTime.Tick += _loadCompletionTime_Tick;
+            _loadCompletionTime = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            _loadCompletionTime.Tick += LoadCompletionTime_Tick;
 
-            _actionToFrameMap = new Dictionary<Type, Type>();
-            _actionToFrameMap.Add(typeof(ImageAction), typeof(ImagePage));
-            _actionToFrameMap.Add(typeof(WebsiteAction), typeof(WebsitePage));
+            _actionToFrameMap = new Dictionary<Type, Type>
+            {
+                { typeof(ImageAction), typeof(ImagePage) },
+                { typeof(WebsiteAction), typeof(WebsitePage) }
+            };
 
             _orchestrator = new Orchestrator();
             _orchestrator.OrchestrationStarted += OrchestrationStarted;
@@ -61,7 +65,7 @@ namespace KioskLibrary
 
         protected override void OnNavigatedFrom(NavigationEventArgs e) => _loadCompletionTime.Stop();
 
-        private async void _loadCompletionTime_Tick(object sender, object e)
+        private async void LoadCompletionTime_Tick(object sender, object e)
         {
             _loadCompletionTime.Stop();
             await _orchestrator.StartOrchestration();
