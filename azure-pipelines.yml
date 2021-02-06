@@ -88,13 +88,13 @@ steps:
     msbuildArchitecture: 'x86'
     configuration: '$(testConfiguration)'
     clean: false
-    msbuildArgs: '/m
+    msbuildArgs: '/m:1
                   /p:platform=x64 /p:platform=x86
                   /p:AppxBundlePlatforms="x86"
                   /Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal
                   /p:AppxPackageDir="$(appxPackageDir)"
-                  -nodeReuse:false'
+                  /nodeReuse:false'
 
 - task: VSTest@2
   displayName: 'Run Tests'
@@ -124,7 +124,7 @@ steps:
     msbuildArchitecture: 'x86'
     configuration: '$(buildConfiguration)'
     clean: false
-    msbuildArgs: '/m
+    msbuildArgs: '/m:1
                   /p:platform=x64 /p:platform=x86
                   /p:AppxBundlePlatforms="x86"
                   /Fileloggerparameters:verbosity=quiet
@@ -135,7 +135,7 @@ steps:
                   /p:PackageCertificateThumbprint="$(signingCert.thumbprint)"
                   /p:PackageCertificateKeyFile="$(mySecureFile.secureFilePath)"
                   /p:PackageCertificatePassword="$(signingCert.password)"
-                  -nodeReuse:false'
+                  /nodeReuse:false'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
