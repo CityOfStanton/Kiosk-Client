@@ -61,20 +61,28 @@ namespace KioskLibrary.Orchestration
         public OrchestrationInstance() { Actions = new List<Action>(); }
 
         /// <summary>
+        /// The HTTP helper
+        /// </summary>
+        [JsonIgnore]
+        [XmlIgnore]
+        public IHttpHelper HttpHelper { get; set; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="actions">A list of <see cref="Action" />s to process</param>
         /// <param name="pollingInterval">The interval used to check for updated versions of this <see cref="OrchestrationInstance" /></param>
         /// <param name="orchestrationSource">The source of this <see cref="OrchestrationInstance" /></param>
         /// <param name="lifecycle">The lifecycle behavior of an <see cref="OrchestrationInstance" /></param>
-        /// <param name="order">The order to iterate through the set of <see cref="OrchestrationInstance.Actions" /></param>
-        public OrchestrationInstance(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential)
+        /// <param name="order">The order to iterate through the set of <see cref="Actions" /></param>
+        public OrchestrationInstance(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential, IHttpHelper httpHelper = null)
         {
             PollingIntervalMinutes = pollingInterval;
             Actions = actions;
             Lifecycle = lifecycle;
             Order = order;
             OrchestrationSource = orchestrationSource;
+            HttpHelper = httpHelper ?? new HttpHelper();
         }
 
         /// <summary>
@@ -141,7 +149,7 @@ namespace KioskLibrary.Orchestration
             if (Actions != null)
                 foreach (var a in Actions)
                 {
-                    (bool status, string name, List<string> actionErrors) = await a.ValidateAsync();
+                    (bool status, string name, List<string> actionErrors) = await a.ValidateAsync(HttpHelper);
                     if (!status)
                         foreach (var actionError in actionErrors)
                             errors.Add($"{name}: {actionError}");

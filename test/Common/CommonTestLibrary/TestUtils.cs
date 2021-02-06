@@ -84,10 +84,16 @@ namespace CommonTestLibrary
             return new OrchestrationInstance(
                 new List<Action>()
                 {
-                    new ImageAction(),
+                    new ImageAction()
+                    {
+                        Path = $"http://{CreateRandomString()}"
+                    },
                     new WebsiteAction()
+                    {
+                        Path = $"http://{CreateRandomString()}"
+                    }
                 },
-                CreateRandomNumber(),
+                CreateRandomNumber(15),
                 (OrchestrationSource)orchestrationSourceOptions.GetValue(r.Next(orchestrationSourceOptions.Length)),
                 (LifecycleBehavior)lifecycleBehaviorOptions.GetValue(r.Next(lifecycleBehaviorOptions.Length)),
                 (Ordering)orderingOptions.GetValue(r.Next(orderingOptions.Length)));

@@ -27,7 +27,7 @@ namespace KioskLibrary
     public class Orchestrator
     {
         private OrchestrationInstance _orchestrationInstance;
-        private readonly DispatcherTimer _durationtime;
+        private readonly ITimeHelper _durationtimer;
         private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
@@ -79,7 +79,7 @@ namespace KioskLibrary
         /// <summary>
         /// Constructor
         /// </summary>
-        public Orchestrator()
+        public Orchestrator(ITimeHelper timeHelper = null)
         {
             if (_httpHelper == null)
                 _httpHelper = new HttpHelper();
@@ -87,16 +87,16 @@ namespace KioskLibrary
             if (_applicationStorage == null)
                 _applicationStorage = new ApplicationStorage();
 
+            _orchestrationSequence = new List<Action>();
+
             _orchestrationInstance = null;
             _currentAction = null;
 
             _durationCounter = 0;
 
-            _durationtime = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1.0)
-            };
-            _durationtime.Tick += Durationtime_Tick;
+            _durationtimer = timeHelper ?? new TimerHelper();
+            _durationtimer.Interval = TimeSpan.FromSeconds(1.0);
+            _durationtimer.Tick += Durationtime_Tick;
         }
 
         /// <summary>
@@ -104,10 +104,11 @@ namespace KioskLibrary
         /// </summary>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
         /// <param name="applicationStorage">The <see cref="IApplicationStorage"/> to use for interacting with local application storage</param>
-        public Orchestrator(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
-            : this()
+        /// <param name="timeHelper">The <see cref="ITimeHelper"/> to use for interacting with the <see cref="DispatcherTimer"/></param>
+        public Orchestrator(IHttpHelper httpHelper, IApplicationStorage applicationStorage, ITimeHelper timeHelper)
+            : this(timeHelper)
         {
-            _httpHelper = httpHelper; 
+            _httpHelper = httpHelper;
             _applicationStorage = applicationStorage;
         }
 
@@ -159,7 +160,11 @@ namespace KioskLibrary
 
                 OrchestrationStarted?.Invoke();
 
-                ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
+                try
+                {
+                    ApplicationView.GetForCurrentView()?.TryEnterFullScreenMode();
+                }
+                catch { }
 
                 if (_orchestrationInstance.Actions.Any())
                 {
@@ -181,8 +186,8 @@ namespace KioskLibrary
         /// </summary>
         public void StopOrchestration()
         {
-            if (_durationtime != null)
-                _durationtime.Stop();
+            if (_durationtimer != null)
+                _durationtimer.Start();
         }
 
         private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
@@ -242,7 +247,7 @@ namespace KioskLibrary
                 {
                     _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
                     _durationCounter = 0;
-                    _durationtime.Start();
+                    _durationtimer.Start();
                 }
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions
