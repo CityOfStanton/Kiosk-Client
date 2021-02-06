@@ -59,7 +59,7 @@ steps:
 
 - task: DownloadSecureFile@1
   name: mySecureFile
-  displayName: 'Get the PFX file certificat'
+  displayName: 'Get the PFX file certificate'
   inputs:
     secureFile: '$(signingCert.secureFilePath)'
 
