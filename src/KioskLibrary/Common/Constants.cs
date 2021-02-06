@@ -13,6 +13,12 @@ namespace KioskLibrary.Common
     /// </summary>
     public class Constants
     {
+        public class ValidationMessages
+        {
+            public static string ValidURIMessage = "URL is valid!";
+            public static string InvalidPollingMessage = "OrchestrationInstance: The polling interval cannot be less than 15 minutes.";
+        }
+
         /// <summary>
         /// Keys used for storing objects in local application storage
         /// </summary>
@@ -25,7 +31,6 @@ namespace KioskLibrary.Common
             public static string SettingsViewModel = "#SettingsViewModel";
             public static string PollingInterval = "#PollingInterval";
             public static string EndOrchestration = "#EndOrchestration";
-
         }
     }
 }

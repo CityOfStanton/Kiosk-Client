@@ -127,7 +127,10 @@
     <Compile Include="Common\Constants.cs" />
     <Compile Include="Common\OrchestrationSource.cs" />
     <Compile Include="Helpers\HttpHelper.cs" />
+    <Compile Include="Helpers\IHttpHelper.cs" />
+    <Compile Include="Helpers\ITimeHelper.cs" />
     <Compile Include="Helpers\SerializationHelper.cs" />
+    <Compile Include="Helpers\TimerHelper.cs" />
     <Compile Include="Orchestration\LifecycleBehavior.cs" />
     <Compile Include="Common\Ordering.cs" />
     <Compile Include="Orchestration\OrchestrationInstance.cs" />
@@ -137,6 +140,7 @@
     <Compile Include="Orchestration\Orchestrator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\ApplicationStorage.cs" />
+    <Compile Include="Storage\IApplicationStorage.cs" />
     <EmbeddedResource Include="Properties\KioskLibrary.rd.xml" />
   </ItemGroup>
   <ItemGroup>

@@ -6,6 +6,7 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Common;
 using System;
 using System.Threading.Tasks;
 using Windows.Web.Http;
@@ -15,23 +16,39 @@ namespace KioskLibrary.Helpers
     /// <summary>
     /// Helper class for HTTP related methods
     /// </summary>
-    public class HttpHelper
+    public class HttpHelper : IHttpHelper
     {
+        private readonly HttpClient _httpClient;
+
         /// <summary>
-        /// Validates that <paramref name="settingsUri" /> returns <paramref name="expectedResult" />
+        /// Constructor
         /// </summary>
-        /// <param name="settingsUri">The settings URI</param>
-        /// <param name="expectedResult">The expected result</param>
-        /// <returns>A boolean indicating whether or nor the validation succeeded as well as a corresponding message</returns>
-        public async static Task<(bool, string)> ValidateURI(string settingsUri, HttpStatusCode expectedResult)
+        public HttpHelper()
+        {
+            _httpClient = new HttpClient();
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="httpClient">The <see cref="HttpClient"/> to use for HTTP requests</param>
+        public HttpHelper(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        /// <inheritDoc />
+        public virtual async Task<HttpResponseMessage> GetAsync(Uri uri) => await _httpClient.GetAsync(uri);
+                
+        /// <inheritDoc />
+        public virtual async Task<(bool IsValid, string Message)> ValidateURI(string settingsUri, HttpStatusCode expectedResult)
         {
             try
             {
                 var uri = new Uri(settingsUri);
-                var client = new HttpClient();
-                var result = await client.GetAsync(uri);
+                var result = await GetAsync(uri);
 
-                return (result.StatusCode == expectedResult, "URL is valid!");
+                return (result.StatusCode == expectedResult, Constants.ValidationMessages.ValidURIMessage);
             }
             catch (Exception ex)
             {

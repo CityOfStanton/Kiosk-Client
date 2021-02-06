@@ -52,7 +52,7 @@ namespace KioskLibrary.Orchestration
         /// <summary>
         /// A list of <see cref="Action" />s to process
         /// </summary>
-        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Auto)] 
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Auto)]
         public List<Action> Actions { get; set; }
 
         /// <summary>
@@ -61,33 +61,41 @@ namespace KioskLibrary.Orchestration
         public OrchestrationInstance() { Actions = new List<Action>(); }
 
         /// <summary>
+        /// The HTTP helper
+        /// </summary>
+        [JsonIgnore]
+        [XmlIgnore]
+        public IHttpHelper HttpHelper { get; set; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="actions">A list of <see cref="Action" />s to process</param>
         /// <param name="pollingInterval">The interval used to check for updated versions of this <see cref="OrchestrationInstance" /></param>
         /// <param name="orchestrationSource">The source of this <see cref="OrchestrationInstance" /></param>
         /// <param name="lifecycle">The lifecycle behavior of an <see cref="OrchestrationInstance" /></param>
-        /// <param name="order">The order to iterate through the set of <see cref="OrchestrationInstance.Actions" /></param>
-        public OrchestrationInstance(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential)
+        /// <param name="order">The order to iterate through the set of <see cref="Actions" /></param>
+        public OrchestrationInstance(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential, IHttpHelper httpHelper = null)
         {
             PollingIntervalMinutes = pollingInterval;
             Actions = actions;
             Lifecycle = lifecycle;
             Order = order;
             OrchestrationSource = orchestrationSource;
+            HttpHelper = httpHelper ?? new HttpHelper();
         }
 
         /// <summary>
         /// Gets the <see cref="OrchestrationInstance" /> from the specified <paramref name="uri" />
         /// </summary>
         /// <param name="uri">The URI where the <see cref="OrchestrationInstance" /> is stored</param>
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
         /// <returns>An <see cref="OrchestrationInstance" /> if the it could be retrieved, else <see cref="null"/></returns>
-        public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri)
+        public async static Task<OrchestrationInstance> GetOrchestrationInstance(Uri uri, IHttpHelper httpHelper)
         {
             try
             {
-                var client = new HttpClient();
-                var result = await client.GetAsync(uri);
+                var result = await httpHelper.GetAsync(uri);
                 if (result.StatusCode == HttpStatusCode.Ok)
                     return ConvertStringToOrchestrationInstance(await result.Content.ReadAsStringAsync());
             }
@@ -106,7 +114,7 @@ namespace KioskLibrary.Orchestration
             try
             {
                 // Try to parse the text as JSON
-                return SerializationHelper.Deserialize<OrchestrationInstance>(orchestrationInstanceAsString);
+                return SerializationHelper.JSONDeserialize<OrchestrationInstance>(orchestrationInstanceAsString);
             }
             catch (JsonException)
             {
@@ -114,7 +122,7 @@ namespace KioskLibrary.Orchestration
                 using var sr = new StringReader(orchestrationInstanceAsString);
                 try
                 {
-                    return new XmlSerializer(typeof(OrchestrationInstance)).Deserialize(sr) as OrchestrationInstance;
+                    return SerializationHelper.XMLDeserialize<OrchestrationInstance>(sr);
                 }
                 catch { }
                 finally
@@ -122,6 +130,7 @@ namespace KioskLibrary.Orchestration
                     sr.Close();
                 }
             }
+            catch (ArgumentNullException) { return null; }
 
             return null;
         }
@@ -130,17 +139,17 @@ namespace KioskLibrary.Orchestration
         /// Validates this <see cref="OrchestrationInstance" />
         /// </summary>
         /// <returns>A boolean indicating whether or not this <see cref="OrchestrationInstance" /> is valid as well as a list of errors (if validation fails)</returns>
-        public async Task<(bool, List<string>)> ValidateAsync()
+        public async Task<(bool IsValid, List<string> Errors)> ValidateAsync()
         {
             var errors = new List<string>();
 
             if (PollingIntervalMinutes < 15)
-                errors.Add("OrchestrationInstance: The polling interval cannot be less than 15 minutes.");
+                errors.Add(Constants.ValidationMessages.InvalidPollingMessage);
 
             if (Actions != null)
                 foreach (var a in Actions)
                 {
-                    (bool status, string name, List<string> actionErrors) = await a.ValidateAsync();
+                    (bool status, string name, List<string> actionErrors) = await a.ValidateAsync(HttpHelper);
                     if (!status)
                         foreach (var actionError in actionErrors)
                             errors.Add($"{name}: {actionError}");

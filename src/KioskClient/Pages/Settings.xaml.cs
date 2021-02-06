@@ -11,8 +11,6 @@ using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml.Serialization;
 using Windows.Storage.Pickers;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -34,8 +32,10 @@ namespace KioskLibrary.Pages
     /// </summary>
     public sealed partial class Settings : Page
     {
-        private SettingsViewModel State { get; set; }
-        private SettingsPageArguments currentPageArguments = null;
+        private SettingsViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
+        private SettingsPageArguments _currentPageArguments;
+        private readonly IHttpHelper _httpHelper;
+        private readonly IApplicationStorage _applicationStorage;
 
         /// <summary>
         /// Constructor
@@ -44,7 +44,13 @@ namespace KioskLibrary.Pages
         {
             try
             {
-                State = ApplicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
+                if (_httpHelper == null)
+                    _httpHelper = new HttpHelper();
+
+                if (_applicationStorage == null)
+                    _applicationStorage = new ApplicationStorage();
+
+                State = _applicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
 
                 if (State == null)
                     State = new SettingsViewModel();
@@ -55,6 +61,18 @@ namespace KioskLibrary.Pages
 
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
+        /// <param name="applicationStorage">The <see cref="IApplicationStorage"/> to use for interacting with local application storage</param>
+        public Settings(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
+            : this()
+        {
+            _httpHelper = httpHelper;
+            _applicationStorage = applicationStorage;
         }
 
         /// <summary>
@@ -74,11 +92,11 @@ namespace KioskLibrary.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
-            currentPageArguments = e.Parameter as SettingsPageArguments;
+            _currentPageArguments = e.Parameter as SettingsPageArguments;
 
-            if (currentPageArguments != null)
-                if (currentPageArguments.Log != null)
-                    foreach (var error in currentPageArguments.Log)
+            if (_currentPageArguments != null)
+                if (_currentPageArguments.Log != null)
+                    foreach (var error in _currentPageArguments.Log)
                         Log(error);
         }
 
@@ -99,13 +117,13 @@ namespace KioskLibrary.Pages
             State.IsUriLoading = true;
             OrchestrationInstance tmpOrchestrationInstance;
 
-            (bool isValid, string message) = await HttpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
+            (bool isValid, string message) = await _httpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
             State.PathValidationMessage = message;
             State.IsUriPathVerified = isValid;
 
             if (isValid)
             {
-                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath));
+                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath), _httpHelper);
                 await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
             }
             else
@@ -153,7 +171,7 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private async void Button_FileLoad_Click(object sender, RoutedEventArgs e)
+        private async void Button_FileLoad_Click(object _, RoutedEventArgs e)
         {
             var openPicker = new FileOpenPicker
             {
@@ -183,9 +201,9 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private void ButtonSave_Click(object sender, RoutedEventArgs e) => Save();
+        private void ButtonSave_Click(object _, RoutedEventArgs e) => Save();
 
-        private void ButtonStart_Click(object sender, RoutedEventArgs e)
+        private void ButtonStart_Click(object _, RoutedEventArgs e)
         {
             Save();
             Start();
@@ -193,10 +211,10 @@ namespace KioskLibrary.Pages
 
         private void Save()
         {
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationURI, State.UriPath);
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestration, State.OrchestrationInstance);
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationURI, State.UriPath);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestration, State.OrchestrationInstance);
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.CurrentOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
             Log("Orchestration saved!");
         }
 
@@ -237,7 +255,7 @@ namespace KioskLibrary.Pages
             return orchestration;
         }
 
-        private async void ButtonJSON_Click(object sender, RoutedEventArgs e)
+        private async void ButtonJSON_Click(object _, RoutedEventArgs e)
         {
             var savePicker = new FileSavePicker
             {
@@ -251,13 +269,13 @@ namespace KioskLibrary.Pages
             {
                 OrchestrationInstance orchestration = ComposeExampleOrchestration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = SerializationHelper.Serialize(orchestration);
+                var fileText = SerializationHelper.JSONSerialize(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
         }
 
-        private async void ButtonXML_Click(object sender, RoutedEventArgs e)
+        private async void ButtonXML_Click(object _, RoutedEventArgs e)
         {
             var savePicker = new FileSavePicker
             {
@@ -271,11 +289,8 @@ namespace KioskLibrary.Pages
             {
                 OrchestrationInstance orchestration = ComposeExampleOrchestration();
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var sb = new StringBuilder();
-                var sw = new StringWriter(sb);
-                new XmlSerializer(typeof(OrchestrationInstance)).Serialize(sw, orchestration);
-                sw.Close();
-                await Windows.Storage.FileIO.WriteTextAsync(file, sb.ToString());
+                var serializedString = SerializationHelper.XMLSerialize<OrchestrationInstance>(orchestration);
+                await Windows.Storage.FileIO.WriteTextAsync(file, serializedString);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
         }

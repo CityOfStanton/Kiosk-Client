@@ -46,14 +46,15 @@ namespace KioskLibrary.Actions
         /// </summary>
         public int? ScrollResetDelay { get; set; }
 
+        private readonly IHttpHelper _httpHelper;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public WebsiteAction() { }
+        public WebsiteAction() { _httpHelper = new HttpHelper(); }
 
         /// <summary>
-        /// <value></value>
-        ///
+        /// Constructor
         /// </summary>
         /// <param name="name">The name of the action</param>
         /// <param name="duration">The duration of the action</param>
@@ -62,7 +63,8 @@ namespace KioskLibrary.Actions
         /// <param name="scrollDuration">How long to scroll the page</param>
         /// <param name="scrollInterval">The delay between scrolling</param>
         /// <param name="scrollResetDelay">The delay before resetting the scroll to the top</param>
-        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay)
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
+        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, IHttpHelper httpHelper = null)
             : base(name, duration)
         {
             Path = path;
@@ -70,14 +72,13 @@ namespace KioskLibrary.Actions
             ScrollDuration = scrollDuration;
             ScrollInterval = scrollInterval;
             ScrollResetDelay = scrollResetDelay;
+            _httpHelper = httpHelper ?? new HttpHelper();
         }
 
-        /// <summary>
-        /// Validates the action
-        /// </summary>
-        public async override Task<(bool, string, List<string>)> ValidateAsync()
+        /// <inheritdoc/>
+        public async override Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
         {
-            (bool isValid, string message) = await HttpHelper.ValidateURI(Path, HttpStatusCode.Ok);
+            (bool isValid, string message) = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok);
 
             var errors = new List<string>();
             if (!isValid)

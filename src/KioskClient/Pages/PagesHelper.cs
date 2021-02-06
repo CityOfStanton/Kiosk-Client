@@ -27,7 +27,7 @@ namespace KioskClient.Pages
         /// </summary>
         /// <param name="sender">The sender</param>
         /// <param name="args">The arguments</param>
-        public static void CommonKeyUp(object sender, Windows.UI.Core.KeyEventArgs args)
+        public static void CommonKeyUp(object _, Windows.UI.Core.KeyEventArgs args)
         {
             if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
                 GoToSettings();
@@ -38,7 +38,7 @@ namespace KioskClient.Pages
         /// </summary>
         /// <param name="sender">The sender</param>
         /// <param name="args">The arguments</param>
-        public static void CommonKeyUp(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs args)
+        public static void CommonKeyUp(object _, Windows.UI.Xaml.Input.KeyRoutedEventArgs args)
         {
             if (args.Key == Windows.System.VirtualKey.Home || args.Key == Windows.System.VirtualKey.Escape)
                 GoToSettings();
@@ -47,9 +47,9 @@ namespace KioskClient.Pages
         /// <summary>
         /// Common function used to navigate to the Settings page.
         /// </summary>
-        public static void GoToSettings()
+        public static void GoToSettings(IApplicationStorage applicationStorage = null)
         {
-            ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
+            (applicationStorage ?? new ApplicationStorage()).SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { "Orchestration was cancelled." }));
         }

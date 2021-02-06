@@ -17,6 +17,7 @@ using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
 using KioskLibrary.Orchestration;
 using Windows.ApplicationModel.Core;
+using KioskLibrary.Helpers;
 
 namespace KioskLibrary
 {
@@ -26,13 +27,15 @@ namespace KioskLibrary
     public class Orchestrator
     {
         private OrchestrationInstance _orchestrationInstance;
-        private readonly DispatcherTimer _durationtime;
+        private readonly ITimeHelper _durationtimer;
         private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
+        private readonly IHttpHelper _httpHelper;
+        private readonly IApplicationStorage _applicationStorage;
 
         /// <summary>
-        /// The delegate for receiving <see cref="Orchestrator.NextAction" /> events
+        /// The delegate for receiving <see cref="NextAction" /> events
         /// </summary>
         /// <param name="action">The next action</param>
         public delegate void NextActionDelegate(Action action);
@@ -43,7 +46,7 @@ namespace KioskLibrary
         public event NextActionDelegate NextAction;
 
         /// <summary>
-        /// The delegate for receiving <see cref="Orchestrator.OrchestrationCancelled" /> events
+        /// The delegate for receiving <see cref="OrchestrationCancelled" /> events
         /// </summary>
         /// <param name="reason">The reason for the cancellation</param>
         public delegate void OrchestrationCancelledDelegate(string reason);
@@ -54,12 +57,12 @@ namespace KioskLibrary
         public event OrchestrationCancelledDelegate OrchestrationCancelled;
 
         /// <summary>
-        /// Delegate used for <see cref="Orchestrator.OrchestrationStarted" />
+        /// Delegate used for <see cref="OrchestrationStarted" />
         /// </summary>
         public delegate void OrchestrationStartedDelegate();
 
         /// <summary>
-        /// Delegate used for <see cref="Orchestrator.OrchestrationInvalid" />
+        /// Delegate used for <see cref="OrchestrationInvalid" />
         /// </summary>
         public delegate void OrchestrationInvalidDelegate(List<string> errors);
 
@@ -76,35 +79,54 @@ namespace KioskLibrary
         /// <summary>
         /// Constructor
         /// </summary>
-        public Orchestrator()
+        public Orchestrator(ITimeHelper timeHelper = null)
         {
+            if (_httpHelper == null)
+                _httpHelper = new HttpHelper();
+
+            if (_applicationStorage == null)
+                _applicationStorage = new ApplicationStorage();
+
+            _orchestrationSequence = new List<Action>();
+
             _orchestrationInstance = null;
             _currentAction = null;
 
             _durationCounter = 0;
 
-            _durationtime = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1.0)
-            };
-            _durationtime.Tick += Durationtime_Tick;
+            _durationtimer = timeHelper ?? new TimerHelper();
+            _durationtimer.Interval = TimeSpan.FromSeconds(1.0);
+            _durationtimer.Tick += Durationtime_Tick;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
+        /// <param name="applicationStorage">The <see cref="IApplicationStorage"/> to use for interacting with local application storage</param>
+        /// <param name="timeHelper">The <see cref="ITimeHelper"/> to use for interacting with the <see cref="DispatcherTimer"/></param>
+        public Orchestrator(IHttpHelper httpHelper, IApplicationStorage applicationStorage, ITimeHelper timeHelper)
+            : this(timeHelper)
+        {
+            _httpHelper = httpHelper;
+            _applicationStorage = applicationStorage;
         }
 
         /// <summary>
         /// Gets the updated <see cref="OrchestrationInstance" /> from the web
         /// </summary>
-        public static async Task GetNextOrchestration()
+        public static async Task GetNextOrchestration(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
         {
             // Get the Settings URI
-            var currentOrchestrationURI = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
+            var currentOrchestrationURI = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
 
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
                 // Get orchestration from Settings URI
-                var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI));
+                var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI), httpHelper);
 
                 // Save to the 'NextOrchestration'
-                ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
+                applicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
             }
         }
 
@@ -114,11 +136,11 @@ namespace KioskLibrary
         /// <returns></returns>
         public async Task StartOrchestration()
         {
-            var orchestrationSource = ApplicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.CurrentOrchestrationSource);
+            var orchestrationSource = _applicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.CurrentOrchestrationSource);
 
             _durationCounter = 0;
 
-            _orchestrationInstance = await LoadOrchestration(orchestrationSource);
+            _orchestrationInstance = await LoadOrchestration(orchestrationSource, _httpHelper, _applicationStorage);
 
             if (_orchestrationInstance != null)
             {
@@ -134,11 +156,15 @@ namespace KioskLibrary
                 }
 
                 if (orchestrationSource == OrchestrationSource.URL)
-                    ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
+                    _applicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
 
                 OrchestrationStarted?.Invoke();
 
-                ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
+                try
+                {
+                    ApplicationView.GetForCurrentView()?.TryEnterFullScreenMode();
+                }
+                catch { }
 
                 if (_orchestrationInstance.Actions.Any())
                 {
@@ -160,22 +186,22 @@ namespace KioskLibrary
         /// </summary>
         public void StopOrchestration()
         {
-            if (_durationtime != null)
-                _durationtime.Stop();
+            if (_durationtimer != null)
+                _durationtimer.Start();
         }
 
-        private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource)
+        private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
         {
             OrchestrationInstance toReturn = null;
 
             if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
-                toReturn = ApplicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.CurrentOrchestration);
+                toReturn = applicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.CurrentOrchestration);
             else if (orchestrationSource == OrchestrationSource.URL) // Load OrchestrationInstance from the web.
             {
-                var orchestrationInstancePath = ApplicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
+                var orchestrationInstancePath = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
                 if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
-                        toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri); // Pull a new instace from the URL
+                        toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri, httpHelper); // Pull a new instace from the URL
             }
 
             return toReturn;
@@ -197,10 +223,10 @@ namespace KioskLibrary
 
         private async Task EvaluateNextAction()
         {
-            var endOrchestration = ApplicationStorage.GetFromStorage<bool>(Constants.ApplicationStorage.EndOrchestration);
+            var endOrchestration = _applicationStorage.GetFromStorage<bool>(Constants.ApplicationStorage.EndOrchestration);
             if (endOrchestration)
             {
-                ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
+                _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
                 StopOrchestration();
                 return;
             }
@@ -219,9 +245,9 @@ namespace KioskLibrary
                 // After we have set the _currentAction, we can assess the duration
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
                 {
-                    ApplicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
+                    _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
                     _durationCounter = 0;
-                    _durationtime.Start();
+                    _durationtimer.Start();
                 }
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions

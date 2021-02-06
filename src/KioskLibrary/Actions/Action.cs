@@ -6,6 +6,7 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -60,9 +61,9 @@ namespace KioskLibrary.Actions
         /// <summary>
         /// Validates the action
         /// </summary>
-        /// <param name="The name of the action"></param>
+        /// <param name="httpHelper">The HTTP helper</param>
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async virtual Task<(bool, string, List<string>)> ValidateAsync()
+        public async virtual Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             throw new NotImplementedException();
