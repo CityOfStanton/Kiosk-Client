@@ -10,6 +10,7 @@ A simple Universal Windows Platform (UWP) app used to display web-based content 
 - [Features](#features)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
+- [Known Issues](#known-issues)
 - [Contributing](#contributing)
 - [Future Work](#future-work)
 
@@ -29,6 +30,9 @@ A simple Universal Windows Platform (UWP) app used to display web-based content 
 
 * [Visual Studio](https://visualstudio.microsoft.com/vs/community)
 * A Windows machine with [Developer Mode enabled](https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development).
+
+## Known Issues
+Due to the way we render web pages, you can't press the Escape key to return to the settings. Instead, there is a button with a low opacity that exists in the bottom right-hand corner of the screen for the first 5 seconds the webpage is rendered. Clicking on that button will return you to the Settings menu.
 
 ## Contributing
 

@@ -113,7 +113,11 @@
         <StackPanel Orientation="Vertical" Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 20" >
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
                 <Button x:Name="ButtonSave" Content="Save" Margin="20,0" Click="ButtonSave_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
-                <Button x:Name="ButtonStart" Content="Start" Margin="20,0" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
+                <Button x:Name="ButtonStart" Content="Start" Margin="20,0" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" >
+                    <Button.Background>
+                        <SolidColorBrush Color="#277C31" />
+                    </Button.Background>
+                </Button>
             </StackPanel>
             <TextBlock Text="Press the Escape key or the Home key to return to this screen." TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,10,0,0"/>
         </StackPanel>
