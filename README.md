@@ -4,7 +4,7 @@
 A simple Universal Windows Platform (UWP) app used to display web-based content on a Windows 10 systems.
 
 <!-- omit in toc -->
-# ![KioskClientLogo](logo/Kiosk-Client_App%20Logo.png)
+# ![KioskClientLogo](logo/Kiosk-Client_App%20Logo%20@%20200.png)
 
 
 - [Features](#features)
