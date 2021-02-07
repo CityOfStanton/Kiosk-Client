@@ -200,7 +200,7 @@ namespace KioskLibrary
             Log.Information("StopOrchestration - Stopping orchestration");
 
             if (_durationtimer != null)
-                _durationtimer.Start();
+                _durationtimer.Stop();
         }
 
         private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
