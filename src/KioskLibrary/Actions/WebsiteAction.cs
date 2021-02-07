@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -8,6 +8,7 @@
 
 using KioskLibrary.Helpers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 
@@ -85,13 +86,26 @@ namespace KioskLibrary.Actions
         /// <inheritdoc/>
         public async override Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
         {
+            (_, _, var errors) = await base.ValidateAsync(httpHelper);
+
             (bool isValid, string message) = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok);
 
-            var errors = new List<string>();
             if (!isValid)
                 errors.Add(message);
 
-            return (isValid, Name, errors);
+            if (ScrollDuration.HasValue && ScrollDuration < 0)
+                errors.Add($"{nameof(ScrollDuration)} must be greater than or equalt to 0.");
+
+            if (ScrollInterval.HasValue && ScrollInterval < 0)
+                errors.Add($"{nameof(ScrollInterval)} must be greater than or equalt to 0.");
+
+            if (ScrollResetDelay.HasValue && ScrollResetDelay < 0)
+                errors.Add($"{nameof(ScrollResetDelay)} must be greater than or equalt to 0.");
+
+            if (SettingsDisplayTime.HasValue && SettingsDisplayTime < 0)
+                errors.Add($"{nameof(SettingsDisplayTime)} must be greater than or equalt to 0.");
+
+            return (!errors.Any(), Name, errors);
         }
     }
 }

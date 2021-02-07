@@ -80,7 +80,7 @@ namespace KioskLibrary.Spec.Orchestration
                 .Returns(Task.FromResult((false, invalidMessage2)));
 
             var validImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
-            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
+            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
 
             var orchestrationInstance = CreateRandomOrchestrationInstance();
             orchestrationInstance.Actions.Clear();
@@ -97,7 +97,7 @@ namespace KioskLibrary.Spec.Orchestration
             orchestrationInstanceWithInvalidPollingInterval.HttpHelper = mockHttpHelper.Object;
 
             var invalidImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
-            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
+            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
 
             var orchestrationInstanceWithInvalidActions = CreateRandomOrchestrationInstance();
             orchestrationInstanceWithInvalidActions.Actions.Clear();
