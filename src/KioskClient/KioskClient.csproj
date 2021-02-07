@@ -20,7 +20,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <LangVersion>9.0</LangVersion>
-    <PackageCertificateThumbprint>23B6B099373D23CFC987E5239D9DCC99DD4D34A2</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>C448BA4CDAD6EA016C8547779FBDA74FBD750EBC</PackageCertificateThumbprint>
     <PackageCertificateKeyFile />
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
@@ -251,6 +251,10 @@
     <Page Include="Resources\CityOfStantonTechnology.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\GreenControls.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\KioskClientLogo.xaml">
       <Generator>MSBuild:Compile</Generator>
