@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   Copyright 2021
   City of Stanton
   Stanton, Kentucky
@@ -12,7 +12,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:KioskLibrary"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local1="using:KioskLibrary.Converters"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:local1="using:KioskLibrary.Converters"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
@@ -28,7 +30,6 @@
     <Grid x:Name="mainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
@@ -36,85 +37,150 @@
             <ColumnDefinition Width="50*" />
             <ColumnDefinition Width="50*" />
         </Grid.ColumnDefinitions>
-        
-        <ContentControl x:Name="ccLogo" Grid.RowSpan="2" Grid.Column="0" Grid.Row="0" Template="{StaticResource MainLogo}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <Button x:Name="Button_About" Grid.Column="0" Grid.Row="0"  HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" Click="Button_About_Click">
+            <ContentControl x:Name="ccLogo" Template="{StaticResource MainLogo}"/>
+        </Button>
 
         <Grid Grid.Column="1"  Grid.Row="0" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <StackPanel Orientation="Vertical">
-                <ScrollViewer VerticalScrollMode="Enabled">
-                    <TextBlock TextWrapping="WrapWholeWords" TextAlignment="Justify" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" >
-                        Welcome to Kiosk Client. 
-                        To get started, generate an <Bold>Example Orchestration File </Bold> by selecting either the JSON or XML button. 
-                        Once generated, you can edit the file to customize your specific scenario according to the <Hyperlink NavigateUri="https://github.com/CityOfStanton/Kiosk-Client/wiki">Orchestration File Wiki</Hyperlink>.
-                        You can test your file by loading it using the <Bold>Load File</Bold> button.
-                        Once you are satisfied, you can save the file to a publicly available location on the web.
-                        Specify the URL in the <Bold>Orchestration URL</Bold> field and click the <Bold>Save</Bold> button.
-                        Now you're good to go.
-                        Click the <Bold>Save</Bold> button to save your current configuration.
-                        It will begin the next time you open the app.
-                        You can click the <Bold>Start</Bold> button to start immediately.
-                        Note that when using an Orchestration URL, the app will check for updates based on the <Bold>PollingIntervalMinutes</Bold> field in the Orchestration File.
-                        If you are running an Orchestration from a local file, then the file will not be updated until you manually load a new Orchestration File.
-                    </TextBlock>
-                </ScrollViewer>
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,20">
-                    <TextBlock Text="Generate Example Orchestration File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                    <Button x:Name="ButtonJSON" Content="JSON" Margin="20,0" Click="ButtonJSON_Click" Style="{ThemeResource ButtonRevealStyle}"/>
-                    <Button x:Name="ButtonXML" Content="XML" Margin="20,0" Click="ButtonXML_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Margin="0,20">
+                    <TextBlock Text="Need help? Start the walk-through:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <Button x:Name="Button_Help" Content="Begin" Margin="20,0" Style="{ThemeResource ButtonRevealStyle}" Click="Button_Help_Click" />
                 </StackPanel>
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" >
+                    <TextBlock Text="Ready to get started? Check out the Wiki:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                    <!--<HyperlinkButton x:Name="Button_GitHub" Content="Kiosk Client GitHub" Margin="20,0" NavigateUri="https://github.com/CityOfStanton/Kiosk-Client" />-->
+                    <HyperlinkButton x:Name="Button_Wiki" Content="Kiosk Client Wiki" Margin="20,0" NavigateUri="https://github.com/CityOfStanton/Kiosk-Client/wiki" />
+                    <!--<HyperlinkButton x:Name="Button_Homepage" Content="City of Stanton Technology" Margin="20,0" NavigateUri="https://www.stantonky.gov/technology" />-->
+                </StackPanel>
+
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Margin="0,20">
+                    <TextBlock Text="Generate Example Orchestration File:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <Button x:Name="Button_JSON" Content="JSON" Margin="20,0" Click="ButtonJSON_Click" Style="{ThemeResource ButtonRevealStyle}"/>
+                    <Button x:Name="Button_XML" Content="XML" Margin="20,0" Click="ButtonXML_Click" Style="{ThemeResource ButtonRevealStyle}" />
+                </StackPanel>
+                <TextBlock Text="Settings:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                <Grid Grid.Column="1"  Grid.Row="1" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" OnContent="File" OffContent="URL" HorizontalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" VerticalAlignment="Center" />
+                    <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+                        <TextBox x:Name="TextBox_URLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
+                        <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind Path=State.CanLoadUri, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" >
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <SymbolIcon Symbol="Globe"/>
+                                    <TextBlock Text=" Load"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <ProgressRing x:Name="ProgressRing_URL_Loading" IsActive="{x:Bind Path=State.IsUriLoading, Mode=OneWay}" Grid.Column="2" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="0,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="Button_FileLoad" IsEnabled="{x:Bind Path=State.CanLoadFile, Mode=OneWay}" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" >
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <SymbolIcon Symbol="Save"/>
+                                    <TextBlock Text=" Load File"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                        <ProgressRing x:Name="ProgressRing_File_Loading" IsActive="{x:Bind Path=State.IsFileLoading, Mode=OneWay}" Grid.Column="1" Margin="20,0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
+                        <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
+                    </Grid>
+                </Grid>
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Column="1"  Grid.Row="1" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" OnContent="File" OffContent="URL" HorizontalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" VerticalAlignment="Center" />
-            <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition Height="auto" />
-                </Grid.RowDefinitions>
-                <TextBox x:Name="tbURLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
-                <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind Path=State.CanLoadUri, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Content="Load" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" />
-                <ProgressRing x:Name="ProgressRing_URL_Loading" IsActive="{x:Bind Path=State.IsUriLoading, Mode=OneWay}" Grid.Column="2" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
-            </Grid>
-            <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Background="Black" Margin="0,20,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Button x:Name="Button_FileLoad" IsEnabled="{x:Bind Path=State.CanLoadFile, Mode=OneWay}" Grid.Column="0" Content="Load File" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" Width="75" />
-                <ProgressRing x:Name="ProgressRing_File_Loading" IsActive="{x:Bind Path=State.IsFileLoading, Mode=OneWay}" Grid.Column="1" Margin="20,0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
-                <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
-            </Grid>
-        </Grid>
-
-        <Grid Grid.ColumnSpan="2" Margin="20" Grid.Column="0" Grid.Row="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Grid Grid.ColumnSpan="2" Margin="20" Grid.Column="0" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="1" Text="Log:" TextWrapping="WrapWholeWords" VerticalAlignment="Top" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,10" />
-            <ListBox x:Name="ListBox_Log" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <ListBox x:Name="ListBox_Log" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <ListBox.ContextFlyout>
+                    <MenuFlyout x:Name="ListBox_Log_Context_Menu">
+                        <MenuFlyout.Items>
+                            <MenuFlyoutItem x:Name="ListBox_Log_Copy" Text="Copy" Click="ListBox_Log_Copy_Click" >
+                                <MenuFlyoutItem.Icon>
+                                    <SymbolIcon Symbol="Copy"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Name="ListBox_Log_Clear" Text="Clear" Click="ListBox_Log_Clear_Click" >
+                                <MenuFlyoutItem.Icon>
+                                    <SymbolIcon Symbol="Clear"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout.Items>
+                    </MenuFlyout>
+                </ListBox.ContextFlyout>
+            </ListBox>
         </Grid>
 
-        <StackPanel Orientation="Vertical" Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 20" >
+        <StackPanel Orientation="Vertical" Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 20" >
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
-                <Button x:Name="ButtonSave" Content="Save" Margin="20,0" Click="ButtonSave_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" />
-                <Button x:Name="ButtonStart" Content="Start" Margin="20,0" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" >
+                <Button x:Name="Button_Clear" Margin="20,0" Click="Button_Clear_Click" Style="{ThemeResource ButtonRevealStyle}" >
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="Clear"/>
+                            <TextBlock Text=" Clear"/>
+                        </StackPanel>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel>
+                                <TextBlock Style="{ThemeResource BaseTextBlockStyle}" Text="All settings have been cleared!" Margin="0,0,0,12" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="Button_Save" Margin="20,0" Click="ButtonSave_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" >
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="SaveLocal"/>
+                            <TextBlock Text=" Save"/>
+                        </StackPanel>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel>
+                                <TextBlock Style="{ThemeResource BaseTextBlockStyle}" Text="The current Orchestration has been saved and will begin the next time Kiosk Cliet starts!" Margin="0,0,0,12" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="Button_Start" Margin="20,0" Click="ButtonStart_Click" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Style="{ThemeResource ButtonRevealStyle}" >
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="Play"/>
+                            <TextBlock Text=" Start"/>
+                        </StackPanel>
+                    </Button.Content>
                     <Button.Background>
                         <SolidColorBrush Color="#277C31" />
                     </Button.Background>
@@ -122,5 +188,114 @@
             </StackPanel>
             <TextBlock Text="Press the Escape key or the Home key to return to this screen." TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,10,0,0"/>
         </StackPanel>
+
+        <muxc:TeachingTip x:Name="TeachTip_Welcome"
+	        Target="{x:Bind Button_JSON}"
+            IsLightDismissEnabled="true"
+	        Title="Welcome to Kiosk Client."
+	        Subtitle="To get started, generate an Example Orchestration File by selecting either the JSON or XML button." 
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Document" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_Wiki"
+	        Target="{x:Bind Button_Wiki}"
+            IsLightDismissEnabled="true"
+	        Title="Edit your Orchestration File"
+	        Subtitle="Once generated, you can edit the file to customize your specific scenario according to the Orchestration File Wiki." 
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Edit" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_LoadFile"
+	        Target="{x:Bind Button_FileLoad}"
+            IsLightDismissEnabled="true"
+	        Title="Test your Orchestration File"
+	        Subtitle="You can test your file by loading it using the Load File button."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Edit" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_SaveFilToTheWeb"
+	        Target="{x:Bind TextBox_URLPath}"
+            IsLightDismissEnabled="true"
+	        Title="Save your Orchestration File to the web"
+	        Subtitle="Once you are satisfied, you can save the file to a publicly available location on the web, such as GitHub, Azure Storage, or Amazon S3."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Save" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_SaveLocally"
+	        Target="{x:Bind Button_Save}"
+            IsLightDismissEnabled="true"
+	        Title="Save your Orchestration Locally"
+	        Subtitle="Click the Save button to save your current configuration. It will begin the next time you app is launched."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="SaveLocal" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_Clear"
+	        Target="{x:Bind Button_Clear}"
+            IsLightDismissEnabled="true"
+	        Title="Clear your  saved Orchestration"
+	        Subtitle="Clear the saved Orchestration to prevent Kiosk Client from starting with it the next time the app is started."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="SaveLocal" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_Start"
+	        Target="{x:Bind Button_Start}"
+            IsLightDismissEnabled="true"
+	        Title="Start your Orchestration!"
+	        Subtitle="You can click the Start button to start immediately. This also saves your Orchestration; setting it to start the next time the app is launched."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Play" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_Update"
+	        Target="{x:Bind Button_UrlLoad}"
+            IsLightDismissEnabled="true"
+	        Title="Updating your Orchestration"
+	        Subtitle="Note that when using an Orchestration URL, the app will check for updates based on the PollingIntervalMinutes field in the Orchestration File."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="RepeatAll" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_FileLoad"
+	        Target="{x:Bind Button_FileLoad}"
+            IsLightDismissEnabled="true"
+	        Title="Local Orchestration limitations"
+	        Subtitle="If you are running an Orchestration from a local file, then the file will not be updated until you manually load a new Orchestration File."
+            Closed="TeachTip_Closed">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Save" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
+
+        <muxc:TeachingTip x:Name="TeachTip_Enjoy"
+	        Target="{x:Bind Button_About}"
+            IsLightDismissEnabled="true"
+	        Title="Enjoy Kiosk Client!"
+	        Subtitle="We hope you enjoy Kiosk Client! If you have any questions, or find any issues, please log an issue on our GitHub page. If you like our app, please leave a review on the Windows Store.">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Like" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
     </Grid>
 </Page>
