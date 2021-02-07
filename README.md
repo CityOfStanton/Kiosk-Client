@@ -1,11 +1,13 @@
+
+<!-- omit in toc -->
+<p align="center">
+  <img src="https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_App%20Logo%20%40%20200.png">
+</p>
+
 <!-- omit in toc -->
 # Kiosk Client ![CodeQL](https://github.com/CityOfStanton/Kiosk-Client/workflows/CodeQL/badge.svg) [![Build Status](https://dev.azure.com/chadbirch0541/Kiosk%20Client/_apis/build/status/CityOfStanton.Kiosk-Client?branchName=develop)](https://dev.azure.com/chadbirch0541/Kiosk%20Client/_build/latest?definitionId=1&branchName=develop)
 
 A simple Universal Windows Platform (UWP) app used to display web-based content on a Windows 10 systems.
-
-<!-- omit in toc -->
-# ![KioskClientLogo](logo/Kiosk-Client_App%20Logo%20@%20200.png)
-
 
 - [Features](#features)
 - [Getting Started](#getting-started)
@@ -37,6 +39,8 @@ Due to the way we render web pages, you can't press the Escape key to return to 
 ## Contributing
 
 We encourage anyone to contribute features or bug fixes. Simply raise an issue, then use that thread to let people know what you're working on. This coordinate work so two people aren't working on the same problem at any given time.
+
+**Note:** PR builds will fail the pipeline check if you're contributing from a fork. This due to a [security restriction in Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#access-restrictions). A repository owner will verify your commit builds and passes tests once it has been merged with the [develop branch](https://github.com/CityOfStanton/Kiosk-Client/tree/develop).
 
 ## Future Work
 
