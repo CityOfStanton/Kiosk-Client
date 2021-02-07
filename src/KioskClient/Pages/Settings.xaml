@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   Copyright 2021
   City of Stanton
   Stanton, Kentucky
@@ -19,7 +19,8 @@
         <ResourceDictionary>
             <local1:InvertBooleanConverter x:Key="InvertBoolean" />
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="../Resources/Base.xaml" />
+                <ResourceDictionary Source="../Resources/KioskClientLogo.xaml" />
+                <ResourceDictionary Source="../Resources/CityOfStantonTechnology.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
