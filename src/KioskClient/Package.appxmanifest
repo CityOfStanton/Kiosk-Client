@@ -7,14 +7,14 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="98a23b4b-8b3d-4221-8367-917f3102593f"
-    Publisher="CN=Technology Group, O=City of Stanton, C=US"
-    Version="1.0.0.0" />
+    Name="5999BirchCom.385071C3770F8"
+    Publisher="CN=291573D4-2B42-451F-9AD2-2CCDBBAF6DB9"
+    Version="1.0.8.0" />
 
-  <mp:PhoneIdentity PhoneProductId="98a23b4b-8b3d-4221-8367-917f3102593f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="47b8c639-f5e2-40d3-87e7-c171c9844513" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Kiosk-Client</DisplayName>
+    <DisplayName>Kiosk Client</DisplayName>
     <PublisherDisplayName>City of Stanton</PublisherDisplayName>
     <Logo>Assets\AppIcon\StoreLogo.png</Logo>
   </Properties>

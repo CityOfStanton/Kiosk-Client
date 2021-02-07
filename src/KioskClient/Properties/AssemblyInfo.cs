@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Kiosk-Client")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Kiosk Client")]
+[assembly: AssemblyDescription("A simple Universal Windows Platform (UWP) app used to display web-based content on a Windows 10 systems.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Kiosk-Client")]
+[assembly: AssemblyCompany("City of Stanton")]
+[assembly: AssemblyProduct("Kiosk Client")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("2020")]
 [assembly: AssemblyCulture("")]
 
 // Version information for an assembly consists of the following four values:
