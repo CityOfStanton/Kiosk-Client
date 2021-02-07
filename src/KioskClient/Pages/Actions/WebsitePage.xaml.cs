@@ -22,13 +22,13 @@ namespace KioskLibrary.Pages.Actions
     /// </summary>
     public sealed partial class WebsitePage : Page
     {
-        private DispatcherTimer _scrollingTimer;
-        private DispatcherTimer _settingsButtonTimer;
+        private readonly DispatcherTimer _scrollingTimer;
+        private readonly DispatcherTimer _settingsButtonTimer;
         private WebsiteAction _websiteAction;
         private double _currentTick;
         private double _totalTicks;
         private double _webviewContentHeight;
-        private string _scrollToTopString = @"window.scrollTo(0,0);";
+        private readonly string _scrollToTopString = @"window.scrollTo(0,0);";
 
         public WebsitePage()
         {
@@ -48,12 +48,15 @@ namespace KioskLibrary.Pages.Actions
                     _scrollingTimer.Start();
                 }
 
-            _settingsButtonTimer.Interval = TimeSpan.FromSeconds(5);
-            _settingsButtonTimer.Tick += _settingsTimer_Tick;
-            _settingsButtonTimer.Start();
+            if (_websiteAction.SettingsDisplayTime.HasValue && _websiteAction.SettingsDisplayTime > 0)
+            {
+                _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_websiteAction.SettingsDisplayTime.Value);
+                _settingsButtonTimer.Tick += SettingsTimer_Tick;
+                _settingsButtonTimer.Start();
+            }
         }
 
-        private void _settingsTimer_Tick(object sender, object e)
+        private void SettingsTimer_Tick(object sender, object e)
         {
             _settingsButtonTimer.Stop();
             Button_Settings.Visibility = Visibility.Collapsed;
@@ -76,13 +79,13 @@ namespace KioskLibrary.Pages.Actions
                 _totalTicks = _websiteAction.ScrollDuration.Value / _websiteAction.ScrollInterval.Value;
 
                 _scrollingTimer.Interval = TimeSpan.FromSeconds(_websiteAction.ScrollInterval.Value);
-                _scrollingTimer.Tick += _scrollingTimer_Tick;
+                _scrollingTimer.Tick += ScrollingTimer_Tick;
             }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e) => _scrollingTimer.Stop();
 
-        private async void _scrollingTimer_Tick(object sender, object e)
+        private async void ScrollingTimer_Tick(object sender, object e)
         {
             if (++_currentTick >= _totalTicks)
             {

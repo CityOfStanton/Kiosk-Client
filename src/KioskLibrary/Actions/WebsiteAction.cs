@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -46,6 +46,11 @@ namespace KioskLibrary.Actions
         /// </summary>
         public int? ScrollResetDelay { get; set; }
 
+        /// <summary>
+        /// The number of seconds to display the Settings button on the Website Action
+        /// </summary>
+        public int? SettingsDisplayTime { get; set; }
+
         private readonly IHttpHelper _httpHelper;
 
         /// <summary>
@@ -63,8 +68,9 @@ namespace KioskLibrary.Actions
         /// <param name="scrollDuration">How long to scroll the page</param>
         /// <param name="scrollInterval">The delay between scrolling</param>
         /// <param name="scrollResetDelay">The delay before resetting the scroll to the top</param>
+        /// <param name="settingsDisplayTime">The number of seconds to display the Settings button on the Website Action</param>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, IHttpHelper httpHelper = null)
+        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, int? settingsDisplayTime, IHttpHelper httpHelper = null)
             : base(name, duration)
         {
             Path = path;
@@ -72,6 +78,7 @@ namespace KioskLibrary.Actions
             ScrollDuration = scrollDuration;
             ScrollInterval = scrollInterval;
             ScrollResetDelay = scrollResetDelay;
+            SettingsDisplayTime = settingsDisplayTime;
             _httpHelper = httpHelper ?? new HttpHelper();
         }
 
