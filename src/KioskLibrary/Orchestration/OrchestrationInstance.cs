@@ -26,6 +26,12 @@ namespace KioskLibrary.Orchestration
     /// </summary>
     public class OrchestrationInstance
     {
+
+        /// <summary>
+        /// The name of this instance
+        /// </summary>
+        public string Name { get; set; }
+
         /// <summary>
         /// The interval used to check for updated versions of this <see cref="OrchestrationInstance" />
         /// </summary>
@@ -70,13 +76,15 @@ namespace KioskLibrary.Orchestration
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="name">The name of this instance</param>
         /// <param name="actions">A list of <see cref="Action" />s to process</param>
         /// <param name="pollingInterval">The interval used to check for updated versions of this <see cref="OrchestrationInstance" /></param>
         /// <param name="orchestrationSource">The source of this <see cref="OrchestrationInstance" /></param>
         /// <param name="lifecycle">The lifecycle behavior of an <see cref="OrchestrationInstance" /></param>
         /// <param name="order">The order to iterate through the set of <see cref="Actions" /></param>
-        public OrchestrationInstance(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential, IHttpHelper httpHelper = null)
+        public OrchestrationInstance(string name, List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential, IHttpHelper httpHelper = null)
         {
+            Name = name;
             PollingIntervalMinutes = pollingInterval;
             Actions = actions;
             Lifecycle = lifecycle;

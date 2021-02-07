@@ -21,6 +21,7 @@ namespace KioskLibrary.Spec.Orchestration
         {
             var orchestrationInstance = CreateRandomOrchestrationInstance();
             yield return new object[] {
+                orchestrationInstance.Name,
                 orchestrationInstance.Actions,
                 orchestrationInstance.PollingIntervalMinutes,
                 orchestrationInstance.OrchestrationSource,
@@ -29,6 +30,7 @@ namespace KioskLibrary.Spec.Orchestration
             };
 
             yield return new object[] {
+                null,
                 null,
                 0,
                 orchestrationInstance.OrchestrationSource,
@@ -148,10 +150,11 @@ namespace KioskLibrary.Spec.Orchestration
 
         [DataTestMethod]
         [DynamicData(nameof(ConstructorTestData), DynamicDataSourceType.Method)]
-        public void ConstructorTest(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
+        public void ConstructorTest(string name, List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
         {
-            var orchestrationInstance = new OrchestrationInstance(actions, pollingInterval, orchestrationSource, lifecycle, order);
+            var orchestrationInstance = new OrchestrationInstance(name, actions, pollingInterval, orchestrationSource, lifecycle, order);
 
+            Assert.AreEqual(name, orchestrationInstance.Name);
             Assert.AreEqual(actions, orchestrationInstance.Actions);
             Assert.AreEqual(pollingInterval, orchestrationInstance.PollingIntervalMinutes);
             Assert.AreEqual(orchestrationSource, orchestrationInstance.OrchestrationSource);

@@ -159,7 +159,13 @@ namespace KioskLibrary.Pages
                 if (status)
                 {
                     State.OrchestrationInstance = orchestrationInstance;
-                    LogToListbox("Orchestration valid!");
+                    LogToListbox($"Orchestration Instance: \"{orchestrationInstance.Name ?? "[No Name]"}\"");
+
+                    if(orchestrationInstance.Actions != null)
+                        foreach(var action in orchestrationInstance.Actions)
+                            LogToListbox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
+
+                    LogToListbox($"Orchestration valid: \"{orchestrationInstance.Name ?? "[No Name]"}\"");
 
                     if (orchestrationSource == OrchestrationSource.File)
                         State.IsLocalPathVerified = true;
@@ -240,76 +246,6 @@ namespace KioskLibrary.Pages
             rootFrame.Navigate(typeof(MainPage));
         }
 
-        #region Examples
-        private OrchestrationInstance ComposeExampleOrchestration()
-        {
-            OrchestrationInstance orchestration = new OrchestrationInstance
-            {
-                PollingIntervalMinutes = 15,
-                Order = Ordering.Sequential,
-                Lifecycle = LifecycleBehavior.ContinuousLoop
-            };
-
-            orchestration.Actions.Add(new ImageAction(
-                "Show the Social Share iamge from GitHub",
-                5,
-                "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_GitHub%20Social%20Preview.png",
-                Windows.UI.Xaml.Media.Stretch.Uniform));
-
-            orchestration.Actions.Add(new WebsiteAction(
-                "Display the Kiosk Client GitHub page",
-                20,
-                "https://github.com/CityOfStanton/Kiosk-Client",
-                true,
-                15,
-                .005,
-                0,
-                5));
-
-            return orchestration;
-        }
-
-        private async void ButtonJSON_Click(object _, RoutedEventArgs e)
-        {
-            var savePicker = new FileSavePicker
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
-            savePicker.SuggestedFileName = "Settings.json";
-
-            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
-            if (file != null)
-            {
-                OrchestrationInstance orchestration = ComposeExampleOrchestration();
-                Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = SerializationHelper.JSONSerialize(orchestration);
-                await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
-                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
-            }
-        }
-
-        private async void ButtonXML_Click(object _, RoutedEventArgs e)
-        {
-            var savePicker = new FileSavePicker
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
-            savePicker.SuggestedFileName = "Settings.xml";
-
-            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
-            if (file != null)
-            {
-                OrchestrationInstance orchestration = ComposeExampleOrchestration();
-                Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var serializedString = SerializationHelper.XMLSerialize<OrchestrationInstance>(orchestration);
-                await Windows.Storage.FileIO.WriteTextAsync(file, serializedString);
-                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
-            }
-        }
-        #endregion
-
         private void Button_Help_Click(object sender, RoutedEventArgs e)
         {
             _walkThrough = new Queue<TeachingTip>();
@@ -346,7 +282,7 @@ namespace KioskLibrary.Pages
 
         private void ListBox_Log_Copy_Click(object sender, RoutedEventArgs e)
         {
-            if (sender != null && ListBox_Log.SelectedItem != null)
+            if (ListBox_Log.SelectedItem != null)
             {
                 var dataPackage = new DataPackage
                 {
@@ -356,11 +292,107 @@ namespace KioskLibrary.Pages
                 Clipboard.SetContent(dataPackage);
             }
         }
+        private async void ListBox_Log_Save_Click(object sender, RoutedEventArgs e)
+        {
+            var savePicker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
+            savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+
+            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                var fileText = "";
+                foreach (var item in ListBox_Log.Items)
+                    fileText += $"{item}{Environment.NewLine}";
+
+                Windows.Storage.CachedFileManager.DeferUpdates(file);
+                await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
+                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+            }
+        }
 
         private async void Button_About_Click(object sender, RoutedEventArgs e)
         {
             var about = new About();
             await about.ShowAsync();
         }
+
+        #region Examples
+        private OrchestrationInstance ComposeExampleOrchestration(string fileFormat)
+        {
+            OrchestrationInstance orchestration = new OrchestrationInstance
+            {
+                Name = $"Example demo project for {fileFormat}",
+                PollingIntervalMinutes = 15,
+                Order = Ordering.Sequential,
+                Lifecycle = LifecycleBehavior.ContinuousLoop
+            };
+
+            orchestration.Actions.Add(new ImageAction(
+                "Show the Kiosk Client Social Share image from GitHub",
+                5,
+                "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_GitHub%20Social%20Preview.png",
+                Windows.UI.Xaml.Media.Stretch.Uniform));
+
+            orchestration.Actions.Add(new WebsiteAction(
+                "Display the Kiosk Client GitHub page",
+                20,
+                "https://github.com/CityOfStanton/Kiosk-Client",
+                true,
+                15,
+                .005,
+                0,
+                5));
+
+            return orchestration;
+        }
+
+        private async void ButtonJSON_Click(object _, RoutedEventArgs e)
+        {
+            var savePicker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
+            savePicker.SuggestedFileName = "Settings.json";
+
+            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                OrchestrationInstance orchestrationInstance = ComposeExampleOrchestration("JSON");
+                Windows.Storage.CachedFileManager.DeferUpdates(file);
+                var fileText = SerializationHelper.JSONSerialize(orchestrationInstance);
+                await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
+                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+
+                LogToListbox($"Saved \"{orchestrationInstance.Name}\" to the following location: {file.Path}");
+            }
+        }
+
+        private async void ButtonXML_Click(object _, RoutedEventArgs e)
+        {
+            var savePicker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
+            savePicker.SuggestedFileName = "Settings.xml";
+
+            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                OrchestrationInstance orchestrationInstance = ComposeExampleOrchestration("XML");
+                Windows.Storage.CachedFileManager.DeferUpdates(file);
+                var serializedString = SerializationHelper.XMLSerialize<OrchestrationInstance>(orchestrationInstance);
+                await Windows.Storage.FileIO.WriteTextAsync(file, serializedString);
+                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+
+                LogToListbox($"Saved \"{orchestrationInstance.Name}\" to the following location: {file.Path}");
+            }
+        }
+        #endregion
     }
 }
