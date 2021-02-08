@@ -128,7 +128,6 @@ steps:
     clean: false
     msbuildArgs: '/m:1
                   /p:platform=x64 /p:platform=x86  /p:platform=arm
-                  /p:AppxBundlePlatforms="x86"
                   /Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal
                   /p:AppxPackageDir="$(appxPackageDir)"
