@@ -23,7 +23,8 @@ A simple Universal Windows Platform (UWP) app used to display web-based content 
     * Displays websites
       * Customizable, automatic website scrolling.
   * Set timing between actions to allow for a dynamic experience.
-  * Designed for use with Windows Kiosk Mode.
+  * Designed for use with Windows 10 machines running in Kiosk Mode.
+    * Automatically starts previously loaded Orchestration when the app starts.
   * Minimum permission requirement reduces elevation attack surface.
 
 ## Getting Started
