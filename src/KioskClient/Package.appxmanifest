@@ -8,10 +8,10 @@
 
   <Identity
     Name="5999BirchCom.385071C3770F8"
-    Publisher="CN=Technology Group, O=City of Stanton, C=US"
+    Publisher="CN=291573D4-2B42-451F-9AD2-2CCDBBAF6DB9"
     Version="1.0.9.0" />
 
-  <mp:PhoneIdentity PhoneProductId="47b8c639-f5e2-40d3-87e7-c171c9844513" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="b29b6a2c-5949-49c5-aa41-92131041d6de" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Kiosk Client</DisplayName>
