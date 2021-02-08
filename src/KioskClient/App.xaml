@@ -21,9 +21,7 @@
                 <ResourceDictionary Source="/Resources/KioskClientLogo.xaml" />
                 <ResourceDictionary Source="/Resources/CityOfStantonTechnology.xaml" />
                 <ResourceDictionary Source="/Resources/GreenControls.xaml" />
-                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>
 </Application>

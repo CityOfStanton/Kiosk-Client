@@ -15,6 +15,13 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#277C31" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#1A5120" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3DBF4A" />
+        </ResourceDictionary>
+    </Page.Resources>
 
     <Grid x:Name="mainGrid">
         <Grid.RowDefinitions>
@@ -107,7 +114,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="1" Text="Log:" TextWrapping="WrapWholeWords" VerticalAlignment="Top" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,10" />
-            <ListBox x:Name="ListBox_Log" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <ListBox x:Name="ListBox_Log" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemContainerStyle="{StaticResource GreenListBoxItemContainerStyle}">
                 <ListBox.ContextFlyout>
                     <MenuFlyout x:Name="ListBox_Log_Context_Menu">
                         <MenuFlyout.Items>
