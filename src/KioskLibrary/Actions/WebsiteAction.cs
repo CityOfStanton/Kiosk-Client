@@ -6,6 +6,7 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,16 +95,16 @@ namespace KioskLibrary.Actions
                 errors.Add(message);
 
             if (ScrollDuration.HasValue && ScrollDuration < 0)
-                errors.Add($"{nameof(ScrollDuration)} must be greater than or equalt to 0.");
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration);
 
             if (ScrollInterval.HasValue && ScrollInterval < 0)
-                errors.Add($"{nameof(ScrollInterval)} must be greater than or equalt to 0.");
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval);
 
             if (ScrollResetDelay.HasValue && ScrollResetDelay < 0)
-                errors.Add($"{nameof(ScrollResetDelay)} must be greater than or equalt to 0.");
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay);
 
             if (SettingsDisplayTime.HasValue && SettingsDisplayTime < 0)
-                errors.Add($"{nameof(SettingsDisplayTime)} must be greater than or equalt to 0.");
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime);
 
             return (!errors.Any(), Name, errors);
         }

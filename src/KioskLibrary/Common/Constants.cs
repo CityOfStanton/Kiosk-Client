@@ -17,6 +17,19 @@ namespace KioskLibrary.Common
         {
             public static string ValidURIMessage = "URL is valid!";
             public static string InvalidPollingMessage = "OrchestrationInstance: The polling interval cannot be less than 15 minutes.";
+
+            public class ActionValidationErrors
+            {
+                public static string Duration = "Duration must be greater than 0.";
+            }
+
+            public class WebsiteActionValidationErrors
+            {
+                public static string ScrollDuration = "ScrollDuration must be greater than or equalt to 0.";
+                public static string SettingsDisplayTime = "SettingsDisplayTime must be greater than or equalt to 0.";
+                public static string ScrollInterval = "ScrollInterval must be greater than or equalt to 0.";
+                public static string ScrollResetDelay = "ScrollResetDelay must be greater than or equalt to 0.";
+            }
         }
 
         /// <summary>

@@ -15,6 +15,7 @@ using Moq;
 using Windows.Web.Http;
 using System.Threading.Tasks;
 using KioskLibrary.Helpers;
+using KioskLibrary.Common;
 
 namespace KioskLibrary.Spec.Actions
 {
@@ -24,20 +25,21 @@ namespace KioskLibrary.Spec.Actions
         public static IEnumerable<object[]> GetConstructorTestData()
         {
             yield return new object[] {
-                CreateRandomString(), 
-                CreateRandomNumber(), 
-                CreateRandomString(), 
+                CreateRandomString(),
+                CreateRandomNumber(0),
+                CreateRandomString(),
                 Convert.ToBoolean(CreateRandomNumber(0, 1)),
-                CreateRandomNumber(),
-                (double?)CreateRandomNumber(),
-                CreateRandomNumber(),
-                CreateRandomNumber()
+                CreateRandomNumber(0),
+                (double?)CreateRandomNumber(0),
+                CreateRandomNumber(0),
+                CreateRandomNumber(0)
             };
             yield return new object[] {
                 null,
                 null,
                 null,
                 Convert.ToBoolean(CreateRandomNumber(0, 1)),
+                null,
                 null,
                 null,
                 null
@@ -58,20 +60,49 @@ namespace KioskLibrary.Spec.Actions
             Assert.AreEqual(scrollInterval, action.ScrollInterval);
             Assert.AreEqual(scrollResetDelay, action.ScrollResetDelay);
             Assert.AreEqual(settingsDisplayTime, action.SettingsDisplayTime);
+
         }
 
-        [DataTestMethod]
-        [DataRow(true, 0, null)]
-        [DataRow(false, 6, "ERROR, ERROR, ERROR")]
-        public async Task ValidateFailedAsyncTest(bool validationResult, int errorCount, string uriValidationErrorMessage)
+        [TestMethod]
+        public async Task ValidatePassedAsyncTest()
         {
-            var randomName= CreateRandomString();
+            var randomName = CreateRandomString();
             var randomPath = $"http://{CreateRandomString()}";
 
             Mock<IHttpHelper> mockHttpClient = new Mock<IHttpHelper>();
             mockHttpClient
                 .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
-                .Returns(Task.FromResult((validationResult, uriValidationErrorMessage)));
+                .Returns(Task.FromResult((true, null as string)));
+
+            var action = new WebsiteAction(
+                randomName,
+                CreateRandomNumber(0),
+                randomPath,
+                false,
+                CreateRandomNumber(0),
+                (double)CreateRandomNumber(0),
+                CreateRandomNumber(0),
+                CreateRandomNumber(0),
+                mockHttpClient.Object);
+
+            var (IsValid, Name, Errors) = await action.ValidateAsync();
+
+            Assert.IsTrue(IsValid, "The validation result is True.");
+            Assert.AreEqual(randomName, Name, "The name is correct.");
+            Assert.AreEqual(0, Errors.Count, "The error count is 0");
+        }
+
+        [TestMethod]
+        public async Task ValidateFailedAsyncTest()
+        {
+            var randomName = CreateRandomString();
+            var randomPath = $"http://{CreateRandomString()}";
+            var uriValidationErrorMessage = $"The error message is {CreateRandomString()}";
+
+            Mock<IHttpHelper> mockHttpClient = new Mock<IHttpHelper>();
+            mockHttpClient
+                .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
+                .Returns(Task.FromResult((false, uriValidationErrorMessage)));
 
             var action = new WebsiteAction(
                 randomName,
@@ -86,15 +117,15 @@ namespace KioskLibrary.Spec.Actions
 
             var (IsValid, Name, Errors) = await action.ValidateAsync();
 
-            Assert.AreEqual(validationResult, IsValid, $"The result is {validationResult}.");
+            Assert.IsFalse(IsValid, "The result is False.");
             Assert.AreEqual(randomName, Name, "The name is correct.");
-            Assert.AreEqual(errorCount, Errors.Count, $"The error count is {errorCount}");
-            Assert.IsTrue(Errors.Contains($"The error message is {uriValidationErrorMessage}"));
-            Assert.IsTrue(Errors.Contains("Duration must be greater than 0."));
-            Assert.IsTrue(Errors.Contains("ScrollDuration must be greater than 0."));
-            Assert.IsTrue(Errors.Contains("ScrollInterval must be greater than 0."));
-            Assert.IsTrue(Errors.Contains("ScrollResetDelay must be greater than 0."));
-            Assert.IsTrue(Errors.Contains("SettingsDisplayTime must be greater than 0."));
+            Assert.AreEqual(6, Errors.Count, "The error count is 6");
+            Assert.IsTrue(Errors.Contains(uriValidationErrorMessage));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.ActionValidationErrors.Duration));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime));
         }
     }
 }
