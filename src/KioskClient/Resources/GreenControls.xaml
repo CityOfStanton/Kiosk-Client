@@ -3,10 +3,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Style x:Key="GreenButton" TargetType="Button">
-        <Setter Property="Background" Value="#277C31"/>
+        <Setter Property="Background" Value="#267B30"/>
     </Style>
     <Style x:Key="GreenHyperlinkButton" TargetType="HyperlinkButton">
-        <Setter Property="Foreground" Value="#277C31"/>
+        <Setter Property="Foreground" Value="#267B30"/>
     </Style>
 
     <DataTemplate x:Key="GreenToggleSwitchOnContentTemplate">
@@ -68,7 +68,7 @@
                                 <VisualState x:Name="Selected">
                                     <Storyboard>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PressedBackground" Storyboard.TargetProperty="Fill">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#277C31"/>
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#267B30"/>
                                         </ObjectAnimationUsingKeyFrames>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemControlHighlightAltBaseHighBrush}"/>
@@ -78,7 +78,7 @@
                                 <VisualState x:Name="SelectedUnfocused">
                                     <Storyboard>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PressedBackground" Storyboard.TargetProperty="Fill">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#277C31"/>
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#267B30"/>
                                         </ObjectAnimationUsingKeyFrames>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemControlHighlightAltBaseHighBrush}"/>
