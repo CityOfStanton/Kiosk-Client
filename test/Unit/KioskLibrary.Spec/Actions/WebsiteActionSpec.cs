@@ -15,7 +15,6 @@ using Moq;
 using Windows.Web.Http;
 using System.Threading.Tasks;
 using KioskLibrary.Helpers;
-using System.Linq;
 
 namespace KioskLibrary.Spec.Actions
 {
