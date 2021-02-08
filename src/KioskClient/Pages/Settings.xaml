@@ -203,7 +203,7 @@
 	        Target="{x:Bind Button_Wiki}"
             IsLightDismissEnabled="true"
 	        Title="Edit your Orchestration File"
-	        Subtitle="Once generated, you can edit the file to customize your specific scenario according to the Orchestration File Wiki." 
+	        Subtitle="Once generated, you can edit the file to customize your specific scenario. More information can be found in the Orchestration File section of the Kiosk Client Wiki." 
             Closed="TeachTip_Closed">
             <muxc:TeachingTip.IconSource>
                 <muxc:SymbolIconSource Symbol="Edit" />
