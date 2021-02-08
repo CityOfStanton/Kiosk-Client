@@ -189,7 +189,7 @@ namespace KioskLibrary
                 }
             }
             else
-                OrchestrationCancelled?.Invoke("No valid orchestration was loaded.");
+                OrchestrationCancelled?.Invoke("No valid orchestration was loaded. Going to Settings.");
         }
 
         /// <summary>
