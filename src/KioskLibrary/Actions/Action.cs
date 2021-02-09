@@ -10,6 +10,7 @@ using KioskLibrary.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -66,7 +67,12 @@ namespace KioskLibrary.Actions
         public async virtual Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            throw new NotImplementedException();
+            var errors = new List<string>();
+
+            if (Duration.HasValue && Duration <= 0)
+                errors.Add($"{nameof(Duration)} must be greater than 0.");
+
+            return (!errors.Any(), null as string, errors);
         }
 
         public override string ToString() => $"{Id} | {Name}";

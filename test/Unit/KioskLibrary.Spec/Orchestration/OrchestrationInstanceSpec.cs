@@ -21,6 +21,7 @@ namespace KioskLibrary.Spec.Orchestration
         {
             var orchestrationInstance = CreateRandomOrchestrationInstance();
             yield return new object[] {
+                orchestrationInstance.Name,
                 orchestrationInstance.Actions,
                 orchestrationInstance.PollingIntervalMinutes,
                 orchestrationInstance.OrchestrationSource,
@@ -29,6 +30,7 @@ namespace KioskLibrary.Spec.Orchestration
             };
 
             yield return new object[] {
+                null,
                 null,
                 0,
                 orchestrationInstance.OrchestrationSource,
@@ -79,8 +81,8 @@ namespace KioskLibrary.Spec.Orchestration
                 .Setup(x => x.ValidateURI(It.Is<string>(u => u == invalidPath2), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
                 .Returns(Task.FromResult((false, invalidMessage2)));
 
-            var validImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
-            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), validPath, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
+            var validImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(0), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
+            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(0), validPath, true, CreateRandomNumber(0), CreateRandomNumber(0), CreateRandomNumber(0), CreateRandomNumber(0), mockHttpHelper.Object);
 
             var orchestrationInstance = CreateRandomOrchestrationInstance();
             orchestrationInstance.Actions.Clear();
@@ -96,8 +98,8 @@ namespace KioskLibrary.Spec.Orchestration
             orchestrationInstanceWithInvalidPollingInterval.PollingIntervalMinutes = 5;
             orchestrationInstanceWithInvalidPollingInterval.HttpHelper = mockHttpHelper.Object;
 
-            var invalidImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(), invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
-            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(), invalidPath2, true, CreateRandomNumber(), CreateRandomNumber(), CreateRandomNumber(), mockHttpHelper.Object);
+            var invalidImageAction = new ImageAction(CreateRandomString(), -1, invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
+            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), -1, invalidPath2, true, -1, -1, -1, -1, mockHttpHelper.Object);
 
             var orchestrationInstanceWithInvalidActions = CreateRandomOrchestrationInstance();
             orchestrationInstanceWithInvalidActions.Actions.Clear();
@@ -131,7 +133,13 @@ namespace KioskLibrary.Spec.Orchestration
                 new List<string>()
                 {
                     $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {invalidMessage2}"
+                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {invalidMessage2}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime}"
                 }
             };
 
@@ -141,17 +149,25 @@ namespace KioskLibrary.Spec.Orchestration
                 new List<string>()
                 {
                     Constants.ValidationMessages.InvalidPollingMessage,
-                    $"{orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions[0].Name}: {invalidMessage1}",
-                    $"{orchestrationInstanceWithInvalidPollingIntervalAndActions.Actions[1].Name}: {invalidMessage2}"}
+                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {invalidMessage2}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime}"
+                }
             };
         }
 
         [DataTestMethod]
         [DynamicData(nameof(ConstructorTestData), DynamicDataSourceType.Method)]
-        public void ConstructorTest(List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
+        public void ConstructorTest(string name, List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
         {
-            var orchestrationInstance = new OrchestrationInstance(actions, pollingInterval, orchestrationSource, lifecycle, order);
+            var orchestrationInstance = new OrchestrationInstance(name, actions, pollingInterval, orchestrationSource, lifecycle, order);
 
+            Assert.AreEqual(name, orchestrationInstance.Name);
             Assert.AreEqual(actions, orchestrationInstance.Actions);
             Assert.AreEqual(pollingInterval, orchestrationInstance.PollingIntervalMinutes);
             Assert.AreEqual(orchestrationSource, orchestrationInstance.OrchestrationSource);

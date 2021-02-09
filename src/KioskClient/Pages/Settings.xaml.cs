@@ -7,7 +7,6 @@
  */
 
 using KioskLibrary.ViewModels;
-using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +24,8 @@ using KioskLibrary.Helpers;
 using System.Threading.Tasks;
 using KioskClient.Pages.PageArguments;
 using Serilog;
+using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace KioskLibrary.Pages
 {
@@ -37,6 +38,8 @@ namespace KioskLibrary.Pages
         private SettingsPageArguments _currentPageArguments;
         private readonly IHttpHelper _httpHelper;
         private readonly IApplicationStorage _applicationStorage;
+        private Queue<TeachingTip> _walkThrough;
+        private bool Walkthrough_StartingIsLocalState;
 
         /// <summary>
         /// Constructor
@@ -156,7 +159,13 @@ namespace KioskLibrary.Pages
                 if (status)
                 {
                     State.OrchestrationInstance = orchestrationInstance;
-                    LogToListbox("Orchestration valid!");
+                    LogToListbox($"Orchestration Instance: \"{orchestrationInstance.Name ?? "[No Name]"}\"");
+
+                    if (orchestrationInstance.Actions != null)
+                        foreach (var action in orchestrationInstance.Actions)
+                            LogToListbox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
+
+                    LogToListbox($"Orchestration valid: \"{orchestrationInstance.Name ?? "[No Name]"}\"");
 
                     if (orchestrationSource == OrchestrationSource.File)
                         State.IsLocalPathVerified = true;
@@ -237,74 +246,132 @@ namespace KioskLibrary.Pages
             rootFrame.Navigate(typeof(MainPage));
         }
 
-        #region Examples
-        private OrchestrationInstance ComposeExampleOrchestration()
+        private void Help()
         {
-            OrchestrationInstance orchestration = new OrchestrationInstance
-            {
-                PollingIntervalMinutes = 15,
-                Order = Ordering.Sequential,
-                Lifecycle = LifecycleBehavior.ContinuousLoop
-            };
+            Walkthrough_StartingIsLocalState = State.IsLocalFile; // Capture the state of the IsLocal toggle when we start the walkthrough.
+            State.IsLocalFile = false;
 
-            orchestration.Actions.Add(new ImageAction(
-                "Show a single image. Use multiple ImageActions to create a slideshow.",
-                30,
-                "https://some-uri.com/images/the-image-to-show.jpg",
-                Windows.UI.Xaml.Media.Stretch.Uniform));
+            _walkThrough = new Queue<TeachingTip>();
+            _walkThrough.Enqueue(TeachTip_Wiki);
+            _walkThrough.Enqueue(TeachTip_FileInputMode);
+            _walkThrough.Enqueue(TeachTip_LoadFile);
+            _walkThrough.Enqueue(TeachTip_SaveFileToTheWeb);
+            _walkThrough.Enqueue(TeachTip_SaveLocally);
+            _walkThrough.Enqueue(TeachTip_Clear);
+            _walkThrough.Enqueue(TeachTip_Start);
+            _walkThrough.Enqueue(TeachTip_Update);
+            _walkThrough.Enqueue(TeachTip_FileLoad);
+            _walkThrough.Enqueue(TeachTip_About);
+            _walkThrough.Enqueue(TeachTip_Enjoy);
 
-            orchestration.Actions.Add(new WebsiteAction(
-                "Display the website",
-                120,
-                "https://some-uri.com",
-                true,
-                55,
-                1.0,
-                5
-                ));
-
-            return orchestration;
+            TeachTip_Welcome.IsOpen = true;
         }
 
-        private async void ButtonJSON_Click(object _, RoutedEventArgs e)
+        private void TeachTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
+        {
+            if (_walkThrough.Count > 0)
+            {
+                var tip = _walkThrough.Dequeue();
+
+                if (tip == TeachTip_FileInputMode)
+                    State.IsLocalFile = true;
+                else if (tip == TeachTip_SaveFileToTheWeb)
+                    State.IsLocalFile = false;
+
+                tip.IsOpen = true;
+            }
+            else
+                State.IsLocalFile = Walkthrough_StartingIsLocalState; // Restore the state of the IsLocal toggle after the walkthrough.
+        }
+
+        private void Button_Clear_Click(object sender, RoutedEventArgs e)
+        {
+            Clear();
+        }
+
+        private void Clear()
+        {
+            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.CurrentOrchestration);
+            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.CurrentOrchestrationSource);
+            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.NextOrchestration);
+
+            LogToListbox("Startup Orchestration has been removed.");
+        }
+
+        private void ListBox_Log_Clear_Click(object sender, RoutedEventArgs e)
+        {
+            ListBox_Log.Items.Clear();
+        }
+
+        private void ListBox_Log_Copy_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListBox_Log.SelectedItem != null)
+            {
+                var dataPackage = new DataPackage
+                {
+                    RequestedOperation = DataPackageOperation.Copy
+                };
+                dataPackage.SetText(ListBox_Log.SelectedItem?.ToString());
+                Clipboard.SetContent(dataPackage);
+            }
+        }
+        private async void ListBox_Log_Save_Click(object sender, RoutedEventArgs e)
         {
             var savePicker = new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
-            savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
-            savePicker.SuggestedFileName = "Settings.json";
+            savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
+            savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now.ToString("yyyyMMddHHmmss")}";
 
             Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
-                OrchestrationInstance orchestration = ComposeExampleOrchestration();
+                var fileText = "";
+                foreach (var item in ListBox_Log.Items)
+                    fileText += $"{item}{Environment.NewLine}";
+
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = SerializationHelper.JSONSerialize(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
         }
 
-        private async void ButtonXML_Click(object _, RoutedEventArgs e)
+        private async void NavigationView_Menu_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
         {
-            var savePicker = new FileSavePicker
+            switch (args?.InvokedItemContainer?.Tag)
             {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
-            savePicker.SuggestedFileName = "Settings.xml";
+                case "Start":
+                    Save();
+                    Start();
+                    break;
 
-            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
-            if (file != null)
-            {
-                OrchestrationInstance orchestration = ComposeExampleOrchestration();
-                Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var serializedString = SerializationHelper.XMLSerialize<OrchestrationInstance>(orchestration);
-                await Windows.Storage.FileIO.WriteTextAsync(file, serializedString);
-                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+                case "Save":
+                    Save();
+                    break;
+
+                case "Clear":
+                    Clear();
+                    break;
+
+                case "Examples":
+                    var examples = new Examples();
+                    await examples.ShowAsync();
+
+                    foreach (var log in examples.Logs)
+                        LogToListbox(log);
+
+                    break;
+
+                case "Tutorial":
+                    Help();
+                    break;
+
+                case "About":
+                    var about = new About();
+                    await about.ShowAsync();
+                    break;
             }
         }
-        #endregion
     }
 }

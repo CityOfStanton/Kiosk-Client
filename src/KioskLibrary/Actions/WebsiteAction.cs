@@ -6,8 +6,10 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 
@@ -46,6 +48,11 @@ namespace KioskLibrary.Actions
         /// </summary>
         public int? ScrollResetDelay { get; set; }
 
+        /// <summary>
+        /// The number of seconds to display the Settings button on the Website Action
+        /// </summary>
+        public int? SettingsDisplayTime { get; set; }
+
         private readonly IHttpHelper _httpHelper;
 
         /// <summary>
@@ -63,8 +70,9 @@ namespace KioskLibrary.Actions
         /// <param name="scrollDuration">How long to scroll the page</param>
         /// <param name="scrollInterval">The delay between scrolling</param>
         /// <param name="scrollResetDelay">The delay before resetting the scroll to the top</param>
+        /// <param name="settingsDisplayTime">The number of seconds to display the Settings button on the Website Action</param>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, IHttpHelper httpHelper = null)
+        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, int? settingsDisplayTime, IHttpHelper httpHelper = null)
             : base(name, duration)
         {
             Path = path;
@@ -72,19 +80,33 @@ namespace KioskLibrary.Actions
             ScrollDuration = scrollDuration;
             ScrollInterval = scrollInterval;
             ScrollResetDelay = scrollResetDelay;
+            SettingsDisplayTime = settingsDisplayTime;
             _httpHelper = httpHelper ?? new HttpHelper();
         }
 
         /// <inheritdoc/>
         public async override Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
         {
+            (_, _, var errors) = await base.ValidateAsync(httpHelper);
+
             (bool isValid, string message) = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok);
 
-            var errors = new List<string>();
             if (!isValid)
                 errors.Add(message);
 
-            return (isValid, Name, errors);
+            if (ScrollDuration.HasValue && ScrollDuration < 0)
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration);
+
+            if (ScrollInterval.HasValue && ScrollInterval < 0)
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval);
+
+            if (ScrollResetDelay.HasValue && ScrollResetDelay < 0)
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay);
+
+            if (SettingsDisplayTime.HasValue && SettingsDisplayTime < 0)
+                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime);
+
+            return (!errors.Any(), Name, errors);
         }
     }
 }

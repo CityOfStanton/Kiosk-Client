@@ -30,7 +30,7 @@ namespace KioskLibrary.Spec.Actions
 
             yield return new object[] {
                 CreateRandomString(),
-                CreateRandomNumber(),
+                CreateRandomNumber(0),
                 CreateRandomString(),
                 (Stretch)options.GetValue(r.Next(options.Length))
             };
@@ -69,7 +69,7 @@ namespace KioskLibrary.Spec.Actions
 
             var action = new ImageAction(
                 randomName,
-                CreateRandomNumber(),
+                CreateRandomNumber(0),
                 randomPath,
                 Stretch.None,
                 mockHttpClient.Object);

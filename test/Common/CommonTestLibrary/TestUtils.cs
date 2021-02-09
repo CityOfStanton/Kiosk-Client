@@ -82,6 +82,7 @@ namespace CommonTestLibrary
             var r = new Random();
 
             return new OrchestrationInstance(
+                CreateRandomString(),
                 new List<Action>()
                 {
                     new ImageAction()

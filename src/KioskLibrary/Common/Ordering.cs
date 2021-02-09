@@ -9,11 +9,11 @@
 namespace KioskLibrary.Common
 {
     /// <summary>
-    /// The source of an <see cref="OrchestrationInstance" />
+    /// The order to iterate through a set
     /// </summary>
-    public enum OrchestrationSource
+    public enum Ordering
     {
-        URL,
-        File
+        Sequential,
+        Random
     }
 }

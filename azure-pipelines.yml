@@ -41,6 +41,8 @@ variables:
 - group: code-signing
 - name: solution
   value: '**/*.sln'
+- name: deployProject
+  value: '**/KioskClient.csproj'
 - name: testConfiguration
   value: 'Debug'
 - name: buildConfiguration
@@ -93,7 +95,6 @@ steps:
                   /p:AppxBundlePlatforms="x86"
                   /Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal
-                  /p:AppxPackageDir="$(appxPackageDir)"
                   /nodeReuse:false'
 
 - task: VSTest@2
@@ -118,15 +119,14 @@ steps:
     testRunTitle: 'Publish Test Results'
 
 - task: VSBuild@1
-  displayName: 'Build Kiosk Client: $(buildConfiguration)'
+  displayName: 'Build Kiosk Client Deployment: $(buildConfiguration)'
   inputs:
-    solution: '$(solution)'
+    solution: '$(deployProject)'
     msbuildArchitecture: 'x86'
     configuration: '$(buildConfiguration)'
     clean: false
     msbuildArgs: '/m:1
-                  /p:platform=x64 /p:platform=x86
-                  /p:AppxBundlePlatforms="x86"
+                  /p:platform=x64 /p:platform=x86  /p:platform=arm
                   /Fileloggerparameters:verbosity=quiet
                   /Consoleloggerparameters:verbosity=minimal
                   /p:AppxPackageDir="$(appxPackageDir)"

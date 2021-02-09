@@ -23,7 +23,8 @@ A simple Universal Windows Platform (UWP) app used to display web-based content 
     * Displays websites
       * Customizable, automatic website scrolling.
   * Set timing between actions to allow for a dynamic experience.
-  * Designed for use with Windows Kiosk Mode.
+  * Designed for use with Windows 10 machines running in Kiosk Mode.
+    * Automatically starts previously loaded Orchestration when the app starts.
   * Minimum permission requirement reduces elevation attack surface.
 
 ## Getting Started
@@ -38,7 +39,7 @@ Due to the way we render web pages, you can't press the Escape key to return to 
 
 ## Contributing
 
-We encourage anyone to contribute features or bug fixes. Simply raise an issue, then use that thread to let people know what you're working on. This coordinate work so two people aren't working on the same problem at any given time.
+We encourage anyone to contribute features or bug fixes. Simply raise an issue, then use that thread to let people know what you're working on. This coordinates work so two people aren't working on the same problem at the same time.
 
 **Note:** PR builds will fail the pipeline check if you're contributing from a fork. This due to a [security restriction in Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#access-restrictions). A repository owner will verify your commit builds and passes tests once it has been merged with the [develop branch](https://github.com/CityOfStanton/Kiosk-Client/tree/develop).
 

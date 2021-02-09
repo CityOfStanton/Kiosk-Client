@@ -58,9 +58,10 @@ namespace KioskLibrary.Actions
         /// <inheritdoc/>
         public async override Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
         {
+            (_, _, var errors) = await base.ValidateAsync(httpHelper);
+
             (bool isValid, string message) = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok);
 
-            var errors = new List<string>();
             if (!isValid)
                 errors.Add(message);
 
