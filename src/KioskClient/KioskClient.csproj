@@ -142,6 +142,9 @@
     <Compile Include="Pages\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\Examples.xaml.cs">
+      <DependentUpon>Examples.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\PagesHelper.cs" />
     <Compile Include="Pages\PageArguments\SettingsPageArguments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -214,6 +217,9 @@
     <Content Include="Assets\BadgeLogo.scale-400.png" />
     <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
+    <Content Include="Resources\KioskClient.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -236,6 +242,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\Examples.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -243,6 +253,10 @@
     <Page Include="Resources\CityOfStantonTechnology.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\BadgeLogo.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\GreenControls.xaml">
       <SubType>Designer</SubType>

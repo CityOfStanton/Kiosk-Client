@@ -1,0 +1,23 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ControlTemplate x:Key="BadgeLogo">
+        <!-- Created with Ai->XAML Export Plug-In Version 0.4 (PC/64) -->
+        <!-- By Mike Swanson (http://blog.mikeswanson.com/)           -->
+        <Canvas Width="21.487" Height="19.525">
+
+            <Canvas>
+
+                <!-- Layer 1/<Path> -->
+                <Path StrokeThickness="0.3" Stroke="#ffffffff" StrokeMiterLimit="1.0" Fill="#ff000000" Data="F1 M 12.553,15.768 L 7.118,15.768 L 8.934,17.584 L 7.118,19.400 L 12.553,19.400 L 14.369,17.584 L 12.553,15.768 Z"/>
+
+                <!-- Layer 1/<Compound Path> -->
+                <Path StrokeThickness="0.5" Stroke="#ffffffff" StrokeMiterLimit="1.0" Fill="#ff000000" Data="F1 M 20.508,14.190 C 20.508,14.589 20.184,14.913 19.785,14.913 L 1.702,14.913 C 1.303,14.913 0.979,14.589 0.979,14.190 L 0.979,1.725 C 0.979,1.325 1.303,1.001 1.702,1.001 L 19.785,1.001 C 20.184,1.001 20.508,1.325 20.508,1.725 L 20.508,14.190 Z M 20.513,0.250 L 0.974,0.250 C 0.574,0.250 0.250,0.574 0.250,0.974 L 0.250,14.941 C 0.250,15.341 0.574,15.665 0.974,15.665 L 20.513,15.665 C 20.913,15.665 21.237,15.341 21.237,14.941 L 21.237,0.974 C 21.237,0.574 20.913,0.250 20.513,0.250 Z"/>
+
+                <!-- Layer 1/<Rectangle> -->
+                <Path StrokeThickness="1.0" Stroke="#ff000000" StrokeMiterLimit="1.0" Fill="#ff267b30" Data="F1 M 20.632,14.914 L 0.855,14.914 L 0.855,0.894 L 20.632,0.894 L 20.632,14.914 Z"/>
+
+            </Canvas>
+        </Canvas>
+    </ControlTemplate>
+</ResourceDictionary>
