@@ -1,0 +1,55 @@
+﻿<!--
+  Copyright 2021
+  City of Stanton
+  Stanton, Kentucky
+  www.stantonky.gov
+  github.com/CityOfStanton
+-->
+
+<ContentDialog
+    x:Class="KioskClient.Dialogs.RunTutorial"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:KioskClient.Dialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Name="ContentDialog_RunTutorial"
+    KeyUp="ContentDialog_RunTutorial_KeyUp"
+    Title="Welcome to Kiosk Client!">
+    <ContentDialog.Resources>
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#267B30" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#3DBF4A" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#3DBF4A" />
+        </ResourceDictionary>
+    </ContentDialog.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="20" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+        <ContentControl x:Name="ContentControl_Logo" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Template="{StaticResource MainLogo}"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="Welcom to Kiosk Client! Would you like to run the tutorial to get yourself familiar with everything?" TextWrapping="Wrap" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+
+        <StackPanel Grid.Row="3" Grid.Column="2" >
+            <CheckBox x:Name="CheckBox_DoNotShowThisAgain" Content="Do Not Show This Again" HorizontalAlignment="Right" IsChecked="{x:Bind Path=DoNotShowThisAgain, Mode=TwoWay}" Margin="0,0,0,10"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="Button_Yes" Content="Yes" Style="{StaticResource GreenButton}" Width="75" Margin="10,0" Click="Button_Yes_Click" />
+                <Button x:Name="Button_No" Content="No" Style="{StaticResource GreenButton}"  Width="75" Margin="10,0" Click="Button_Close_Click" />
+                <Button x:Name="Button_Close" Content="Close" Style="{StaticResource GreenButton}" Width="75" Margin="10,0" Click="Button_Close_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+
+</ContentDialog>

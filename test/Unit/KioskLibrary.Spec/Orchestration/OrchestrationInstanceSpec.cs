@@ -81,8 +81,8 @@ namespace KioskLibrary.Spec.Orchestration
                 .Setup(x => x.ValidateURI(It.Is<string>(u => u == invalidPath2), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
                 .Returns(Task.FromResult((false, invalidMessage2)));
 
-            var validImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(0), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
-            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(0), validPath, true, CreateRandomNumber(0), CreateRandomNumber(0), CreateRandomNumber(0), CreateRandomNumber(0), mockHttpHelper.Object);
+            var validImageAction = new ImageAction(CreateRandomString(), CreateRandomNumber(1), validPath, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
+            var validWebsiteAction = new WebsiteAction(CreateRandomString(), CreateRandomNumber(1), validPath, true, CreateRandomNumber(1), CreateRandomNumber(0), CreateRandomNumber(1), mockHttpHelper.Object);
 
             var orchestrationInstance = CreateRandomOrchestrationInstance();
             orchestrationInstance.Actions.Clear();
@@ -99,7 +99,7 @@ namespace KioskLibrary.Spec.Orchestration
             orchestrationInstanceWithInvalidPollingInterval.HttpHelper = mockHttpHelper.Object;
 
             var invalidImageAction = new ImageAction(CreateRandomString(), -1, invalidPath1, (Stretch)stretchOptions.GetValue(r.Next(stretchOptions.Length)), mockHttpHelper.Object);
-            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), -1, invalidPath2, true, -1, -1, -1, -1, mockHttpHelper.Object);
+            var invalidWebsiteAction = new WebsiteAction(CreateRandomString(), -1, invalidPath2, true, -1, -1, -1, mockHttpHelper.Object);
 
             var orchestrationInstanceWithInvalidActions = CreateRandomOrchestrationInstance();
             orchestrationInstanceWithInvalidActions.Actions.Clear();
@@ -124,7 +124,7 @@ namespace KioskLibrary.Spec.Orchestration
             yield return new object[] {
                 orchestrationInstanceWithInvalidPollingInterval,
                 false,
-                new List<string>() { Constants.ValidationMessages.InvalidPollingMessage }
+                new List<string>() { Constants.ValidationMessages.OrchestrationInstance.InvalidPollingInterval}
             };
 
             yield return new object[] {
@@ -133,13 +133,12 @@ namespace KioskLibrary.Spec.Orchestration
                 new List<string>()
                 {
                     $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {Constants.ValidationMessages.Actions.InvalidDuration}",
                     $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {invalidMessage2}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime}"
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.InvalidDuration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingTime}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingResetDelay}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.WebsiteAction.InvalidSettingsDisplayTime}"
                 }
             };
 
@@ -148,15 +147,14 @@ namespace KioskLibrary.Spec.Orchestration
                 false,
                 new List<string>()
                 {
-                    Constants.ValidationMessages.InvalidPollingMessage,
+                    Constants.ValidationMessages.OrchestrationInstance.InvalidPollingInterval,
                     $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[0].Name}: {Constants.ValidationMessages.Actions.InvalidDuration}",
                     $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {invalidMessage2}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.ActionValidationErrors.Duration}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay}",
-                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime}"
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.InvalidDuration}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingTime}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingResetDelay}",
+                    $"{orchestrationInstanceWithInvalidActions.Actions[1].Name}: {Constants.ValidationMessages.Actions.WebsiteAction.InvalidSettingsDisplayTime}"
                 }
             };
         }

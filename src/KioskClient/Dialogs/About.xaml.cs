@@ -6,11 +6,10 @@
  * github.com/CityOfStanton
  */
 
-using System;
 using Windows.ApplicationModel;
 using Windows.UI.Xaml.Controls;
 
-namespace KioskClient.Pages
+namespace KioskClient.Dialogs
 {
     public sealed partial class About : ContentDialog
     {

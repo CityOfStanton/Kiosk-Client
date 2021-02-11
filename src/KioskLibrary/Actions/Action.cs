@@ -6,6 +6,7 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using Newtonsoft.Json;
 using System;
@@ -38,6 +39,7 @@ namespace KioskLibrary.Actions
         /// <summary>
         /// The duration of the action
         /// </summary>
+        /// <remarks>This number must be greater than or equal to 1.</remarks>
         public int? Duration { get; set; }
 
         /// <summary>
@@ -70,7 +72,7 @@ namespace KioskLibrary.Actions
             var errors = new List<string>();
 
             if (Duration.HasValue && Duration <= 0)
-                errors.Add($"{nameof(Duration)} must be greater than 0.");
+                errors.Add(Constants.ValidationMessages.Actions.InvalidDuration);
 
             return (!errors.Any(), null as string, errors);
         }

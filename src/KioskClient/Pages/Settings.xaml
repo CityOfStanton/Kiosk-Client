@@ -22,7 +22,7 @@
             <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3DBF4A" />
         </ResourceDictionary>
     </Page.Resources>
-    <muxc:NavigationView x:Name="NavigationView_Menu" IsSettingsVisible="False" PaneDisplayMode="LeftCompact"  ItemInvoked="NavigationView_Menu_ItemInvoked">
+    <muxc:NavigationView x:Name="NavigationView_Menu" IsSettingsVisible="False" PaneDisplayMode="LeftCompact"  ItemInvoked="NavigationView_Menu_ItemInvoked" ScrollViewer.VerticalScrollBarVisibility="Auto">
         <muxc:NavigationView.MenuItems>
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Start" Icon="Play" Content="Start the Orchestration" Tag="Start" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Background="#267B30" />
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Save" Icon="SaveLocal" Content="Save as startup Orchestration" Tag="Save" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" />
@@ -31,7 +31,12 @@
 
         <muxc:NavigationView.FooterMenuItems>
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Examples" Icon="Download" Content="Generate Examples" Tag="Examples" />
-            <muxc:NavigationViewItem x:Name="NavigationViewItem_Tutorial" Icon="Help" Content="Tutorial" Tag="Tutorial" />
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Tutorial" Content="Tutorial" Tag="Tutorial" >
+                <muxc:NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7BE;" FontFamily="Segoe MDL2 Assets" />
+                </muxc:NavigationViewItem.Icon>
+            </muxc:NavigationViewItem>
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Help" Icon="Help" Content="Help" Tag="Help" />
             <muxc:NavigationViewItem x:Name="NavigationViewItem_About" Content="About" Tag="About" >
                 <muxc:NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xe900;" FontFamily="{StaticResource KioskClientFonts}" />
@@ -147,12 +152,12 @@
 	        Subtitle="To get started, generate an Example Orchestration File by selecting either the JSON or XML button." 
             Closed="TeachTip_Closed">
                 <muxc:TeachingTip.IconSource>
-                    <muxc:SymbolIconSource Symbol="Document" />
+                    <muxc:SymbolIconSource Symbol="Download" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachTip_Wiki"
-	        Target="{x:Bind NavigationViewItem_Examples}"
+	        Target="{x:Bind NavigationViewItem_Help}"
             IsLightDismissEnabled="true"
 	        Title="Edit your Orchestration File"
 	        Subtitle="Once generated, you can edit the file to customize your specific scenario. More information can be found in the Orchestration File section of the Kiosk Client Wiki." 

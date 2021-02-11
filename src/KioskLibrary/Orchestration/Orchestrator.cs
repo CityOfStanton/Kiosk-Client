@@ -29,7 +29,6 @@ namespace KioskLibrary
     {
         private OrchestrationInstance _orchestrationInstance;
         private readonly ITimeHelper _durationtimer;
-        private int _durationCounter;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
         private readonly IHttpHelper _httpHelper;
@@ -93,10 +92,7 @@ namespace KioskLibrary
             _orchestrationInstance = null;
             _currentAction = null;
 
-            _durationCounter = 0;
-
             _durationtimer = timeHelper ?? new TimerHelper();
-            _durationtimer.Interval = TimeSpan.FromSeconds(1.0);
             _durationtimer.Tick += Durationtime_Tick;
         }
 
@@ -121,7 +117,7 @@ namespace KioskLibrary
             Log.Information("GetNextOrchestration invoked");
 
             // Get the Settings URI
-            var currentOrchestrationURI = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
+            var currentOrchestrationURI = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.DefaultOrchestrationURI);
 
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
@@ -140,14 +136,11 @@ namespace KioskLibrary
         /// <summary>
         /// Starts processing the current <see cref="OrchestrationInstance" />
         /// </summary>
-        /// <returns></returns>
         public async Task StartOrchestration()
         {
             Log.Information("StartOrchestration invoked");
 
-            var orchestrationSource = _applicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.CurrentOrchestrationSource);
-
-            _durationCounter = 0;
+            var orchestrationSource = _applicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.DefaultOrchestrationSource);
 
             _orchestrationInstance = await LoadOrchestration(orchestrationSource, _httpHelper, _applicationStorage);
 
@@ -162,7 +155,6 @@ namespace KioskLibrary
                 if (!status)
                 {
                     OrchestrationInvalid?.Invoke(errors);
-
                     return;
                 }
 
@@ -189,7 +181,7 @@ namespace KioskLibrary
                 }
             }
             else
-                OrchestrationCancelled?.Invoke("No valid orchestration was loaded. Going to Settings.");
+                OrchestrationCancelled?.Invoke(Constants.Orchestrator.NoValidOrchestration);
         }
 
         /// <summary>
@@ -210,10 +202,10 @@ namespace KioskLibrary
             OrchestrationInstance toReturn = null;
 
             if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
-                toReturn = applicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.CurrentOrchestration);
+                toReturn = applicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.DefaultOrchestration);
             else if (orchestrationSource == OrchestrationSource.URL) // Load OrchestrationInstance from the web.
             {
-                var orchestrationInstancePath = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.CurrentOrchestrationURI);
+                var orchestrationInstancePath = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.DefaultOrchestrationURI);
                 if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
                         toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri, httpHelper); // Pull a new instace from the URL
@@ -264,14 +256,15 @@ namespace KioskLibrary
                 // After we have set the _currentAction, we can assess the duration
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
                 {
+                    _durationtimer.Stop();
                     _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
-                    _durationCounter = 0;
+                    _durationtimer.Interval = TimeSpan.FromSeconds(_currentAction.Duration.Value);
                     _durationtimer.Start();
                 }
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions
 
-                Log.Information("EvaluateNextAction - Valling next action: {action}", _currentAction.ToString());
+                Log.Information("EvaluateNextAction - Calling next action: {action}", _currentAction.ToString());
 
                 NextAction?.Invoke(_currentAction);
             }
@@ -281,13 +274,6 @@ namespace KioskLibrary
                 CoreApplication.Exit();
         }
 
-        private async void Durationtime_Tick(object sender, object e)
-        {
-            if (_currentAction?.Duration != null && _currentAction.Duration.HasValue == true)
-                if (_durationCounter >= _currentAction.Duration.Value)
-                    await EvaluateNextAction();
-
-            _durationCounter++;
-        }
+        private async void Durationtime_Tick(object sender, object e) => await EvaluateNextAction();
     }
 }

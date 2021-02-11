@@ -15,9 +15,8 @@
       "$type": "KioskLibrary.Actions.WebsiteAction, KioskLibrary",
       "path": "https://github.com/CityOfStanton/Kiosk-Client",
       "autoScroll": true,
-      "scrollDuration": 15,
-      "scrollInterval": 0.005,
-      "scrollResetDelay": 0,
+      "scrollingTime": 15,
+      "scrollingResetDelay": 5,
       "settingsDisplayTime": 5,
       "name": "Display the Kiosk Client GitHub page",
       "duration": 20

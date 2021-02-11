@@ -48,7 +48,7 @@ namespace KioskLibrary.Helpers
                 var uri = new Uri(settingsUri);
                 var result = await GetAsync(uri);
 
-                return (result.StatusCode == expectedResult, Constants.ValidationMessages.ValidURIMessage);
+                return (result.StatusCode == expectedResult, Constants.ValidationMessages.OrchestrationInstance.ValidURIMessage);
             }
             catch (Exception ex)
             {

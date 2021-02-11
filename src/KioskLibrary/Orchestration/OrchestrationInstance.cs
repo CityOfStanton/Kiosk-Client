@@ -152,7 +152,7 @@ namespace KioskLibrary.Orchestration
             var errors = new List<string>();
 
             if (PollingIntervalMinutes < 15)
-                errors.Add(Constants.ValidationMessages.InvalidPollingMessage);
+                errors.Add(Constants.ValidationMessages.OrchestrationInstance.InvalidPollingInterval);
 
             if (Actions != null)
                 foreach (var a in Actions)

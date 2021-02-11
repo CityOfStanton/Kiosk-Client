@@ -19,7 +19,7 @@ using Windows.UI.Xaml.Input;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace KioskClient.Pages
+namespace KioskClient.Dialogs
 {
     public sealed partial class Examples : ContentDialog
     {
@@ -34,26 +34,25 @@ namespace KioskClient.Pages
         {
             OrchestrationInstance orchestration = new OrchestrationInstance
             {
-                Name = $"Example demo project for {fileFormat}",
+                Name = $"{Constants.Application.OrchestrationFileExample.Name}{fileFormat}",
                 PollingIntervalMinutes = 15,
                 Order = Ordering.Sequential,
                 Lifecycle = LifecycleBehavior.ContinuousLoop
             };
 
             orchestration.Actions.Add(new ImageAction(
-                "Show the Kiosk Client Social Share image from GitHub",
+                Constants.Application.OrchestrationFileExample.ImageActionExample.Name,
                 5,
-                "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_GitHub%20Social%20Preview.png",
+                Constants.Application.OrchestrationFileExample.ImageActionExample.Path,
                 Windows.UI.Xaml.Media.Stretch.Uniform));
 
             orchestration.Actions.Add(new WebsiteAction(
-                "Display the Kiosk Client GitHub page",
+                Constants.Application.OrchestrationFileExample.WebsiteExample.Name,
                 20,
-                "https://github.com/CityOfStanton/Kiosk-Client",
+                Constants.Application.OrchestrationFileExample.WebsiteExample.Path,
                 true,
                 15,
-                .005,
-                0,
+                5,
                 5));
 
             return orchestration;

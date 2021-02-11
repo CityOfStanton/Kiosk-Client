@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace KioskClient.Support.Pages
+namespace KioskClient.Dialogs
 {
     /// <summary>
     /// Helper class for common page-level functionality
