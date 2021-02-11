@@ -6,7 +6,7 @@
  * github.com/CityOfStanton
  */
 
-using KioskClient.Pages;
+using KioskClient.Dialogs;
 using KioskLibrary.Actions;
 using KioskLibrary.Helpers;
 using Serilog;
@@ -40,26 +40,18 @@ namespace KioskLibrary.Pages.Actions
 
         private async void WvDisplay_LoadCompleted(object sender, NavigationEventArgs e)
         {
-            var heightString = await Webview_Display.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
-            if (!string.IsNullOrEmpty(heightString))
-                if (double.TryParse(heightString, out var height))
+            var documentBodyScrollHeight = await Webview_Display.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
+
+            if (!string.IsNullOrEmpty(documentBodyScrollHeight))
+                if (double.TryParse(documentBodyScrollHeight, out var height))
                 {
                     _webviewContentHeight = height;
                     _scrollingTimer.Start();
                 }
 
-            if (_websiteAction.SettingsDisplayTime.HasValue && _websiteAction.SettingsDisplayTime > 0)
-            {
-                _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_websiteAction.SettingsDisplayTime.Value);
-                _settingsButtonTimer.Tick += SettingsTimer_Tick;
-                _settingsButtonTimer.Start();
-            }
-        }
-
-        private void SettingsTimer_Tick(object sender, object e)
-        {
-            _settingsButtonTimer.Stop();
-            Button_Settings.Visibility = Visibility.Collapsed;
+            _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_websiteAction.SettingsDisplayTime);
+            _settingsButtonTimer.Tick += SettingsTimer_Tick;
+            _settingsButtonTimer.Start();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -68,29 +60,38 @@ namespace KioskLibrary.Pages.Actions
 
             Log.Information("WebsitePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(_websiteAction));
 
+            var refreshRate = 60;
+
             Webview_Display.Source = new Uri(_websiteAction.Path);
 
-            if (!_websiteAction.ScrollInterval.HasValue || _websiteAction.ScrollInterval.Value <= 0)
-                _websiteAction.ScrollInterval = 1;
-
-            if (_websiteAction.AutoScroll && _websiteAction.ScrollDuration.HasValue)
+            if (_websiteAction.AutoScroll && _websiteAction.ScrollingTime.HasValue)
             {
                 _currentTick = 0;
-                _totalTicks = _websiteAction.ScrollDuration.Value / _websiteAction.ScrollInterval.Value;
+                _totalTicks = Convert.ToDouble(refreshRate * _websiteAction.ScrollingTime);
 
-                _scrollingTimer.Interval = TimeSpan.FromSeconds(_websiteAction.ScrollInterval.Value);
+                _scrollingTimer.Interval = TimeSpan.FromMilliseconds((1.0 / refreshRate) * 1000);
                 _scrollingTimer.Tick += ScrollingTimer_Tick;
             }
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => _scrollingTimer.Stop();
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            _scrollingTimer.Stop();
+            _settingsButtonTimer.Stop();
+        }
+
+        private void SettingsTimer_Tick(object sender, object e)
+        {
+            _settingsButtonTimer.Stop();
+            Button_Settings.Visibility = Visibility.Collapsed;
+        }
 
         private async void ScrollingTimer_Tick(object sender, object e)
         {
-            if (++_currentTick >= _totalTicks)
+            if (++_currentTick > _totalTicks)
             {
-                if (_websiteAction.ScrollResetDelay.HasValue)
-                    System.Threading.Thread.Sleep(_websiteAction.ScrollResetDelay.Value * 1000);
+                if (_websiteAction.ScrollingResetDelay.HasValue)
+                    System.Threading.Thread.Sleep(_websiteAction.ScrollingResetDelay.Value * 1000);
 
                 // Reset _currentTick
                 _currentTick = 0;
@@ -102,9 +103,6 @@ namespace KioskLibrary.Pages.Actions
                 await Webview_Display.InvokeScriptAsync("eval", new string[] { $"window.scrollTo(0,{(_currentTick / _totalTicks) * _webviewContentHeight});" });
         }
 
-        private void Button_Settings_Click(object sender, RoutedEventArgs e)
-        {
-            PagesHelper.GoToSettings();
-        }
+        private void Button_Settings_Click(object sender, RoutedEventArgs e) => PagesHelper.GoToSettings();
     }
 }

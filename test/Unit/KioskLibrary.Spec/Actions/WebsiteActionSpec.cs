@@ -29,10 +29,9 @@ namespace KioskLibrary.Spec.Actions
                 CreateRandomNumber(0),
                 CreateRandomString(),
                 Convert.ToBoolean(CreateRandomNumber(0, 1)),
+                CreateRandomNumber(1),
                 CreateRandomNumber(0),
-                (double?)CreateRandomNumber(0),
-                CreateRandomNumber(0),
-                CreateRandomNumber(0)
+                CreateRandomNumber(1)
             };
             yield return new object[] {
                 null,
@@ -41,26 +40,23 @@ namespace KioskLibrary.Spec.Actions
                 Convert.ToBoolean(CreateRandomNumber(0, 1)),
                 null,
                 null,
-                null,
-                null
+                CreateRandomNumber(1)
             };
         }
 
         [DataTestMethod]
         [DynamicData(nameof(GetConstructorTestData), DynamicDataSourceType.Method)]
-        public void ConstructorTest(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, int? settingsDisplayTime)
+        public void ConstructorTest(string name, int? duration, string path, bool autoScroll, int? scrollingTime, int? scrollingResetDelay, int settingsDisplayTime)
         {
-            var action = new WebsiteAction(name, duration, path, autoScroll, scrollDuration, scrollInterval, scrollResetDelay, settingsDisplayTime);
+            var action = new WebsiteAction(name, duration, path, autoScroll, scrollingTime, scrollingResetDelay, settingsDisplayTime);
 
             Assert.AreEqual(name, action.Name);
             Assert.AreEqual(duration, action.Duration);
             Assert.AreEqual(path, action.Path);
             Assert.AreEqual(autoScroll, action.AutoScroll);
-            Assert.AreEqual(scrollDuration, action.ScrollDuration);
-            Assert.AreEqual(scrollInterval, action.ScrollInterval);
-            Assert.AreEqual(scrollResetDelay, action.ScrollResetDelay);
+            Assert.AreEqual(scrollingTime, action.ScrollingTime);
+            Assert.AreEqual(scrollingResetDelay, action.ScrollingResetDelay);
             Assert.AreEqual(settingsDisplayTime, action.SettingsDisplayTime);
-
         }
 
         [TestMethod]
@@ -79,10 +75,9 @@ namespace KioskLibrary.Spec.Actions
                 CreateRandomNumber(0),
                 randomPath,
                 false,
+                CreateRandomNumber(1),
                 CreateRandomNumber(0),
-                (double)CreateRandomNumber(0),
-                CreateRandomNumber(0),
-                CreateRandomNumber(0),
+                CreateRandomNumber(1),
                 mockHttpClient.Object);
 
             var (IsValid, Name, Errors) = await action.ValidateAsync();
@@ -104,28 +99,26 @@ namespace KioskLibrary.Spec.Actions
                 .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
                 .Returns(Task.FromResult((false, uriValidationErrorMessage)));
 
-            var action = new WebsiteAction(
+            var invalidActionWithSmallScrollingTime = new WebsiteAction(
                 randomName,
                 -1,
                 randomPath,
                 false,
                 -1,
-                (double)-1,
                 -1,
                 -1,
                 mockHttpClient.Object);
 
-            var (IsValid, Name, Errors) = await action.ValidateAsync();
+            var (IsValid, Name, Errors) = await invalidActionWithSmallScrollingTime.ValidateAsync();
 
             Assert.IsFalse(IsValid, "The result is False.");
             Assert.AreEqual(randomName, Name, "The name is correct.");
-            Assert.AreEqual(6, Errors.Count, "The error count is 6");
+            Assert.AreEqual(5, Errors.Count, "The error count is 5");
             Assert.IsTrue(Errors.Contains(uriValidationErrorMessage));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.ActionValidationErrors.Duration));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.InvalidDuration));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingTime));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingResetDelay));
+            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.WebsiteAction.InvalidSettingsDisplayTime));
         }
     }
 }

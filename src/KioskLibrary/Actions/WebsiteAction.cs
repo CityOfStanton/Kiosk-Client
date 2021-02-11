@@ -32,26 +32,22 @@ namespace KioskLibrary.Actions
         public bool AutoScroll { get; set; }
 
         /// <summary>
-        /// How long to scroll the page
+        /// The number of seconds spent scrolling the webpage
         /// </summary>
-        /// <remarks>The longer the duration, the slower the scrolling effect</remarks>
-        public int? ScrollDuration { get; set; }
+        /// <remarks>This number must be greater than or equal to 1.</remarks>
+        public int? ScrollingTime { get; set; }
 
         /// <summary>
-        /// The delay between scrolling
+        /// The number of seconds after the bottom of the page is reached before resetting the view to the top of the page
         /// </summary>
-        /// <remarks>The smaller the interval, the smoother the scroll will appear</remarks>
-        public double? ScrollInterval { get; set; }
-
-        /// <summary>
-        /// The delay before resetting the scroll to the top
-        /// </summary>
-        public int? ScrollResetDelay { get; set; }
+        /// <remarks>If defined, this number must be greater than or equal to 0.</remarks>
+        public int? ScrollingResetDelay { get; set; }
 
         /// <summary>
         /// The number of seconds to display the Settings button on the Website Action
         /// </summary>
-        public int? SettingsDisplayTime { get; set; }
+        /// <remarks>This number must be greater than or equal to 1.</remarks>
+        public int SettingsDisplayTime { get; set; }
 
         private readonly IHttpHelper _httpHelper;
 
@@ -67,19 +63,17 @@ namespace KioskLibrary.Actions
         /// <param name="duration">The duration of the action</param>
         /// <param name="path">The path to the website</param>
         /// <param name="autoScroll">Whether or not to auto scroll the page</param>
-        /// <param name="scrollDuration">How long to scroll the page</param>
-        /// <param name="scrollInterval">The delay between scrolling</param>
-        /// <param name="scrollResetDelay">The delay before resetting the scroll to the top</param>
+        /// <param name="scrollingTime">The number of times a scrolling event happens per second</param>
+        /// <param name="scrollingResetDelay">The delay before resetting the scroll to the top</param>
         /// <param name="settingsDisplayTime">The number of seconds to display the Settings button on the Website Action</param>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollDuration, double? scrollInterval, int? scrollResetDelay, int? settingsDisplayTime, IHttpHelper httpHelper = null)
+        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollingTime, int? scrollingResetDelay, int settingsDisplayTime, IHttpHelper httpHelper = null)
             : base(name, duration)
         {
             Path = path;
             AutoScroll = autoScroll;
-            ScrollDuration = scrollDuration;
-            ScrollInterval = scrollInterval;
-            ScrollResetDelay = scrollResetDelay;
+            ScrollingTime = scrollingTime;
+            ScrollingResetDelay = scrollingResetDelay;
             SettingsDisplayTime = settingsDisplayTime;
             _httpHelper = httpHelper ?? new HttpHelper();
         }
@@ -94,17 +88,14 @@ namespace KioskLibrary.Actions
             if (!isValid)
                 errors.Add(message);
 
-            if (ScrollDuration.HasValue && ScrollDuration < 0)
-                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollDuration);
+            if (ScrollingTime.HasValue && ScrollingTime <= 0)
+                errors.Add(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingTime);
 
-            if (ScrollInterval.HasValue && ScrollInterval < 0)
-                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollInterval);
+            if (ScrollingResetDelay.HasValue && ScrollingResetDelay < 0)
+                errors.Add(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingResetDelay);
 
-            if (ScrollResetDelay.HasValue && ScrollResetDelay < 0)
-                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.ScrollResetDelay);
-
-            if (SettingsDisplayTime.HasValue && SettingsDisplayTime < 0)
-                errors.Add(Constants.ValidationMessages.WebsiteActionValidationErrors.SettingsDisplayTime);
+            if (SettingsDisplayTime < 1)
+                errors.Add(Constants.ValidationMessages.Actions.WebsiteAction.InvalidSettingsDisplayTime);
 
             return (!errors.Any(), Name, errors);
         }
