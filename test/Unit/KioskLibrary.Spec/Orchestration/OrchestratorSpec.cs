@@ -16,22 +16,6 @@ namespace KioskLibrary.Spec.Orchestration
     public class OrchestratorSpec
     {
         [TestMethod]
-        public void ConstructorTest()
-        {
-            var mockApplicationStorage = new Mock<IApplicationStorage>();
-            var mockhttphelper = new Mock<IHttpHelper>();
-            var mockTimeHelper = new Mock<ITimeHelper>();
-
-            mockTimeHelper
-                .SetupSet(x => x.Interval = It.IsAny<TimeSpan>())
-                .Verifiable();
-
-            var orchestrator = new Orchestrator(mockhttphelper.Object, mockApplicationStorage.Object, mockTimeHelper.Object);
-
-            mockTimeHelper.VerifyAll();
-        }
-
-        [TestMethod]
         public async Task GetNextOrchestrationTest()
         {
             var currentOrchestrationPath = $"http://{CreateRandomString()}";
@@ -46,7 +30,7 @@ namespace KioskLibrary.Spec.Orchestration
             };
 
             mockApplicationStorage
-                .Setup(x => x.GetFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.CurrentOrchestrationURI)))
+                .Setup(x => x.GetFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.DefaultOrchestrationURI)))
                 .Returns(currentOrchestrationPath)
                 .Verifiable();
 
@@ -73,7 +57,7 @@ namespace KioskLibrary.Spec.Orchestration
             var mockTimeHelper = new Mock<ITimeHelper>();
 
             mockApplicationStorage
-                .Setup(x => x.GetFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.CurrentOrchestrationURI)))
+                .Setup(x => x.GetFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.DefaultOrchestrationURI)))
                 .Verifiable();
 
             await Orchestrator.GetNextOrchestration(mockhttphelper.Object, mockApplicationStorage.Object);
@@ -89,7 +73,7 @@ namespace KioskLibrary.Spec.Orchestration
             var mockTimeHelper = new Mock<ITimeHelper>();
 
             mockApplicationStorage
-                .Setup(x => x.GetFromStorage<OrchestrationSource>(It.Is<string>(s => s == Constants.ApplicationStorage.CurrentOrchestrationSource)))
+                .Setup(x => x.GetFromStorage<OrchestrationSource>(It.Is<string>(s => s == Constants.ApplicationStorage.DefaultOrchestrationSource)))
                 .Verifiable();
 
             var orchestrator = new Orchestrator(mockhttphelper.Object, mockApplicationStorage.Object, mockTimeHelper.Object);
@@ -117,15 +101,15 @@ namespace KioskLibrary.Spec.Orchestration
             testInstance.HttpHelper = mockhttphelper.Object;
 
             mockApplicationStorage
-                .Setup(x => x.GetFromStorage<OrchestrationSource>(It.Is<string>(s => s == Constants.ApplicationStorage.CurrentOrchestrationSource)))
+                .Setup(x => x.GetFromStorage<OrchestrationSource>(It.Is<string>(s => s == Constants.ApplicationStorage.DefaultOrchestrationSource)))
                 .Returns(orchestrationSource);
 
             mockApplicationStorage
-                .Setup(x => x.GetFromStorage<OrchestrationInstance>(It.Is<string>(s => s == Constants.ApplicationStorage.CurrentOrchestration)))
+                .Setup(x => x.GetFromStorage<OrchestrationInstance>(It.Is<string>(s => s == Constants.ApplicationStorage.DefaultOrchestration)))
                 .Returns(testInstance);
 
             mockApplicationStorage
-                .Setup(x => x.GetFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.CurrentOrchestrationURI)))
+                .Setup(x => x.GetFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.DefaultOrchestrationURI)))
                 .Returns(currentOrchestrationPath);
 
             mockhttphelper
