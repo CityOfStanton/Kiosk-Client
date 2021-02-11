@@ -7,7 +7,7 @@
 <!-- omit in toc -->
 # Kiosk Client ![CodeQL](https://github.com/CityOfStanton/Kiosk-Client/workflows/CodeQL/badge.svg) [![Build Status](https://dev.azure.com/chadbirch0541/Kiosk%20Client/_apis/build/status/CityOfStanton.Kiosk-Client?branchName=develop)](https://dev.azure.com/chadbirch0541/Kiosk%20Client/_build/latest?definitionId=1&branchName=develop)
 
-A simple Universal Windows Platform (UWP) app used to display web-based content on a Windows 10 systems.
+A free, simple, easy to use, app that displays important information on the screen. Designed to be used in a kiosk setting, Kiosk Client can render multiple images or webpages in a predefined sequence or in a random order. Kiosk Client can pull its content from publicly accessible sites. The instructions that drive Kiosk Client can also be hosted from any static web hosting source.
 
 - [Features](#features)
 - [Getting Started](#getting-started)
@@ -40,6 +40,8 @@ Due to the way we render web pages, you can't press the Escape key to return to 
 ## Contributing
 
 We encourage anyone to contribute features or bug fixes. Simply raise an issue, then use that thread to let people know what you're working on. This coordinates work so two people aren't working on the same problem at the same time.
+
+Please base your changes off of the [develop](https://github.com/CityOfStanton/Kiosk-Client/tree/develop) branch. This branch functions as our staging area until we can get a tighter CI pipeline working.
 
 **Note:** PR builds will fail the pipeline check if you're contributing from a fork. This due to a [security restriction in Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#access-restrictions). A repository owner will verify your commit builds and passes tests once it has been merged with the [develop branch](https://github.com/CityOfStanton/Kiosk-Client/tree/develop).
 
