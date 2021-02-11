@@ -22,7 +22,7 @@
             <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3DBF4A" />
         </ResourceDictionary>
     </Page.Resources>
-    <muxc:NavigationView x:Name="NavigationView_Menu" IsSettingsVisible="False" PaneDisplayMode="LeftCompact"  ItemInvoked="NavigationView_Menu_ItemInvoked" ScrollViewer.VerticalScrollBarVisibility="Auto">
+    <muxc:NavigationView x:Name="NavigationView_Menu" IsSettingsVisible="False" PaneDisplayMode="LeftCompact"  ItemInvoked="NavigationView_Menu_ItemInvoked" ScrollViewer.VerticalScrollBarVisibility="Disabled">
         <muxc:NavigationView.MenuItems>
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Start" Icon="Play" Content="Start the Orchestration" Tag="Start" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Background="#267B30" />
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Save" Icon="SaveLocal" Content="Save as startup Orchestration" Tag="Save" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" />
