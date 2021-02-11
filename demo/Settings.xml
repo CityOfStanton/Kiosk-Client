@@ -16,9 +16,8 @@
       <Duration>20</Duration>
       <Path>https://github.com/CityOfStanton/Kiosk-Client</Path>
       <AutoScroll>true</AutoScroll>
-      <ScrollDuration>15</ScrollDuration>
-      <ScrollInterval>0.005</ScrollInterval>
-      <ScrollResetDelay>0</ScrollResetDelay>
+      <ScrollingTime>15</ScrollingTime>
+      <ScrollingResetDelay>5</ScrollingResetDelay>
       <SettingsDisplayTime>5</SettingsDisplayTime>
     </Action>
   </Actions>
