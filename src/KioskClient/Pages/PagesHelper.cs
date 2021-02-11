@@ -7,7 +7,6 @@
  */
 
 using KioskClient.Pages.PageArguments;
-using KioskLibrary;
 using KioskLibrary.Common;
 using KioskLibrary.Pages;
 using KioskLibrary.Storage;
@@ -15,7 +14,7 @@ using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace KioskClient.Pages
+namespace KioskClient.Support.Pages
 {
     /// <summary>
     /// Helper class for common page-level functionality
@@ -51,7 +50,7 @@ namespace KioskClient.Pages
         {
             (applicationStorage ?? new ApplicationStorage()).SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
             var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { "Orchestration was cancelled." }));
+            rootFrame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { Constants.Application.PageHelper.OrchestrationCancelled }));
         }
     }
 }

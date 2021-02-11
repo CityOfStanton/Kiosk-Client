@@ -24,6 +24,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="25" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ContentControl Grid.Row="2" Grid.RowSpan="3" x:Name="ccLogo" Template="{StaticResource MainLogo}" HorizontalAlignment="Center"/>

@@ -15,11 +15,12 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using KioskClient.Pages;
+using KioskClient.Dialogs;
 using KioskClient.Pages.PageArguments;
 using Serilog;
 using Serilog.Formatting.Json;
 using Windows.Storage;
+using KioskLibrary.Common;
 
 namespace KioskLibrary
 {
@@ -100,7 +101,7 @@ namespace KioskLibrary
             if (_actionToFrameMap.ContainsKey(action.GetType()))
                 nextPage = _actionToFrameMap[action.GetType()];
             else
-                throw new NotSupportedException($"There is no corresponding Page mapped to [{action.GetType().Name}]");
+                throw new NotSupportedException($"{Constants.Application.Exceptions.PageDoesNotExist}[{action.GetType().Name}]");
 
             Frame.Navigate(nextPage, action);
         }
