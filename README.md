@@ -50,7 +50,10 @@ Please base your changes off of the [develop](https://github.com/CityOfStanton/K
 
 You can download the latest released version from the Windows Store.
 
-<a href='//www.microsoft.com/store/apps/9NQZFB05ZMV9?cid=storebadge&ocid=badge'><img src='https://developer.microsoft.com/store/badges/images/English_get_L.png' alt='English badge' style='width: 127px; height: 52px;'/></a>
+![alt text]([https://developer.microsoft.com/store/badges/images/English_get_L.png)
+
+
+<a href='//www.microsoft.com/store/apps/9NQZFB05ZMV9?cid=storebadge&ocid=badge'><img src='https://developer.microsoft.com/store/badges/images/English_get_L.png' alt='English badge' width="127px" height="52px"/></a>
 
 ## Future Work
 
