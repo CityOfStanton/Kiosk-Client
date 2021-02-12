@@ -157,7 +157,7 @@ namespace KioskLibrary.Common
                     /// <summary>
                     /// The path of the <see cref="Actions.ImageAction"/>
                     /// </summary>
-                    public static string Path = "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_GitHub%20Social%20Preview.png";
+                    public static string Path = "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/main/logo/Kiosk-Client_GitHub%20Social%20Preview.png";
                 }
 
                 /// <summary>
