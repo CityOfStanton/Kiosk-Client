@@ -1,0 +1,25 @@
+{
+  "name": "Example demo project for JSON",
+  "pollingIntervalMinutes": 15,
+  "lifecycle": "ContinuousLoop",
+  "order": "Sequential",
+  "actions": [
+    {
+      "$type": "KioskLibrary.Actions.ImageAction, KioskLibrary",
+      "path": "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_GitHub%20Social%20Preview.png",
+      "stretch": "Uniform",
+      "name": "Show the Kiosk Client Social Share image from GitHub",
+      "duration": 5
+    },
+    {
+      "$type": "KioskLibrary.Actions.WebsiteAction, KioskLibrary",
+      "path": "https://github.com/CityOfStanton/Kiosk-Client",
+      "autoScroll": true,
+      "scrollingTime": 15,
+      "scrollingResetDelay": 5,
+      "settingsDisplayTime": 5,
+      "name": "Display the Kiosk Client GitHub page",
+      "duration": 20
+    }
+  ]
+}

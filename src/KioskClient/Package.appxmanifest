@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  IgnorableNamespaces="uap mp">
+
+  <Identity
+    Name="5999BirchCom.385071C3770F8"
+    Publisher="CN=291573D4-2B42-451F-9AD2-2CCDBBAF6DB9"
+    Version="1.0.9.0" />
+
+  <mp:PhoneIdentity PhoneProductId="b29b6a2c-5949-49c5-aa41-92131041d6de" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>Kiosk Client</DisplayName>
+    <PublisherDisplayName>City of Stanton</PublisherDisplayName>
+    <Logo>Assets\AppIcon\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="KioskClient.App">
+      <uap:VisualElements
+        DisplayName="Kiosk Client"
+        Description="A simple app used to operate with Windows 10 systems running in kiosk mode."
+        BackgroundColor="transparent"  Square150x150Logo="Assets\AppIcon\Square150x150Logo.png" Square44x44Logo="Assets\AppIcon\Square44x44Logo.png">
+        <uap:DefaultTile ShortName="Kiosk Client"  Square71x71Logo="Assets\AppIcon\SmallTile.png" Wide310x150Logo="Assets\AppIcon\Wide310x150Logo.png" Square310x310Logo="Assets\AppIcon\LargeTile.png">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo"/>
+            <uap:ShowOn Tile="square310x310Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile >
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape"/>
+          <uap:Rotation Preference="portrait"/>
+          <uap:Rotation Preference="landscapeFlipped"/>
+          <uap:Rotation Preference="portraitFlipped"/></uap:InitialRotationPreference>
+        <uap:SplashScreen BackgroundColor="white"  Image="Assets\AppIcon\SplashScreen.png"/>
+        <uap:LockScreen Notification="badge" BadgeLogo="Assets\BadgeLogo.png"/>
+      </uap:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="OrchestrationPollingManager.OrchestrationUpdateTask">
+          <BackgroundTasks>
+            <Task Type="timer"/>
+          </BackgroundTasks>
+        </Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>

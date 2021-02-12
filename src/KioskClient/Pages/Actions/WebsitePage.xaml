@@ -1,0 +1,22 @@
+﻿<Page
+    x:Class="KioskLibrary.Pages.Actions.WebsitePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:KioskLibrary.Actions"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid x:Name="Grid_Main" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <WebView x:Name="Webview_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.ZIndex="0"/>
+        <Button x:Name="Button_Settings" Background="Transparent" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,20" Canvas.ZIndex="1" Click="Button_Settings_Click" Opacity=".3">
+            <Button.Content>
+                <StackPanel Orientation="Horizontal">
+                    <SymbolIcon Symbol="Setting"/>
+                    <TextBlock Text=" Settings"/>
+                </StackPanel>
+            </Button.Content>
+        </Button>
+    </Grid>
+</Page>

@@ -1,0 +1,96 @@
+# For most projects, this workflow file will not need changing; you simply need
+# to commit it to your repository.
+#
+# You may wish to alter this file to override the set of languages analyzed,
+# or to provide custom queries or build logic.
+#
+# ******** NOTE ********
+# We have attempted to detect the languages in your repository. Please check
+# the `language` matrix defined below to confirm you have the correct set of
+# supported CodeQL languages.
+#
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ develop ]
+  schedule:
+    - cron: '31 17 * * 4'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: windows-latest
+
+    env:
+      SigningCertificate: City of Stanton.pfx
+      Solution_Path: Kiosk-Client.sln
+      Client_Project_Path: KioskClient.csproj
+      Client_Project_Directory: .\src\KioskClient
+      Client_Library_Path: KioskLibrary.csproj
+      Client_Library_Directory: .\src\KioskLibrary
+      PFX_Container_Name: VS_KEY_E46DB7A70964298B
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp' ]
+        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
+        # Learn more:
+        # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    # The PFX and MSBuild work was derived from the following articles:
+    #   - http://www.dotnetapp.com/github-actions-for-uwp-apps-the-good-and-the-bad-and-the-ugly/
+    #   - https://github.com/microsoft/github-actions-for-desktop-apps#workflows
+
+    # - name: Decode PFX
+    #   run: |
+    #     $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BASE64_ENCODED_CODE_SIGNING_PFX }}")
+    #     $currentDirectory = Get-Location
+    #     $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Project_Directory -AdditionalChildPath $env:SigningCertificate
+    #     [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+    #     $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Library_Directory -AdditionalChildPath $env:SigningCertificate
+    #     [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+
+    # - name: Install PFX
+    #   run : |
+    #     $currentDirectory = Get-Location
+    #     $certificatePath = Join-Path -Path $currentDirectory -ChildPath $env:Client_Project_Directory -AdditionalChildPath $env:SigningCertificate
+    #     .\tools\SnInstallPfx.exe $certificatePath "${{ secrets.CODE_SIGNING_PFX_PASSWORD }}" $env:PFX_Container_Name
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+        # If you wish to specify custom queries, you can do so here or in a config file.
+        # By default, queries listed here will override any specified in a config file.
+        # Prefix the list here with "+" to use these queries and those in the config file.
+        # queries: ./path/to/local/query, your-org/your-repo/queries@main
+
+    # ℹ️ Command-line programs to run using the OS shell.
+    # 📚 https://git.io/JvXDl
+
+    - name: Build Solution
+      # run: MSBuild.exe KioskClient.sln /p:UseSharedCompilation=false /p:Platform=x86 /p:AppxBundle=$env:AppxBundle /p:AppxBundlePlatforms="x86|x64" /p:PackageCertificateKeyFile=$env:SigningCertificate /p:PackageCertificatePassword="${{ secrets.CODE_SIGNING_PFX_PASSWORD }}" /restore
+      run: MSBuild.exe KioskClient.sln /p:UseSharedCompilation=false /p:Platform=x86 /p:AppxBundle=$env:AppxBundle /p:AppxBundlePlatforms="x86" /restore
+      env:
+        AppxBundle: Always
+        BuildMode: StoreUpload
+        Configuration: Debug
+
+    # - name: Remove all PFX files
+    #   run: Get-ChildItem . -recurse -include *.pfx | remove-item
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1

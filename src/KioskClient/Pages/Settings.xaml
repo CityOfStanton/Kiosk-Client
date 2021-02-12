@@ -1,0 +1,281 @@
+﻿<!--
+  Copyright 2021
+  City of Stanton
+  Stanton, Kentucky
+  www.stantonky.gov
+  github.com/CityOfStanton
+-->
+
+<Page
+    x:Class="KioskLibrary.Pages.Settings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#267B30" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#1A5120" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3DBF4A" />
+        </ResourceDictionary>
+    </Page.Resources>
+    <muxc:NavigationView x:Name="NavigationView_Menu" IsSettingsVisible="False" PaneDisplayMode="LeftCompact"  ItemInvoked="NavigationView_Menu_ItemInvoked" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+        <muxc:NavigationView.MenuItems>
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Start" Icon="Play" Content="Start the Orchestration" Tag="Start" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Background="#267B30" />
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Save" Icon="SaveLocal" Content="Save as startup Orchestration" Tag="Save" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" />
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Clear" Icon="Clear" Content="Clear startup  Orchestration" Tag="Clear" />
+        </muxc:NavigationView.MenuItems>
+
+        <muxc:NavigationView.FooterMenuItems>
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Examples" Icon="Download" Content="Generate Examples" Tag="Examples" />
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Tutorial" Content="Tutorial" Tag="Tutorial" >
+                <muxc:NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7BE;" FontFamily="Segoe MDL2 Assets" />
+                </muxc:NavigationViewItem.Icon>
+            </muxc:NavigationViewItem>
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Help" Icon="Help" Content="Help" Tag="Help" />
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_About" Content="About" Tag="About" >
+                <muxc:NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xe900;" FontFamily="{StaticResource KioskClientFonts}" />
+                </muxc:NavigationViewItem.Icon>
+            </muxc:NavigationViewItem>
+        </muxc:NavigationView.FooterMenuItems>
+
+        <Grid x:Name="mainGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <ContentControl x:Name="ContentControl_Logo" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Template="{StaticResource MainLogo}"/>
+
+            <Grid Grid.Column="1"  Grid.Row="0" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Settings:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <Grid Grid.Column="1"  Grid.Row="1" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ToggleSwitch OnContentTemplate="{StaticResource GreenToggleSwitchOnContentTemplate}" x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" OnContent="File" OffContent="URL" HorizontalAlignment="Center" VerticalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" />
+                        <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="auto" />
+                            </Grid.RowDefinitions>
+                            <TextBox x:Name="TextBox_URLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
+                            <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind Path=State.CanLoadUri, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" >
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <SymbolIcon Symbol="Globe"/>
+                                        <TextBlock Text=" Load"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                            <ProgressRing x:Name="ProgressRing_URL_Loading" IsActive="{x:Bind Path=State.IsUriLoading, Mode=OneWay}" Grid.Column="2" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
+                        </Grid>
+                        <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="0,20,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="Button_FileLoad" IsEnabled="{x:Bind Path=State.CanLoadFile, Mode=OneWay}" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" >
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <SymbolIcon Symbol="Save"/>
+                                        <TextBlock Text=" Load File"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                            <ProgressRing x:Name="ProgressRing_File_Loading" IsActive="{x:Bind Path=State.IsFileLoading, Mode=OneWay}" Grid.Column="1" Margin="20,0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
+                            <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
+                        </Grid>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.ColumnSpan="2" Margin="20" Grid.Column="0" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="1" Text="Log:" TextWrapping="WrapWholeWords" VerticalAlignment="Top" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,10" />
+                <ListBox x:Name="ListBox_Log" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemContainerStyle="{StaticResource GreenListBoxItemContainerStyle}">
+                    <ListBox.ContextFlyout>
+                        <MenuFlyout x:Name="ListBox_Log_Context_Menu">
+                            <MenuFlyout.Items>
+                                <MenuFlyoutItem x:Name="ListBox_Log_Copy" Text="Copy" Click="ListBox_Log_Copy_Click" >
+                                    <MenuFlyoutItem.Icon>
+                                        <SymbolIcon Symbol="Copy"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="ListBox_Log_Save" Text="Save" Click="ListBox_Log_Save_Click" >
+                                    <MenuFlyoutItem.Icon>
+                                        <SymbolIcon Symbol="Save"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="ListBox_Log_Clear" Text="Clear" Click="ListBox_Log_Clear_Click" >
+                                    <MenuFlyoutItem.Icon>
+                                        <SymbolIcon Symbol="Clear"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout.Items>
+                        </MenuFlyout>
+                    </ListBox.ContextFlyout>
+                </ListBox>
+            </Grid>
+
+            <muxc:TeachingTip x:Name="TeachTip_Welcome"
+	        Target="{x:Bind NavigationViewItem_Examples}"
+            IsLightDismissEnabled="true"
+	        Title="Welcome to Kiosk Client."
+	        Subtitle="To get started, generate an Example Orchestration File by selecting either the JSON or XML button." 
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Download" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_Wiki"
+	        Target="{x:Bind NavigationViewItem_Help}"
+            IsLightDismissEnabled="true"
+	        Title="Edit your Orchestration File"
+	        Subtitle="Once generated, you can edit the file to customize your specific scenario. More information can be found in the Orchestration File section of the Kiosk Client Wiki." 
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Edit" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_FileInputMode"
+	        Target="{x:Bind ToggleSwitch_InputMode}"
+            IsLightDismissEnabled="true"
+	        Title="Load Orchestrations from multiple sources"
+	        Subtitle="You can load an orchestration from you local file system or from a website or other static file hosting service." 
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Switch" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_LoadFile"
+	        Target="{x:Bind Button_FileLoad}"
+            IsLightDismissEnabled="true"
+	        Title="Test your Orchestration File"
+	        Subtitle="You can test your file by loading it using the Load File button."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Edit" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_SaveFileToTheWeb"
+	        Target="{x:Bind TextBox_URLPath}"
+            IsLightDismissEnabled="true"
+	        Title="Save your Orchestration File to the web"
+	        Subtitle="Once you are satisfied, you can save the file to a publicly available location on the web, such as GitHub, Azure Storage, or Amazon S3."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Save" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_SaveLocally"
+	        Target="{x:Bind NavigationViewItem_Save}"
+            IsLightDismissEnabled="true"
+	        Title="Save your Orchestration Locally"
+	        Subtitle="Click to save your current Orchestration as the startup Orchestration. It will begin the next time you app is launched."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="SaveLocal" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_Clear"
+	        Target="{x:Bind NavigationViewItem_Clear}"
+            IsLightDismissEnabled="true"
+	        Title="Clear your saved Orchestration"
+	        Subtitle="Clear the startup Orchestration to prevent Kiosk Client from starting with it the next time the app is launched."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="SaveLocal" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_Start"
+	        Target="{x:Bind NavigationViewItem_Start}"
+            IsLightDismissEnabled="true"
+	        Title="Start your Orchestration!"
+	        Subtitle="You can click the Start button to start immediately. This also saves your Orchestration as the startup Orchestration."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Play" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_Update"
+	        Target="{x:Bind Button_UrlLoad}"
+            IsLightDismissEnabled="true"
+	        Title="Updating your Orchestration"
+	        Subtitle="Note that when using an Orchestration URL, the app will check for updates based on the PollingIntervalMinutes field in the Orchestration File."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="RepeatAll" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_FileLoad"
+	        Target="{x:Bind Button_FileLoad}"
+            IsLightDismissEnabled="true"
+	        Title="Local Orchestration limitations"
+	        Subtitle="If you are running an Orchestration from a local file, then the file will not be updated until you manually load a new Orchestration File."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Save" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_About"
+	        Target="{x:Bind NavigationViewItem_About}"
+            IsLightDismissEnabled="true"
+	        Title="Reach out to us"
+	        Subtitle="If you still have questions, find any issues, or have an idea on how we can improve Kiosk Client, feel free to reach out to us."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Help" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip x:Name="TeachTip_Enjoy"
+	        Target="{x:Bind ContentControl_Logo}"
+            IsLightDismissEnabled="true"
+	        Title="Enjoy Kiosk Client!"
+	        Subtitle="We hope you enjoy Kiosk Client! If you have any questions, or find any issues, please log an issue on our GitHub page. If you like our app, please leave a review on the Windows Store."
+            Closed="TeachTip_Closed">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Like" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+        </Grid>
+    </muxc:NavigationView>
+</Page>
