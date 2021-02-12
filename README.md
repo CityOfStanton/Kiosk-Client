@@ -14,6 +14,7 @@ A free, simple, easy to use, app that displays important information on the scre
   - [Prerequisites](#prerequisites)
 - [Known Issues](#known-issues)
 - [Contributing](#contributing)
+- [Windows Store](#windows-store)
 - [Future Work](#future-work)
 
 ## Features
@@ -44,6 +45,12 @@ We encourage anyone to contribute features or bug fixes. Simply raise an issue, 
 Please base your changes off of the [develop](https://github.com/CityOfStanton/Kiosk-Client/tree/develop) branch. This branch functions as our staging area until we can get a tighter CI pipeline working.
 
 **Note:** PR builds will fail the pipeline check if you're contributing from a fork. This due to a [security restriction in Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#access-restrictions). A repository owner will verify your commit builds and passes tests once it has been merged with the [develop branch](https://github.com/CityOfStanton/Kiosk-Client/tree/develop).
+
+## Windows Store
+
+You can download the latest released version from the Windows Store.
+
+<a href='//www.microsoft.com/store/apps/9NQZFB05ZMV9?cid=storebadge&ocid=badge'><img src='https://developer.microsoft.com/store/badges/images/English_get-it-from-MS.png' alt='English badge' style='width: 284px; height: 104px;'/></a>
 
 ## Future Work
 
