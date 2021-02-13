@@ -24,10 +24,14 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="25" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ContentControl Grid.Row="2" Grid.RowSpan="3" x:Name="ccLogo" Template="{StaticResource MainLogo}" HorizontalAlignment="Center"/>
-        <TextBlock  Grid.Row="5" Text="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource SubheaderTextBlockStyle}" Foreground="White" FontWeight="Bold" />
+        <StackPanel Grid.Row="5" Orientation="Vertical" HorizontalAlignment="Center">
+            <TextBlock Text="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource SubheaderTextBlockStyle}" Foreground="White" FontWeight="Bold" />
+            <TextBlock x:Name="TextBlock_Status" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" />
+        </StackPanel>
         <ProgressRing x:Name="ProgressRing_File_Loading" Grid.Row="6" IsActive="True" Grid.Column="0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_Settings}" />
         <Button x:Name="Button_Settings" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Settings" Click="Button_Settings_Click" Foreground="White"/>
     </Grid>

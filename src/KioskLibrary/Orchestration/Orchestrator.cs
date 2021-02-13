@@ -35,6 +35,26 @@ namespace KioskLibrary
         private readonly IApplicationStorage _applicationStorage;
 
         /// <summary>
+        /// Delegate used for <see cref="OrchestrationInvalid" />
+        /// </summary>
+        public delegate void OrchestrationInvalidDelegate(List<string> errors);
+
+        /// <summary>
+        /// Event that's raised when the orchestration is invalid
+        /// </summary>
+        public event OrchestrationInvalidDelegate OrchestrationInvalid;
+
+        /// <summary>
+        /// Delegate used for <see cref="OrchestrationStarted" />
+        /// </summary>
+        public delegate void OrchestrationStartedDelegate();
+
+        /// <summary>
+        /// Event that's raised when the orchestration starts
+        /// </summary>
+        public event OrchestrationStartedDelegate OrchestrationStarted;
+
+        /// <summary>
         /// The delegate for receiving <see cref="NextAction" /> events
         /// </summary>
         /// <param name="action">The next action</param>
@@ -57,24 +77,15 @@ namespace KioskLibrary
         public event OrchestrationCancelledDelegate OrchestrationCancelled;
 
         /// <summary>
-        /// Delegate used for <see cref="OrchestrationStarted" />
+        /// The delegate for receiving <see cref="OrchestrationStatusUpdate" /> events
         /// </summary>
-        public delegate void OrchestrationStartedDelegate();
+        /// <param name="status">The status of the Orchestration</param>
+        public delegate void OrchestrationStatusUpdateDelegate(string status);
 
         /// <summary>
-        /// Delegate used for <see cref="OrchestrationInvalid" />
+        /// Event that's fired when an Orchestration's status has updated
         /// </summary>
-        public delegate void OrchestrationInvalidDelegate(List<string> errors);
-
-        /// <summary>
-        /// Event that's raised when the orchestration starts
-        /// </summary>
-        public event OrchestrationStartedDelegate OrchestrationStarted;
-
-        /// <summary>
-        /// Event that's raised when the orchestration is invalid
-        /// </summary>
-        public event OrchestrationInvalidDelegate OrchestrationInvalid;
+        public event OrchestrationStatusUpdateDelegate OrchestrationStatusUpdate;
 
         /// <summary>
         /// Constructor
@@ -140,13 +151,23 @@ namespace KioskLibrary
         {
             Log.Information("StartOrchestration invoked");
 
+            OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.Initializing);
+
+            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false); //Ensure the EndOrchestration value has been reset to false
+
             var orchestrationSource = _applicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.DefaultOrchestrationSource);
+
+            OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.Loading} {orchestrationSource}");
 
             _orchestrationInstance = await LoadOrchestration(orchestrationSource, _httpHelper, _applicationStorage);
 
             if (_orchestrationInstance != null)
             {
+                OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.LoadedSuccessfully);
+
                 _orchestrationInstance.OrchestrationSource = orchestrationSource;
+
+                OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.ValidatingOrchestration);
 
                 (bool status, List<string> errors) = await _orchestrationInstance.ValidateAsync();
 
@@ -154,45 +175,64 @@ namespace KioskLibrary
 
                 if (!status)
                 {
+                    OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
+
                     OrchestrationInvalid?.Invoke(errors);
                     return;
                 }
-
-                if (orchestrationSource == OrchestrationSource.URL)
-                    _applicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
-
-                OrchestrationStarted?.Invoke();
-
-                try
+                else
                 {
-                    ApplicationView.GetForCurrentView()?.TryEnterFullScreenMode();
-                }
-                catch (Exception ex) { Log.Error(ex, ex.Message); }
+                    OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationValid);
 
-                if (_orchestrationInstance.Actions.Any())
-                {
-                    // Populate the _orchestrationSequence with a sequence of actions to take
-                    if (_orchestrationInstance.Order == Ordering.Sequential)
-                        _orchestrationSequence = new List<Action>(_orchestrationInstance.Actions);
-                    else
-                        PopulateRandomSequenceOfActions(new List<Action>(_orchestrationInstance.Actions));
+                    if (orchestrationSource == OrchestrationSource.URL)
+                    {
+                        OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.SettingPollingInterval} {_orchestrationInstance.PollingIntervalMinutes} minutes");
+                        _applicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
+                    }
 
-                    await EvaluateNextAction();
+                    OrchestrationStarted?.Invoke();
+
+                    try
+                    {
+                        ApplicationView.GetForCurrentView()?.TryEnterFullScreenMode();
+                    }
+                    catch (Exception ex) { Log.Error(ex, ex.Message); }
+
+                    if (_orchestrationInstance.Actions.Any())
+                    {
+                        OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.SettingActionSequence);
+
+                        // Populate the _orchestrationSequence with a sequence of actions to take
+                        Log.Information("Action order set to {order}", _orchestrationInstance.Order);
+                        if (_orchestrationInstance.Order == Ordering.Sequential)
+                        {
+                            _orchestrationSequence = new List<Action>(_orchestrationInstance.Actions);
+
+                            foreach (var action in _orchestrationInstance.Actions)
+                                Log.Information("Adding action: {action}", action);
+                        }
+                        else
+                            PopulateRandomSequenceOfActions(new List<Action>(_orchestrationInstance.Actions));
+
+                        await EvaluateNextAction();
+                    }
                 }
             }
             else
-                OrchestrationCancelled?.Invoke(Constants.Orchestrator.NoValidOrchestration);
+                StopOrchestration(Constants.Orchestrator.StatusMessages.NoValidOrchestration);
         }
 
         /// <summary>
         /// Stop processing the current <see cref="OrchestrationInstance" />
         /// </summary>
-        public void StopOrchestration()
+        public void StopOrchestration(string message)
         {
             Log.Information("StopOrchestration - Stopping orchestration");
 
             if (_durationtimer != null)
                 _durationtimer.Stop();
+
+            OrchestrationCancelled?.Invoke(message);
         }
 
         private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
@@ -220,12 +260,17 @@ namespace KioskLibrary
         {
             if (remainingActions.Any())
                 if (remainingActions.Count == 1)
-                    _orchestrationSequence.Add(remainingActions.First());
+                {
+                    var action = remainingActions.First();
+                    _orchestrationSequence.Add(action);
+                    Log.Information("Adding action: {action}", action);
+                }
                 else
                 {
-                    var toAdd = remainingActions[new Random().Next(remainingActions.Count - 1)];
-                    _orchestrationSequence.Add(toAdd);
-                    remainingActions.Remove(toAdd);
+                    var action = remainingActions[new Random().Next(remainingActions.Count - 1)];
+                    _orchestrationSequence.Add(action);
+                    Log.Information("Adding action: {action}", action);
+                    remainingActions.Remove(action);
                     PopulateRandomSequenceOfActions(remainingActions);
                 }
         }
@@ -238,7 +283,7 @@ namespace KioskLibrary
                 Log.Information("EvaluateNextAction - Orchestration ending");
 
                 _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
-                StopOrchestration();
+                StopOrchestration(Constants.Orchestrator.StatusMessages.OrchestrationEnded);
                 return;
             }
 
@@ -252,6 +297,8 @@ namespace KioskLibrary
                     if (index + 1 < _orchestrationSequence.Count)
                         _currentAction = _orchestrationSequence[index + 1];
                 }
+
+                OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.StartingAction} {_currentAction.Name}");
 
                 // After we have set the _currentAction, we can assess the duration
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
@@ -269,9 +316,16 @@ namespace KioskLibrary
                 NextAction?.Invoke(_currentAction);
             }
             else if (_orchestrationInstance.Lifecycle == LifecycleBehavior.ContinuousLoop) // We don't have any more actions to execute, so we see if we need to start over
+            {
+                Log.Information(Constants.Orchestrator.StatusMessages.RestartingOrchestration);
+                OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.RestartingOrchestration);
                 await StartOrchestration();
+            }
             else // We don't have any actions to execute and we are not instructed to start over
+            {
+                Log.Information(Constants.Orchestrator.StatusMessages.ExitingApplication);
                 CoreApplication.Exit();
+            }
         }
 
         private async void Durationtime_Tick(object sender, object e) => await EvaluateNextAction();
