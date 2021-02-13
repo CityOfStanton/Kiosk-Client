@@ -43,6 +43,7 @@
             <HyperlinkButton x:Name="Button_GitHub" Content="Kiosk Client GitHub" NavigateUri="https://github.com/CityOfStanton/Kiosk-Client" Style="{StaticResource GreenHyperlinkButton}" />
             <HyperlinkButton x:Name="Button_WindowsStore" Content="Kiosk Client on the Windows Store" NavigateUri="ms-windows-store://pdp/?productid=9NQZFB05ZMV9" Style="{StaticResource GreenHyperlinkButton}"/>
             <HyperlinkButton x:Name="Button_Homepage" Content="City of Stanton Technology" NavigateUri="https://www.stantonky.gov/technology" Style="{StaticResource GreenHyperlinkButton}"/>
+            <HyperlinkButton x:Name="Button_Logs" Content="Open Logs Folder" Style="{StaticResource GreenHyperlinkButton}" Click="Button_Logs_Click"/>
         </StackPanel>
         <Button Grid.Row="2" Grid.Column="1" x:Name="Button_Close" Content="Close" Style="{StaticResource GreenButton}" Width="200" HorizontalAlignment="Right" Margin="0,30,0,0" Click="Button_Close_Click" />
     </Grid>
