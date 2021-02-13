@@ -9,8 +9,10 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid x:Name="Grid_Main" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <WebView x:Name="Webview_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.ZIndex="0"/>
-        <Button x:Name="Button_Settings" Background="Transparent" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,20" Canvas.ZIndex="1" Click="Button_Settings_Click" Opacity=".3">
+        <TextBlock x:Name="TextBlock_Loading" Style="{StaticResource HeaderTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Loading..." Visibility="{x:Bind Path=State.ShowLoadingMessage, Converter={StaticResource BooleanToVisibility}}" />
+        <WebView x:Name="Webview_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.ZIndex="0" Visibility="{x:Bind Path=State.ShowWebpage, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}"/>
+        <TextBlock x:Name="TextBlock_ConnectionError" Style="{StaticResource HeaderTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Unable to reach the website" Visibility="{x:Bind Path=State.ShowWebpage, Converter={StaticResource BooleanToInvertedVisibility}, Mode=OneWay}" />
+        <Button x:Name="Button_Settings" Background="Black" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,20" Canvas.ZIndex="1" Click="Button_Settings_Click" Opacity=".5">
             <Button.Content>
                 <StackPanel Orientation="Horizontal">
                     <SymbolIcon Symbol="Setting"/>

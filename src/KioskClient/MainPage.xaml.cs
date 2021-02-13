@@ -33,13 +33,16 @@ namespace KioskLibrary
         private readonly DispatcherTimer _loadCompletionTime;
         private readonly Orchestrator _orchestrator;
         private readonly Dictionary<Type, Type> _actionToFrameMap;
+        private readonly List<string> _statusLog;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public MainPage()
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public MainPage()
         {
             InitializeComponent();
+
+            _statusLog = new List<string>();
 
             var fileSizeLimit = 50 * 1024 * 1024; // 50 MB
             Log.Logger = new LoggerConfiguration()
@@ -56,7 +59,7 @@ namespace KioskLibrary
 
             _loadCompletionTime = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(2)
+                Interval = TimeSpan.FromSeconds(3)
             };
             _loadCompletionTime.Tick += LoadCompletionTime_Tick;
 
@@ -71,6 +74,8 @@ namespace KioskLibrary
             _orchestrator.OrchestrationInvalid += OrchestrationInvalid;
             _orchestrator.NextAction += NextAction;
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
+            _orchestrator.OrchestrationStatusUpdate += OrchestrationStatusUpdate;
+            OrchestrationStatusUpdate(Constants.Application.Main.SearchingForOrchestrations);
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
 
@@ -87,9 +92,22 @@ namespace KioskLibrary
             await _orchestrator.StartOrchestration();
         }
 
+        private void OrchestrationStatusUpdate(string status)
+        {
+            _statusLog.Add(status);
+            TextBlock_Status.Text = status;
+        }
+
         private void OrchestrationCancelled(string reason)
         {
-            Frame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { reason }));
+            _statusLog.Add(reason);
+            GoToSettings();
+        }
+
+        private void GoToSettings()
+        {
+            _statusLog.Add(Constants.Application.Main.OpeningSettings);
+            Frame.Navigate(typeof(Settings), new SettingsPageArguments(_statusLog));
         }
 
         private void NextAction(Actions.Action action)
@@ -110,7 +128,10 @@ namespace KioskLibrary
         {
             Log.Information("OrchestrationInvalid: {errors}", errors);
 
-            Frame.Navigate(typeof(Settings), new SettingsPageArguments(errors));
+            foreach (var error in errors)
+                _statusLog.Add(error);
+
+            GoToSettings();
         }
 
         private async void OrchestrationStarted()
@@ -128,7 +149,7 @@ namespace KioskLibrary
             if (_loadSettings.HasValue && _loadSettings.Value)
             {
                 _loadCompletionTime.Start();
-                Frame.Navigate(typeof(Settings));
+                GoToSettings();
             }
         }
 
@@ -137,7 +158,7 @@ namespace KioskLibrary
             Log.Information("Button_Settings_Click Clicked");
 
             _loadCompletionTime.Stop();
-            Frame.Navigate(typeof(Settings));
+            GoToSettings();
         }
     }
 }

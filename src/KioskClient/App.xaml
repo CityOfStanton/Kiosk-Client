@@ -16,6 +16,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <converters:InvertBooleanConverter x:Key="InvertBoolean" />
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+            <converters:BooleanToInvertedVisibilityConverter x:Key="BooleanToInvertedVisibility" />
             <FontFamily x:Key="KioskClientFonts">/Resources/KioskClient.ttf#KioskClient</FontFamily>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />

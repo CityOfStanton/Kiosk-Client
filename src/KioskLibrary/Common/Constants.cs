@@ -70,30 +70,37 @@ namespace KioskLibrary.Common
             /// The default <see cref="Orchestration.OrchestrationInstance" />
             /// </summary>
             public static string DefaultOrchestration = "#DefaultOrchestration";
+            
             /// <summary>
             /// The <see cref="OrchestrationSource" /> of the default <see cref="Orchestration.OrchestrationInstance" />
             /// </summary>
             public static string DefaultOrchestrationSource = "#DefaultOrchestrationSource";
+            
             /// <summary>
             /// The URI of the default <see cref="Orchestration.OrchestrationInstance" />
             /// </summary>
             public static string DefaultOrchestrationURI = "#DefaultOrchestrationURI";
+           
             /// <summary>
             /// The next <see cref="Orchestration.OrchestrationInstance" /> that was pulled in from the OrchestrationPollingManager
             /// </summary>
             public static string NextOrchestration = "#NextOrchestration";
+            
             /// <summary>
             /// The ViewModel for the Settings page
             /// </summary>
             public static string SettingsViewModel = "#SettingsViewModel";
+            
             /// <summary>
             ///The polling interval for the OrchestrationPollingManager
             /// </summary>
             public static string PollingInterval = "#PollingInterval";
+            
             /// <summary>
             /// Indicated wether we should end currently running Orchestration
             /// </summary>
             public static string EndOrchestration = "#EndOrchestration";
+            
             /// <summary>
             /// Whether or not to show the Tutorial prompt on startup
             /// </summary>
@@ -105,7 +112,76 @@ namespace KioskLibrary.Common
         /// </summary>
         public class Orchestrator
         {
-            public static string NoValidOrchestration = "No valid orchestration was loaded. Going to Settings.";
+            /// <summary>
+            /// Status messaged returned by the Orchestrator
+            /// </summary>
+            public class StatusMessages
+            {
+                /// <summary>
+                /// No Orchestrations were found in Application Storage, so go to Settings.
+                /// </summary>
+                public static string NoValidOrchestration = "No valid Orchestration was loaded.";
+
+                /// <summary>
+                /// The orchestration has ended
+                /// </summary>
+                public static string OrchestrationEnded = "The orchestration has ended.";
+
+                /// <summary>
+                /// The orchestration has started
+                /// </summary>
+                public static string Initializing = "Initializing Orchestration...";
+
+                /// <summary>
+                /// Loading Orchestration from
+                /// </summary>
+                public static string Loading = "Loading Orchestration from";
+
+                /// <summary>
+                /// Orchestration was loaded successfully from the orchestration source
+                /// </summary>
+                public static string LoadedSuccessfully = "Orchestration loaded successfully...";
+
+                /// <summary>
+                /// Currently validating the orchestration
+                /// </summary>
+                public static string ValidatingOrchestration = "Validating Orchestration...";
+
+                /// <summary>
+                /// The orchestration is invalid
+                /// </summary>
+                public static string OrchestrationInvalid = "Orchestration invalid!";
+
+                /// <summary>
+                /// The orchestration is valid
+                /// </summary>
+                public static string OrchestrationValid = "Orchestration valid!";
+
+                /// <summary>
+                /// The polling interval is about to be set
+                /// </summary>
+                public static string SettingPollingInterval = "Setting polling interval to";
+
+                /// <summary>
+                /// The action sequence is about to be set
+                /// </summary>
+                public static string SettingActionSequence = "Setting action sequence...";
+
+                /// <summary>
+                /// Starting the action
+                /// </summary>
+                public static string StartingAction = "Starting action:";
+
+                /// <summary>
+                /// Restarting the orchestration
+                /// </summary>
+                public static string RestartingOrchestration = "Restarting Orchestration...";
+
+                /// <summary>
+                /// Exiting the application
+                /// </summary>
+                public static string ExitingApplication = "Exiting Kiosk Client...";
+            }
         }
 
         /// <summary>
@@ -113,6 +189,22 @@ namespace KioskLibrary.Common
         /// </summary>
         public class Application
         {
+            /// <summary>
+            /// Messages used in the Main page
+            /// </summary>
+            public class Main
+            {
+                /// <summary>
+                /// Opening the Settings page
+                /// </summary>
+                public static string OpeningSettings = "Opening Settings...";
+
+                /// <summary>
+                /// Searching for the default orchestration
+                /// </summary>
+                public static string SearchingForOrchestrations = "Searching for previously saved Orchestrations...";
+            }
+
             /// <summary>
             /// Error messages thrown by the application
             /// </summary>

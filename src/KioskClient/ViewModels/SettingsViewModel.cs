@@ -122,7 +122,7 @@ namespace KioskLibrary.ViewModels
         }
 
         /// <summary>
-        /// Whether or not all conditions have been satisfied to start the orchestration
+        /// Whether or not all conditions have been satisfied to run the orchestration
         /// </summary>
         public bool CanStart
         {

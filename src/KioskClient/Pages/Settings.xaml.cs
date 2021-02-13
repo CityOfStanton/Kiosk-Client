@@ -60,6 +60,8 @@ namespace KioskLibrary.Pages
 
                 if (State == null)
                     State = new SettingsViewModel();
+
+                SetDefaultState();
             }
             catch { }
 
@@ -99,7 +101,7 @@ namespace KioskLibrary.Pages
         /// </summary>
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            Log.Information("OnNavigatedTo");
+            Log.Information("Settings OnNavigatedTo");
 
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
             _currentPageArguments = e.Parameter as SettingsPageArguments;
@@ -194,14 +196,6 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private void ButtonSave_Click(object _, RoutedEventArgs e) => Save();
-
-        private void ButtonStart_Click(object _, RoutedEventArgs e)
-        {
-            Save();
-            Start();
-        }
-
         private void TeachTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
         {
             if (_walkThrough.Count > 0)
@@ -217,11 +211,6 @@ namespace KioskLibrary.Pages
             }
             else
                 State.IsLocalFile = Walkthrough_StartingIsLocalState; // Restore the state of the IsLocal toggle after the walkthrough.
-        }
-
-        private void Button_Clear_Click(object sender, RoutedEventArgs e)
-        {
-            Clear();
         }
 
         private void ListBox_Log_Clear_Click(object sender, RoutedEventArgs e)
@@ -248,7 +237,7 @@ namespace KioskLibrary.Pages
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
             savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
-            savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+            savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now:yyyyMMddHHmmss}";
 
             Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
             if (file != null)
@@ -267,9 +256,9 @@ namespace KioskLibrary.Pages
         {
             switch (args?.InvokedItemContainer?.Tag)
             {
-                case "Start":
+                case "Run":
                     Save();
-                    Start();
+                    Run();
                     break;
 
                 case "Save":
@@ -302,6 +291,12 @@ namespace KioskLibrary.Pages
         #endregion
 
         #region Private Methods
+
+        private void SetDefaultState()
+        {
+            State.IsFileLoading = false;
+            State.IsUriLoading = false;
+        }
 
         private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
         {
@@ -370,7 +365,7 @@ namespace KioskLibrary.Pages
             LogToListbox("Orchestration saved as startup Orchestration");
         }
 
-        private void Start()
+        private void Run()
         {
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.

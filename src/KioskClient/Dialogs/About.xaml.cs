@@ -6,7 +6,9 @@
  * github.com/CityOfStanton
  */
 
+using System;
 using Windows.ApplicationModel;
+using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 
 namespace KioskClient.Dialogs
@@ -40,6 +42,12 @@ namespace KioskClient.Dialogs
         private void Button_Close_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             Hide();
+        }
+
+        private async void Button_Logs_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            StorageFolder localCacheFolder = ApplicationData.Current.LocalCacheFolder;
+            await Windows.System.Launcher.LaunchFolderAsync(localCacheFolder);
         }
     }
 }
