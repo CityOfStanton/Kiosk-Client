@@ -9,6 +9,7 @@
 using KioskClient.Dialogs;
 using KioskLibrary.Actions;
 using KioskLibrary.Helpers;
+using KioskLibrary.ViewModels;
 using Serilog;
 using System;
 using Windows.UI.Xaml;
@@ -22,6 +23,7 @@ namespace KioskLibrary.Pages.Actions
     /// </summary>
     public sealed partial class WebsitePage : Page
     {
+        private WebsiteViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
         private readonly DispatcherTimer _scrollingTimer;
         private readonly DispatcherTimer _settingsButtonTimer;
         private WebsiteAction _websiteAction;
@@ -36,25 +38,37 @@ namespace KioskLibrary.Pages.Actions
             _scrollingTimer = new DispatcherTimer();
             _settingsButtonTimer = new DispatcherTimer();
             Webview_Display.LoadCompleted += WvDisplay_LoadCompleted;
+
+            if (State == null)
+                State = new WebsiteViewModel();
         }
 
         private async void WvDisplay_LoadCompleted(object sender, NavigationEventArgs e)
         {
-            var documentBodyScrollHeight = await Webview_Display.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
+            try
+            {
+                var documentBodyScrollHeight = await Webview_Display.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
 
-            if (!string.IsNullOrEmpty(documentBodyScrollHeight))
-                if (double.TryParse(documentBodyScrollHeight, out var height))
-                {
-                    _webviewContentHeight = height;
-                    _scrollingTimer.Start();
-                }
+                if (!string.IsNullOrEmpty(documentBodyScrollHeight))
+                    if (double.TryParse(documentBodyScrollHeight, out var height))
+                    {
+                        _webviewContentHeight = height;
+                        _scrollingTimer.Start();
+                    }
 
-            _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_websiteAction.SettingsDisplayTime);
-            _settingsButtonTimer.Tick += SettingsTimer_Tick;
-            _settingsButtonTimer.Start();
+                _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_websiteAction.SettingsDisplayTime);
+                _settingsButtonTimer.Tick += SettingsTimer_Tick;
+                _settingsButtonTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                TextBlock_ConnectionError.Text += $" - {ex.Message}";
+                State.IsWebpageValid = false;
+                Log.Error(ex, ex.Message);
+            }
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             _websiteAction = e.Parameter as WebsiteAction;
 
@@ -62,16 +76,25 @@ namespace KioskLibrary.Pages.Actions
 
             var refreshRate = 60;
 
-            Webview_Display.Source = new Uri(_websiteAction.Path);
+            State.IsLoaded = true;
 
-            if (_websiteAction.AutoScroll && _websiteAction.ScrollingTime.HasValue)
+            (State.IsWebpageValid, _, _) = await _websiteAction.ValidateAsync();
+
+            if (State.IsWebpageValid)
             {
-                _currentTick = 0;
-                _totalTicks = Convert.ToDouble(refreshRate * _websiteAction.ScrollingTime);
+                Webview_Display.Source = new Uri(_websiteAction.Path);
+             
+                if (_websiteAction.AutoScroll && _websiteAction.ScrollingTime.HasValue)
+                {
+                    _currentTick = 0;
+                    _totalTicks = Convert.ToDouble(refreshRate * _websiteAction.ScrollingTime);
 
-                _scrollingTimer.Interval = TimeSpan.FromMilliseconds((1.0 / refreshRate) * 1000);
-                _scrollingTimer.Tick += ScrollingTimer_Tick;
+                    _scrollingTimer.Interval = TimeSpan.FromMilliseconds((1.0 / refreshRate) * 1000);
+                    _scrollingTimer.Tick += ScrollingTimer_Tick;
+                }
             }
+            else
+                TextBlock_ConnectionError.Visibility = Visibility.Visible;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
