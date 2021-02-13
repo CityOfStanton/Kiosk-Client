@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Kiosk Library")]
-[assembly: AssemblyDescription("Common data structures and actions used in supporting Kiosk applications/")]
+[assembly: AssemblyDescription("Common data structures and actions used in supporting Kiosk applications")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("City of Stanton")]
 [assembly: AssemblyProduct("KioskLibrary")]
