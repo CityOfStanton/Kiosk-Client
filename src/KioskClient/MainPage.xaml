@@ -27,7 +27,7 @@
             <RowDefinition Height="25" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <ContentControl Grid.Row="2" Grid.RowSpan="3" x:Name="ccLogo" Template="{StaticResource MainLogo}" HorizontalAlignment="Center"/>
+        <ContentControl Grid.Row="2" Grid.RowSpan="3" x:Name="ccLogo" Template="{StaticResource InvertedMainLogo}" HorizontalAlignment="Center"/>
         <StackPanel Grid.Row="5" Orientation="Vertical" HorizontalAlignment="Center">
             <TextBlock Text="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource SubheaderTextBlockStyle}" Foreground="White" FontWeight="Bold" />
             <TextBlock x:Name="TextBlock_Status" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" />

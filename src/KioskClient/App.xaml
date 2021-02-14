@@ -21,6 +21,7 @@
             <FontFamily x:Key="KioskClientFonts">/Resources/KioskClient.ttf#KioskClient</FontFamily>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="/Resources/InvertedKioskClientLogo.xaml" />
                 <ResourceDictionary Source="/Resources/KioskClientLogo.xaml" />
                 <ResourceDictionary Source="/Resources/BadgeLogo.xaml" />
                 <ResourceDictionary Source="/Resources/CityOfStantonTechnology.xaml" />

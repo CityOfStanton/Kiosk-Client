@@ -56,7 +56,7 @@ namespace OrchestrationPollingManager
         {
             Log.Information("RegisterOrchestrationInstanceUpdaterHelper invoked");
 
-            var pollingInterval = new ApplicationStorage().GetFromStorage<int>(Constants.ApplicationStorage.PollingInterval);
+            var pollingInterval = new ApplicationStorage().GetSettingFromStorage<int>(Constants.ApplicationStorage.Settings.PollingInterval);
 
             if (pollingInterval > 0)
             {

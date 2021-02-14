@@ -48,7 +48,7 @@ namespace KioskClient.Dialogs
         /// </summary>
         public static void GoToSettings(IApplicationStorage applicationStorage = null)
         {
-            (applicationStorage ?? new ApplicationStorage()).SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
+            (applicationStorage ?? new ApplicationStorage()).SaveSettingToStorage(Constants.ApplicationStorage.Settings.EndOrchestration, true);
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { Constants.Application.PageHelper.OrchestrationCancelled }));
         }
