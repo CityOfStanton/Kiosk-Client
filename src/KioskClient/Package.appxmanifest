@@ -39,6 +39,7 @@
           <uap:ShowNameOnTiles>
             <uap:ShowOn Tile="square310x310Logo"/>
             <uap:ShowOn Tile="square150x150Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
           </uap:ShowNameOnTiles>
         </uap:DefaultTile >
         <uap:InitialRotationPreference>
@@ -46,7 +47,7 @@
           <uap:Rotation Preference="portrait"/>
           <uap:Rotation Preference="landscapeFlipped"/>
           <uap:Rotation Preference="portraitFlipped"/></uap:InitialRotationPreference>
-        <uap:SplashScreen BackgroundColor="white"  Image="Assets\AppIcon\SplashScreen.png"/>
+        <uap:SplashScreen BackgroundColor="#277C31"  Image="Assets\AppIcon\SplashScreen.png"/>
         <uap:LockScreen Notification="badge" BadgeLogo="Assets\AppIcon\BadgeLogo.png"/>
       </uap:VisualElements>
       <Extensions>
