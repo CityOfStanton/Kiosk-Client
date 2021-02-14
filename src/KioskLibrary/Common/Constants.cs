@@ -67,44 +67,56 @@ namespace KioskLibrary.Common
         public class ApplicationStorage
         {
             /// <summary>
-            /// The default <see cref="Orchestration.OrchestrationInstance" />
+            /// Settings stored in Appplication Storage
             /// </summary>
-            public static string DefaultOrchestration = "#DefaultOrchestration";
-            
+            public class Settings
+            {
+                /// <summary>
+                /// The <see cref="OrchestrationSource" /> of the default <see cref="Orchestration.OrchestrationInstance" />
+                /// </summary>
+                public static string DefaultOrchestrationSource = "#DefaultOrchestrationSource";
+
+                /// <summary>
+                /// The URI of the default <see cref="Orchestration.OrchestrationInstance" />
+                /// </summary>
+                public static string DefaultOrchestrationURI = "#DefaultOrchestrationURI";
+
+                /// <summary>
+                ///The polling interval for the OrchestrationPollingManager
+                /// </summary>
+                public static string PollingInterval = "#PollingInterval";
+
+                /// <summary>
+                /// Indicated wether we should end currently running Orchestration
+                /// </summary>
+                public static string EndOrchestration = "#EndOrchestration";
+
+                /// <summary>
+                /// Whether or not to show the Tutorial prompt on startup
+                /// </summary>
+                public static string DoNotShowTutorialOnStartup = "#DoNotShowTutorialOnStartup";
+            }
+
             /// <summary>
-            /// The <see cref="OrchestrationSource" /> of the default <see cref="Orchestration.OrchestrationInstance" />
+            /// Files stored in Appplication Storage
             /// </summary>
-            public static string DefaultOrchestrationSource = "#DefaultOrchestrationSource";
-            
-            /// <summary>
-            /// The URI of the default <see cref="Orchestration.OrchestrationInstance" />
-            /// </summary>
-            public static string DefaultOrchestrationURI = "#DefaultOrchestrationURI";
-           
-            /// <summary>
-            /// The next <see cref="Orchestration.OrchestrationInstance" /> that was pulled in from the OrchestrationPollingManager
-            /// </summary>
-            public static string NextOrchestration = "#NextOrchestration";
-            
-            /// <summary>
-            /// The ViewModel for the Settings page
-            /// </summary>
-            public static string SettingsViewModel = "#SettingsViewModel";
-            
-            /// <summary>
-            ///The polling interval for the OrchestrationPollingManager
-            /// </summary>
-            public static string PollingInterval = "#PollingInterval";
-            
-            /// <summary>
-            /// Indicated wether we should end currently running Orchestration
-            /// </summary>
-            public static string EndOrchestration = "#EndOrchestration";
-            
-            /// <summary>
-            /// Whether or not to show the Tutorial prompt on startup
-            /// </summary>
-            public static string DoNotShowTutorialOnStartup = "#DoNotShowTutorialOnStartup";
+            public class Files
+            {
+                /// <summary>
+                /// The default <see cref="Orchestration.OrchestrationInstance" />
+                /// </summary>
+                public static string DefaultOrchestration = "#DefaultOrchestration";
+
+                /// <summary>
+                /// The next <see cref="Orchestration.OrchestrationInstance" /> that was pulled in from the OrchestrationPollingManager
+                /// </summary>
+                public static string NextOrchestration = "#NextOrchestration";
+
+                /// <summary>
+                /// The ViewModel for the Settings page
+                /// </summary>
+                public static string SettingsViewModel = "#SettingsViewModel";
+            }
         }
 
         /// <summary>

@@ -53,19 +53,8 @@ namespace KioskLibrary.Pages
 
                 if (_applicationStorage == null)
                     _applicationStorage = new ApplicationStorage();
-
-                State = _applicationStorage.GetFromStorage<SettingsViewModel>(Constants.ApplicationStorage.SettingsViewModel);
-
-                Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
-
-                if (State == null)
-                    State = new SettingsViewModel();
-
-                SetDefaultState();
             }
             catch { }
-
-            State.PropertyChanged += State_PropertyChanged;
 
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
@@ -84,6 +73,25 @@ namespace KioskLibrary.Pages
         }
 
         #region Control Events
+
+        /// <summary>
+        /// Fires after the page has loaded
+        /// </summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The event arguments</param>
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            State = await _applicationStorage.GetFileFromStorageAsync<SettingsViewModel>(Constants.ApplicationStorage.Files.SettingsViewModel);
+
+            Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
+
+            if (State == null)
+                State = new SettingsViewModel();
+
+            State.PropertyChanged += State_PropertyChanged;
+
+            SetDefaultState();
+        }
 
         /// <summary>
         /// Handles the PropertyChanged event for anything in the <see cref="State" />
@@ -111,14 +119,14 @@ namespace KioskLibrary.Pages
                     foreach (var error in _currentPageArguments.Log)
                         LogToListbox(error);
 
-            var doNotShowTutorialOnStartup = _applicationStorage.GetFromStorage<bool>(Constants.ApplicationStorage.DoNotShowTutorialOnStartup);
+            var doNotShowTutorialOnStartup = _applicationStorage.GetSettingFromStorage<bool>(Constants.ApplicationStorage.Settings.DoNotShowTutorialOnStartup);
 
             if (!doNotShowTutorialOnStartup)
             {
                 var tutorialDialog = new RunTutorial();
                 await tutorialDialog.ShowAsync();
 
-                _applicationStorage.SaveToStorage(Constants.ApplicationStorage.DoNotShowTutorialOnStartup, tutorialDialog.DoNotShowThisAgain);
+                _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DoNotShowTutorialOnStartup, tutorialDialog.DoNotShowThisAgain);
 
                 if (tutorialDialog.RunTutorialOnClose)
                     StartTutorial();
@@ -257,12 +265,12 @@ namespace KioskLibrary.Pages
             switch (args?.InvokedItemContainer?.Tag)
             {
                 case "Run":
-                    Save();
+                    await Save();
                     Run();
                     break;
 
                 case "Save":
-                    Save();
+                    await Save();
                     break;
 
                 case "Clear":
@@ -353,14 +361,15 @@ namespace KioskLibrary.Pages
             await about.ShowAsync();
         }
 
-        private void Save()
+        private async Task Save()
         {
             Log.Information("Saving Orchestration to Application Storage");
 
-            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.SettingsViewModel, State);
-            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.DefaultOrchestrationURI, State.UriPath);
-            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.DefaultOrchestration, State.OrchestrationInstance);
-            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.DefaultOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
+            await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.SettingsViewModel, State);
+            await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration, State.OrchestrationInstance);
+
+            _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI, State.UriPath);
+            _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
 
             LogToListbox("Orchestration saved as startup Orchestration");
         }
@@ -375,10 +384,11 @@ namespace KioskLibrary.Pages
 
         private void Clear()
         {
-            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.DefaultOrchestration);
-            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.DefaultOrchestrationSource);
-            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.DefaultOrchestrationURI);
-            _applicationStorage.ClearItemFromStorage(Constants.ApplicationStorage.NextOrchestration);
+            _applicationStorage.ClearFileFromStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration);
+            _applicationStorage.ClearFileFromStorageAsync(Constants.ApplicationStorage.Files.NextOrchestration);
+
+            _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource);
+            _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
 
             LogToListbox("Startup Orchestration has been removed");
         }

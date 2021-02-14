@@ -23,7 +23,7 @@
                     <Path StrokeThickness="1.0" Stroke="#ffffffff" StrokeMiterLimit="1.0" Fill="#ff000000" Data="F1 M 103.618,129.270 L 55.577,129.270 L 71.631,145.323 L 55.577,161.377 L 103.618,161.377 L 119.671,145.323 L 103.618,129.270 Z"/>
 
                     <!-- Layer 1/<Group>/<Rectangle> -->
-                    <Path StrokeThickness="1.0" Stroke="#ff000000" StrokeMiterLimit="1.0" Fill="#ff267b30" Data="F1 M 169.874,124.296 L 5.374,124.296 L 5.374,7.296 L 169.874,7.296 L 169.874,124.296 Z"/>
+                    <Path StrokeThickness="1.0" Stroke="#ff000000" StrokeMiterLimit="1.0" Fill="#ff267b30" Data="F1 M 171.624,124.296 L 5.374,124.296 L 5.374,7.296 L 171.624,7.296 L 171.624,124.296 Z"/>
 
                     <Canvas>
 

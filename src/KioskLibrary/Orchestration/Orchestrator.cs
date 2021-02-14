@@ -128,7 +128,7 @@ namespace KioskLibrary
             Log.Information("GetNextOrchestration invoked");
 
             // Get the Settings URI
-            var currentOrchestrationURI = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.DefaultOrchestrationURI);
+            var currentOrchestrationURI = applicationStorage.GetSettingFromStorage<string>(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
 
             if (!string.IsNullOrEmpty(currentOrchestrationURI))
             {
@@ -140,7 +140,7 @@ namespace KioskLibrary
                 Log.Information("GetNextOrchestration - nextOrchestration: {nextOrchestration}", SerializationHelper.JSONSerialize(nextOrchestration));
 
                 // Save to the 'NextOrchestration'
-                applicationStorage.SaveToStorage(Constants.ApplicationStorage.NextOrchestration, nextOrchestration);
+                await applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.NextOrchestration, nextOrchestration);
             }
         }
 
@@ -153,9 +153,9 @@ namespace KioskLibrary
 
             OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.Initializing);
 
-            _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false); //Ensure the EndOrchestration value has been reset to false
+            _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.EndOrchestration, false); //Ensure the EndOrchestration value has been reset to false
 
-            var orchestrationSource = _applicationStorage.GetFromStorage<OrchestrationSource>(Constants.ApplicationStorage.DefaultOrchestrationSource);
+            var orchestrationSource = _applicationStorage.GetSettingFromStorage<OrchestrationSource>(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource);
 
             OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.Loading} {orchestrationSource}");
 
@@ -187,7 +187,7 @@ namespace KioskLibrary
                     if (orchestrationSource == OrchestrationSource.URL)
                     {
                         OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.SettingPollingInterval} {_orchestrationInstance.PollingIntervalMinutes} minutes");
-                        _applicationStorage.SaveToStorage(Constants.ApplicationStorage.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
+                        _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
                     }
 
                     OrchestrationStarted?.Invoke();
@@ -242,10 +242,10 @@ namespace KioskLibrary
             OrchestrationInstance toReturn = null;
 
             if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
-                toReturn = applicationStorage.GetFromStorage<OrchestrationInstance>(Constants.ApplicationStorage.DefaultOrchestration);
+                toReturn = await applicationStorage.GetFileFromStorageAsync<OrchestrationInstance>(Constants.ApplicationStorage.Files.DefaultOrchestration);
             else if (orchestrationSource == OrchestrationSource.URL) // Load OrchestrationInstance from the web.
             {
-                var orchestrationInstancePath = applicationStorage.GetFromStorage<string>(Constants.ApplicationStorage.DefaultOrchestrationURI);
+                var orchestrationInstancePath = applicationStorage.GetSettingFromStorage<string>(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
                 if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
                     if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
                         toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri, httpHelper); // Pull a new instace from the URL
@@ -277,12 +277,12 @@ namespace KioskLibrary
 
         private async Task EvaluateNextAction()
         {
-            var endOrchestration = _applicationStorage.GetFromStorage<bool>(Constants.ApplicationStorage.EndOrchestration);
+            var endOrchestration = _applicationStorage.GetSettingFromStorage<bool>(Constants.ApplicationStorage.Settings.EndOrchestration);
             if (endOrchestration)
             {
                 Log.Information("EvaluateNextAction - Orchestration ending");
 
-                _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
+                _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.EndOrchestration, false);
                 StopOrchestration(Constants.Orchestrator.StatusMessages.OrchestrationEnded);
                 return;
             }
@@ -304,7 +304,7 @@ namespace KioskLibrary
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
                 {
                     _durationtimer.Stop();
-                    _applicationStorage.SaveToStorage(Constants.ApplicationStorage.EndOrchestration, false);
+                    _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.EndOrchestration, false);
                     _durationtimer.Interval = TimeSpan.FromSeconds(_currentAction.Duration.Value);
                     _durationtimer.Start();
                 }
