@@ -9,9 +9,6 @@
         <Setter Property="Foreground" Value="#267B30"/>
     </Style>
 
-    <DataTemplate x:Key="GreenToggleSwitchOnContentTemplate">
-        <Grid/>
-    </DataTemplate>
     <Style x:Key="GreenListBoxItemContainerStyle" TargetType="ListBoxItem">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="TabNavigation" Value="Local"/>
