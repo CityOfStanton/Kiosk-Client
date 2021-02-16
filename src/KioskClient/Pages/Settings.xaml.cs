@@ -34,7 +34,8 @@ namespace KioskLibrary.Pages
     /// </summary>
     public sealed partial class Settings : Page
     {
-        private SettingsViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
+        public SettingsViewModel State { get; set; }
+
         private SettingsPageArguments _currentPageArguments;
         private readonly IHttpHelper _httpHelper;
         private readonly IApplicationStorage _applicationStorage;
@@ -58,6 +59,10 @@ namespace KioskLibrary.Pages
 
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
+
+            State = new SettingsViewModel();
+
+            State.PropertyChanged += State_PropertyChanged;
         }
 
         /// <summary>
@@ -81,16 +86,14 @@ namespace KioskLibrary.Pages
         /// <param name="e">The event arguments</param>
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            State = await _applicationStorage.GetFileFromStorageAsync<SettingsViewModel>(Constants.ApplicationStorage.Files.SettingsViewModel);
+            var stateFromStorage = await _applicationStorage.GetFileFromStorageAsync<SettingsViewModel>(Constants.ApplicationStorage.Files.SettingsViewModel);
+            State.IsLocalFile = stateFromStorage.IsLocalFile;
+            State.LocalPath = stateFromStorage.LocalPath;
+            State.OrchestrationInstance = stateFromStorage.OrchestrationInstance;
+            State.UriPath = stateFromStorage.UriPath;
+            SetDefaultState();
 
             Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
-
-            if (State == null)
-                State = new SettingsViewModel();
-
-            State.PropertyChanged += State_PropertyChanged;
-
-            SetDefaultState();
         }
 
         /// <summary>
@@ -389,6 +392,8 @@ namespace KioskLibrary.Pages
 
             _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource);
             _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
+
+            State.OrchestrationInstance = null;
 
             LogToListbox("Startup Orchestration has been removed");
         }

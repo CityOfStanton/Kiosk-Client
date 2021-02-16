@@ -13,6 +13,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:viewmodels="using:KioskLibrary.ViewModels"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="Page_Loaded">
@@ -69,7 +70,7 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ToggleSwitch OnContentTemplate="{StaticResource GreenToggleSwitchOnContentTemplate}" x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" OnContent="File" OffContent="URL" HorizontalAlignment="Center" VerticalAlignment="Center" IsOn="{x:Bind Path=State.IsLocalFile, Mode=TwoWay}" />
+                        <ToggleSwitch x:Name="ToggleSwitch_InputMode" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Input Mode" OnContent="File" OffContent="URL" HorizontalAlignment="Center" VerticalAlignment="Center" IsOn="{x:Bind State.IsLocalFile, Mode=TwoWay}" />
                         <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -80,8 +81,8 @@
                                 <RowDefinition Height="auto" />
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <TextBox x:Name="TextBox_URLPath" IsEnabled="{Binding IsOn, ElementName=ToggleSwitch_InputMode, Converter={StaticResource InvertBoolean}, Mode=TwoWay}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
-                            <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind Path=State.CanLoadUri, Mode=OneWay}" Grid.Row="0" Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" >
+                            <TextBox x:Name="TextBox_URLPath" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
+                            <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" >
                                 <Button.Content>
                                     <StackPanel Orientation="Horizontal">
                                         <SymbolIcon Symbol="Globe"/>
@@ -89,7 +90,7 @@
                                     </StackPanel>
                                 </Button.Content>
                             </Button>
-                            <ProgressRing x:Name="ProgressRing_URL_Loading" IsActive="{x:Bind Path=State.IsUriLoading, Mode=OneWay}" Grid.Column="2" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
+                            <ProgressRing x:Name="ProgressRing_URL_Loading" IsActive="{x:Bind Path=State.IsUriLoading, Mode=OneWay}" Grid.Column="2" VerticalAlignment="Center" Height="15px" Foreground="{x:Bind Button_UrlLoad.Foreground}" />
                         </Grid>
                         <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="0,20,0,0">
                             <Grid.ColumnDefinitions>
@@ -97,7 +98,7 @@
                                 <ColumnDefinition Width="auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Button x:Name="Button_FileLoad" IsEnabled="{x:Bind Path=State.CanLoadFile, Mode=OneWay}" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" >
+                            <Button x:Name="Button_FileLoad" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay}" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_FileLoad_Click" >
                                 <Button.Content>
                                     <StackPanel Orientation="Horizontal">
                                         <SymbolIcon Symbol="Save"/>
@@ -105,8 +106,8 @@
                                     </StackPanel>
                                 </Button.Content>
                             </Button>
-                            <ProgressRing x:Name="ProgressRing_File_Loading" IsActive="{x:Bind Path=State.IsFileLoading, Mode=OneWay}" Grid.Column="1" Margin="20,0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_UrlLoad}" />
-                            <TextBlock x:Name="tbFilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
+                            <ProgressRing x:Name="ProgressRing_File_Loading" IsActive="{x:Bind Path=State.IsFileLoading, Mode=OneWay}" Grid.Column="1" Margin="20,0" VerticalAlignment="Center" Height="15px" Foreground="{x:Bind Button_UrlLoad.Foreground}" />
+                            <TextBlock x:Name="TextBlock_FilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
                         </Grid>
                     </Grid>
                 </StackPanel>

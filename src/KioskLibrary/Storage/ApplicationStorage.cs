@@ -36,11 +36,12 @@ namespace KioskLibrary.Storage
         public virtual void SaveSettingToStorage(string key, object toSave)
         {
             var localSettings = ApplicationData.Current.LocalSettings;
-            if (toSave != null)
-                if (toSave.GetType().IsPrimitive)
-                    localSettings.Values[key] = toSave;
-                else
-                    localSettings.Values[key] = SerializationHelper.JSONSerialize(toSave);
+            if (toSave == null)
+                localSettings.Values.Remove(key);
+            else if (toSave.GetType().IsPrimitive)
+                localSettings.Values[key] = toSave;
+            else
+                localSettings.Values[key] = SerializationHelper.JSONSerialize(toSave);
         }
 
         /// <inheritdoc />

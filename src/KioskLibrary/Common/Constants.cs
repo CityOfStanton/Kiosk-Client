@@ -145,9 +145,9 @@ namespace KioskLibrary.Common
                 public static string Initializing = "Initializing Orchestration...";
 
                 /// <summary>
-                /// Loading Orchestration from
+                /// Attempting to load Orchestration from
                 /// </summary>
-                public static string Loading = "Loading Orchestration from";
+                public static string Loading = "Attempting to load Orchestration from";
 
                 /// <summary>
                 /// Orchestration was loaded successfully from the orchestration source
@@ -207,14 +207,14 @@ namespace KioskLibrary.Common
             public class Main
             {
                 /// <summary>
+                /// Attempting to load the default Orchestration unless the user presses the Settings button
+                /// </summary>
+                public static string AttemptingToLoadDefaultOrchestration = "Attempting to load the default Orchestration...";
+
+                /// <summary>
                 /// Opening the Settings page
                 /// </summary>
                 public static string OpeningSettings = "Opening Settings...";
-
-                /// <summary>
-                /// Searching for the default orchestration
-                /// </summary>
-                public static string SearchingForOrchestrations = "Searching for previously saved Orchestrations...";
             }
 
             /// <summary>

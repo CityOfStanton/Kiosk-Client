@@ -13,6 +13,7 @@
     xmlns:local="using:KioskLibrary"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Page_Loaded">
 
@@ -24,7 +25,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="30" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ContentControl Grid.Row="2" Grid.RowSpan="3" x:Name="ccLogo" Template="{StaticResource InvertedMainLogo}" HorizontalAlignment="Center"/>
@@ -32,7 +33,7 @@
             <TextBlock Text="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource SubheaderTextBlockStyle}" Foreground="White" FontWeight="Bold" />
             <TextBlock x:Name="TextBlock_Status" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" />
         </StackPanel>
-        <ProgressRing x:Name="ProgressRing_File_Loading" Grid.Row="6" IsActive="True" Grid.Column="0" VerticalAlignment="Center" Height="15px" Foreground="{Binding Foreground, ElementName=Button_Settings}" />
+        <muxc:ProgressRing x:Name="ProgressRing_Loading" Grid.Row="6" IsActive="True" Grid.Column="0" VerticalAlignment="Center" IsIndeterminate="False" Foreground="{x:Bind Button_Settings.Foreground}" />
         <Button x:Name="Button_Settings" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Settings" Click="Button_Settings_Click" Foreground="White"/>
     </Grid>
 </Page>

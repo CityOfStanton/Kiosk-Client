@@ -19,11 +19,22 @@ namespace KioskLibrary.Converters
         /// <summary>
         /// Invert the value
         /// </summary>
-        public object Convert(object value, Type targetType, object parameter, string language) => !(bool)value;
+        public object Convert(object value, Type targetType, object parameter, string language) => ConvertValue(value);
 
         /// <summary>
         /// Restore a converted value to its original value
         /// </summary>
-        public object ConvertBack(object value, Type targetType, object parameter, string language) => !(bool)value;
+        public object ConvertBack(object value, Type targetType, object parameter, string language) => ConvertValue(value);
+
+        private static object ConvertValue(object value)
+        {
+            if (value is bool?)
+                if ((value as bool?).HasValue)
+                    return !(value as bool?).Value;
+                else
+                    return null;
+            else
+                return !(bool)value;
+        }
     }
 }

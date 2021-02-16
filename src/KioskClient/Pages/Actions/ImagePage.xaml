@@ -10,6 +10,14 @@
     >
 
     <Grid>
-        <Image x:Name="imgDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{x:Bind Path=State.ShowLoadingMessage, Converter={StaticResource BooleanToVisibility}}" >
+            <TextBlock x:Name="TextBlock_Loading" Style="{StaticResource HeaderTextBlockStyle}" Text="Loading..." HorizontalAlignment="Center" />
+            <ProgressRing x:Name="ProgressRing_Loading" IsActive="True" HorizontalAlignment="Center" Foreground="{x:Bind TextBlock_Loading.Foreground}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{x:Bind Path=State.ShowFailedToLoadContentMessage, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}" >
+            <TextBlock x:Name="TextBlock_ConnectionError" Style="{StaticResource HeaderTextBlockStyle}" Text="Unable to reach the website..." HorizontalAlignment="Center" />
+            <TextBlock x:Name="TextBlock_ConnectionErrorMessage" Style="{StaticResource SubheaderTextBlockStyle}" Text="{x:Bind Path=State.FailedToLoadContentMessageDetail}" HorizontalAlignment="Center" />
+        </StackPanel>
+        <Image x:Name="Image_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     </Grid>
 </Page>
