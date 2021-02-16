@@ -21,7 +21,16 @@ namespace KioskLibrary.Converters
         /// <summary>
         /// Convert the boolean value to a <see cref="Visibility"/>
         /// </summary>
-        public object Convert(object value, Type targetType, object parameter, string language) => (bool)value ? Visibility.Visible : Visibility.Collapsed;
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is bool?)
+                if ((value as bool?).HasValue)
+                    return (value as bool?).Value ? Visibility.Visible : Visibility.Collapsed;
+                else
+                    return Visibility.Collapsed;
+            else
+                return (bool)value ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         /// <summary>
         /// Restores a converted boolean value to a <see cref="Visibility"/>
