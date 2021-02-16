@@ -12,7 +12,7 @@ using System.Runtime.CompilerServices;
 
 namespace KioskLibrary.ViewModels
 {
-    public abstract class ViewModel : INotifyPropertyChanged
+    public class ViewModel : INotifyPropertyChanged
     {
         /// <summary>
         /// Event that's raised when a property's value has changed
@@ -37,14 +37,17 @@ namespace KioskLibrary.ViewModels
         /// Method that generally handles firing the <see cref="PropertyChanged" />
         /// </summary>
         /// <param name="propertyName"></param>
-        protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        protected virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (propertyName != null)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-            foreach(var v in Validators)
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(v));
+                foreach (var v in Validators)
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(v));
+            }
         }
 
-        private List<string> Validators { get; }
+        public List<string> Validators { get; }
     }
 }

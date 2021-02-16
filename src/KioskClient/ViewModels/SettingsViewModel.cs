@@ -30,7 +30,7 @@ namespace KioskLibrary.ViewModels
         /// Constructor
         /// </summary>
         public SettingsViewModel()
-            : base(new List<string>() { nameof(CanStart), nameof(CanLoadFile), nameof(CanLoadUri) }) { }
+            : base(new List<string>() { nameof(DoesOrchestrationInstanceHaveContent), nameof(CanStart), nameof(CanLoadFile), nameof(CanLoadUri) }) { }
 
         /// <summary>
         /// The Uri Path

@@ -12,6 +12,7 @@ using KioskLibrary.Helpers;
 using KioskLibrary.ViewModels;
 using Serilog;
 using System;
+using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -23,10 +24,10 @@ namespace KioskLibrary.Pages.Actions
     /// </summary>
     public sealed partial class WebsitePage : Page
     {
-        private WebsiteViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
+        private ActionViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
         private readonly DispatcherTimer _scrollingTimer;
         private readonly DispatcherTimer _settingsButtonTimer;
-        private WebsiteAction _websiteAction;
+        private WebsiteAction _action;
         private double _currentTick;
         private double _totalTicks;
         private double _webviewContentHeight;
@@ -37,13 +38,13 @@ namespace KioskLibrary.Pages.Actions
             InitializeComponent();
             _scrollingTimer = new DispatcherTimer();
             _settingsButtonTimer = new DispatcherTimer();
-            Webview_Display.LoadCompleted += WvDisplay_LoadCompleted;
+            Webview_Display.LoadCompleted += Webview_Display_LoadCompleted;
 
             if (State == null)
-                State = new WebsiteViewModel();
+                State = new ActionViewModel();
         }
 
-        private async void WvDisplay_LoadCompleted(object sender, NavigationEventArgs e)
+        private async void Webview_Display_LoadCompleted(object sender, NavigationEventArgs e)
         {
             try
             {
@@ -56,45 +57,55 @@ namespace KioskLibrary.Pages.Actions
                         _scrollingTimer.Start();
                     }
 
-                _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_websiteAction.SettingsDisplayTime);
+                _settingsButtonTimer.Interval = TimeSpan.FromSeconds(_action.SettingsDisplayTime);
                 _settingsButtonTimer.Tick += SettingsTimer_Tick;
                 _settingsButtonTimer.Start();
             }
             catch (Exception ex)
             {
-                TextBlock_ConnectionError.Text += $" - {ex.Message}";
-                State.IsWebpageValid = false;
+                State.IsContentSourceValid = false;
+                State.FailedToLoadContentMessageDetail = ex.Message;
                 Log.Error(ex, ex.Message);
             }
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            _websiteAction = e.Parameter as WebsiteAction;
-
-            Log.Information("WebsitePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(_websiteAction));
-
-            var refreshRate = 60;
-
-            State.IsLoaded = true;
-
-            (State.IsWebpageValid, _, _) = await _websiteAction.ValidateAsync();
-
-            if (State.IsWebpageValid)
+            try
             {
-                Webview_Display.Source = new Uri(_websiteAction.Path);
-             
-                if (_websiteAction.AutoScroll && _websiteAction.ScrollingTime.HasValue)
-                {
-                    _currentTick = 0;
-                    _totalTicks = Convert.ToDouble(refreshRate * _websiteAction.ScrollingTime);
+                _action = e.Parameter as WebsiteAction;
 
-                    _scrollingTimer.Interval = TimeSpan.FromMilliseconds((1.0 / refreshRate) * 1000);
-                    _scrollingTimer.Tick += ScrollingTimer_Tick;
+                Log.Information("WebsitePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(_action));
+
+                var refreshRate = 60;
+
+                (var validationResult, _, var errors) = await _action.ValidateAsync();
+
+                State.IsContentSourceValid = validationResult;
+                State.FailedToLoadContentMessageDetail = errors.FirstOrDefault();
+
+                if (State.IsContentSourceValid.Value)
+                {
+                    Webview_Display.Source = new Uri(_action.Path);
+
+                    if (_action.AutoScroll && _action.ScrollingTime.HasValue)
+                    {
+                        _currentTick = 0;
+                        _totalTicks = Convert.ToDouble(refreshRate * _action.ScrollingTime);
+
+                        _scrollingTimer.Interval = TimeSpan.FromMilliseconds((1.0 / refreshRate) * 1000);
+                        _scrollingTimer.Tick += ScrollingTimer_Tick;
+                    }
                 }
+                else
+                    Log.Error("Failed to validate {action} due to the following errors: {errors}", _action, errors);
             }
-            else
-                TextBlock_ConnectionError.Visibility = Visibility.Visible;
+            catch (Exception ex)
+            {
+                State.IsContentSourceValid = false;
+                State.FailedToLoadContentMessageDetail = ex.Message;
+                Log.Error(ex, ex.Message);
+            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -113,8 +124,8 @@ namespace KioskLibrary.Pages.Actions
         {
             if (++_currentTick > _totalTicks)
             {
-                if (_websiteAction.ScrollingResetDelay.HasValue)
-                    System.Threading.Thread.Sleep(_websiteAction.ScrollingResetDelay.Value * 1000);
+                if (_action.ScrollingResetDelay.HasValue)
+                    System.Threading.Thread.Sleep(_action.ScrollingResetDelay.Value * 1000);
 
                 // Reset _currentTick
                 _currentTick = 0;
