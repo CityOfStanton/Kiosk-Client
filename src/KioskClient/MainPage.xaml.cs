@@ -30,15 +30,18 @@ namespace KioskLibrary
     public sealed partial class MainPage : Page
     {
         private bool? _loadSettings = null;
-        private readonly DispatcherTimer _loadCompletionTime;
+        private readonly DispatcherTimer _initializationDelayTimer;
+        private readonly DispatcherTimer _progressRing_LoadingTimer;
         private readonly Orchestrator _orchestrator;
         private readonly Dictionary<Type, Type> _actionToFrameMap;
         private readonly List<string> _statusLog;
+        private const double _initialLoadTime = 3.0;
+        private const double _initialLoadTimeUpdatesPerSecond = 50.0;
 
-    /// <summary>
-    /// Constructor
-    /// </summary>
-    public MainPage()
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public MainPage()
         {
             InitializeComponent();
 
@@ -57,11 +60,17 @@ namespace KioskLibrary
             Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp; // Remove any pre-existing Common.CommonKeyUp handlers
             Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp; // Add a single Common.CommonKeyUp handler
 
-            _loadCompletionTime = new DispatcherTimer
+            _initializationDelayTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(3)
+                Interval = TimeSpan.FromSeconds(_initialLoadTime + 0.5)
             };
-            _loadCompletionTime.Tick += LoadCompletionTime_Tick;
+            _initializationDelayTimer.Tick += InitializationDelayTimer_Tick;
+
+            _progressRing_LoadingTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds((_initialLoadTime) / _initialLoadTimeUpdatesPerSecond)
+            };
+            _progressRing_LoadingTimer.Tick += ProgressRing_LoadingTimer_Tick;
 
             _actionToFrameMap = new Dictionary<Type, Type>
             {
@@ -75,20 +84,38 @@ namespace KioskLibrary
             _orchestrator.NextAction += NextAction;
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
             _orchestrator.OrchestrationStatusUpdate += OrchestrationStatusUpdate;
-            OrchestrationStatusUpdate(Constants.Application.Main.SearchingForOrchestrations);
+            OrchestrationStatusUpdate(Constants.Application.Main.AttemptingToLoadDefaultOrchestration);
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
 
             Log.Information("Kiosk Client started");
         }
 
+        private void ProgressRing_LoadingTimer_Tick(object sender, object e)
+        {
+            ProgressRing_Loading.Value += (100.0 / _initialLoadTimeUpdatesPerSecond);
+        }
+
         protected override void OnNavigatedTo(NavigationEventArgs e) => _loadSettings = e.Parameter as bool?;
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => _loadCompletionTime.Stop();
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => StopTimers();
 
-        private async void LoadCompletionTime_Tick(object sender, object e)
+        private void StopTimers()
         {
-            _loadCompletionTime.Stop();
+            ProgressRing_Loading.Value = 100;
+            _initializationDelayTimer.Stop();
+            _progressRing_LoadingTimer.Stop();
+        }
+
+        private void StartTimers()
+        {
+            _progressRing_LoadingTimer.Start();
+            _initializationDelayTimer.Start();
+        }
+
+        private async void InitializationDelayTimer_Tick(object sender, object e)
+        {
+            StopTimers();
             await _orchestrator.StartOrchestration();
         }
 
@@ -106,7 +133,7 @@ namespace KioskLibrary
 
         private void GoToSettings()
         {
-            _statusLog.Add(Constants.Application.Main.OpeningSettings);
+            StopTimers();
             Frame.Navigate(typeof(Settings), new SettingsPageArguments(_statusLog));
         }
 
@@ -144,21 +171,16 @@ namespace KioskLibrary
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            _loadCompletionTime.Start();
-
             if (_loadSettings.HasValue && _loadSettings.Value)
-            {
-                _loadCompletionTime.Start();
                 GoToSettings();
-            }
+            else
+                StartTimers();
         }
 
         private void Button_Settings_Click(object sender, RoutedEventArgs e)
         {
             Log.Information("Button_Settings_Click Clicked");
-
-            _loadCompletionTime.Stop();
-            GoToSettings();
+            _orchestrator.StopOrchestration(Constants.Application.Main.OpeningSettings);
         }
     }
 }
