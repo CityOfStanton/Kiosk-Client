@@ -87,11 +87,12 @@ namespace KioskLibrary.Pages
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             var stateFromStorage = await _applicationStorage.GetFileFromStorageAsync<SettingsViewModel>(Constants.ApplicationStorage.Files.SettingsViewModel);
-            State.IsLocalFile = stateFromStorage.IsLocalFile;
-            State.LocalPath = stateFromStorage.LocalPath;
-            State.OrchestrationInstance = stateFromStorage.OrchestrationInstance;
-            State.UriPath = stateFromStorage.UriPath;
-            SetDefaultState();
+            State.IsLocalFile = stateFromStorage?.IsLocalFile ?? default;
+            State.LocalPath = stateFromStorage?.LocalPath ?? default;
+            State.OrchestrationInstance = stateFromStorage?.OrchestrationInstance ?? default;
+            State.UriPath = stateFromStorage?.UriPath ?? default;
+            State.IsFileLoading = false;
+            State.IsUriLoading = false;
 
             Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
         }
@@ -302,12 +303,6 @@ namespace KioskLibrary.Pages
         #endregion
 
         #region Private Methods
-
-        private void SetDefaultState()
-        {
-            State.IsFileLoading = false;
-            State.IsUriLoading = false;
-        }
 
         private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
         {
