@@ -6,8 +6,14 @@
  * github.com/CityOfStanton
  */
 
-using KioskLibrary.Orchestration;
+using Humanizer;
+using KioskLibrary.Common;
+using KioskLibrary.Orchestrations;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace KioskLibrary.ViewModels
 {
@@ -22,15 +28,39 @@ namespace KioskLibrary.ViewModels
         private bool? _isUriPathVerified;
         private bool? _isLocalPathVerified;
         private string _pathValidationMessage;
-        private OrchestrationInstance _orchestrationInstance;
+        private Orchestration _orchestration;
         private bool _isUriLoading;
         private bool _isFileLoading;
+        private ObservableCollection<ValidationResult> _orchestrationValidation;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public SettingsViewModel()
-            : base(new List<string>() { nameof(DoesOrchestrationInstanceHaveContent), nameof(CanStart), nameof(CanLoadFile), nameof(CanLoadUri) }) { }
+            : base(new List<string>() { 
+                nameof(OrchestrationValidationResult), 
+                nameof(IsOrchestrationLoaded), 
+                nameof(IsOrchestrationValid), 
+                nameof(CanStart), 
+                nameof(CanLoadFile), 
+                nameof(CanLoadUri),
+                nameof(OrchestrationSummaryActionCount),
+                nameof(OrchestrationSummaryIsValid),
+                nameof(OrchestrationSummaryLifecycle),
+                nameof(OrchestrationSummaryName),
+                nameof(OrchestrationSummaryOrder),
+                nameof(OrchestrationSummaryPollingInerval),
+                nameof(OrchestrationSummaryRuntime),
+                nameof(OrchestrationSummarySource),
+                nameof(OrchestrationSummarySourceDisplay),
+                nameof(OrchestrationSummaryVersion),
+                nameof(IsOrchestrationValidationResultsLoaded),
+                nameof(OrchestrationSummaryIsValid),
+                nameof(OrchestrationSummaryIsValidDisplay)
+            })
+        {
+            _orchestrationValidation = new ObservableCollection<ValidationResult>();
+        }
 
         /// <summary>
         /// The Uri Path
@@ -87,20 +117,46 @@ namespace KioskLibrary.ViewModels
         }
 
         /// <summary>
-        /// Whether or not the Orchestration
+        /// Whether or not the Orchestration is valid
         /// </summary>
-        public bool DoesOrchestrationInstanceHaveContent
+        public bool IsOrchestrationValid
         {
-            get { return OrchestrationInstance != null; }
+            get { return Orchestration?.IsValid ?? false; }
         }
 
         /// <summary>
-        /// The currently loaded <see cref="OrchestrationInstance" />
+        /// Whether or not the Orchestration is loaded
         /// </summary>
-        public OrchestrationInstance OrchestrationInstance
+        public bool IsOrchestrationLoaded
         {
-            get { return _orchestrationInstance; }
-            set { _orchestrationInstance = value; NotifyPropertyChanged(); }
+            get { return Orchestration != null; }
+        }
+
+        /// <summary>
+        /// Whether or not the Orchestration's validation results have been loaded
+        /// </summary>
+        public bool IsOrchestrationValidationResultsLoaded
+        {
+            get { return Orchestration?.ValidationResult != null && Orchestration.ValidationResult.Count > 0; }
+        }
+
+        /// <summary>
+        /// The currently loaded <see cref="Orchestration" />
+        /// </summary>
+        [JsonIgnore]
+        public Orchestration Orchestration
+        {
+            get { return _orchestration; }
+            set { _orchestration = value; NotifyPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// The currently loaded <see cref="Orchestration" />
+        /// </summary>
+        [JsonIgnore]
+        public ObservableCollection<ValidationResult> OrchestrationValidationResult
+        {
+            get { return _orchestration?.ValidationResult; }
         }
 
         /// <summary>
@@ -128,7 +184,7 @@ namespace KioskLibrary.ViewModels
         {
             get
             {
-                return DoesOrchestrationInstanceHaveContent
+                return IsOrchestrationValid
                     &&
                         ((!IsLocalFile && IsUriPathVerified.HasValue && IsUriPathVerified.Value)
                         ||
@@ -145,5 +201,93 @@ namespace KioskLibrary.ViewModels
         /// Whether or not all conditions have been satisfied to load a local file
         /// </summary>
         public bool CanLoadFile { get { return !IsFileLoading && IsLocalFile; } }
+
+        /// <summary>
+        /// The OrchestrationSummaryName
+        /// </summary>
+        public string OrchestrationSummaryName
+        {
+            get { return Orchestration?.Name ?? ""; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryOrder
+        /// </summary>
+        public string OrchestrationSummaryOrder
+        {
+            get { return Orchestration?.Order.Humanize().Transform(To.TitleCase) ?? ""; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryLifecycle
+        /// </summary>
+        public string OrchestrationSummaryLifecycle
+        {
+            get { return Orchestration?.Lifecycle.Humanize().Transform(To.TitleCase) ?? ""; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryIsValid
+        /// </summary>
+        public bool OrchestrationSummaryIsValid
+        {
+            get { return Orchestration?.IsValid ?? false; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryIsValidDisplay
+        /// </summary>
+        public string OrchestrationSummaryIsValidDisplay
+        {
+            get { return OrchestrationSummaryIsValid ? "Passed" : "Failed"; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryActionCount
+        /// </summary>
+        public int OrchestrationSummaryActionCount
+        {
+            get { return Orchestration?.Actions?.Count ?? 0; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryRuntime
+        /// </summary>
+        public string OrchestrationSummaryRuntime
+        {
+            get { return new TimeSpan(0,0, Orchestration?.Actions?.Sum(x => x.Duration) ?? 0).Humanize(); }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryVersion
+        /// </summary>
+        public string OrchestrationSummaryVersion
+        {
+            get { return Orchestration?.Version ?? ""; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummaryPollingInerval
+        /// </summary>
+        public string OrchestrationSummaryPollingInerval
+        {
+            get { return new TimeSpan(0, Orchestration?.PollingIntervalMinutes ?? 0, 0).Humanize(); }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummarySource
+        /// </summary>
+        public OrchestrationSource OrchestrationSummarySource
+        {
+            get { return Orchestration?.OrchestrationSource ?? OrchestrationSource.File; }
+        }
+
+        /// <summary>
+        /// The OrchestrationSummarySourceDisplay
+        /// </summary>
+        public string OrchestrationSummarySourceDisplay
+        {
+            get { return Orchestration?.OrchestrationSource.Humanize() ?? OrchestrationSource.File.Humanize(); }
+        }
     }
 }

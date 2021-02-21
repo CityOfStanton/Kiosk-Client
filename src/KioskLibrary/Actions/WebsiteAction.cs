@@ -8,8 +8,6 @@
 
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 
@@ -79,25 +77,36 @@ namespace KioskLibrary.Actions
         }
 
         /// <inheritdoc/>
-        public async override Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
+        public async override Task<ValidationResult> ValidateAsync(IHttpHelper httpHelper = null)
         {
-            (_, _, var errors) = await base.ValidateAsync(httpHelper);
+            var result = await base.ValidateAsync(httpHelper);
 
-            (bool isValid, string message) = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok);
+            var pathResult = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok, nameof(Path));
 
-            if (!isValid)
-                errors.Add(message);
+            result.Children.Add(pathResult);
 
-            if (ScrollingTime.HasValue && ScrollingTime <= 0)
-                errors.Add(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingTime);
+            if (ScrollingTime.HasValue)
+                if (ScrollingTime <= 0)
+                    result.Children.Add(new ValidationResult(nameof(ScrollingTime), false, Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime, Constants.Validation.Actions.WebsiteAction.ScrollingTimeGuidance));
+                else
+                    result.Children.Add(new ValidationResult(nameof(ScrollingTime), true, Constants.Validation.Actions.Valid, Constants.Validation.Actions.WebsiteAction.ScrollingTimeGuidance));
+            else
+                result.Children.Add(new ValidationResult(nameof(ScrollingTime), true, Constants.Validation.Actions.NotSet, Constants.Validation.Actions.WebsiteAction.ScrollingTimeGuidance));
 
-            if (ScrollingResetDelay.HasValue && ScrollingResetDelay < 0)
-                errors.Add(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingResetDelay);
+            if (ScrollingResetDelay.HasValue)
+                if (ScrollingResetDelay < 0)
+                    result.Children.Add(new ValidationResult(nameof(ScrollingResetDelay), false, Constants.Validation.Actions.WebsiteAction.InvalidScrollingResetDelay, Constants.Validation.Actions.WebsiteAction.ResetDelayGuidance));
+                else
+                    result.Children.Add(new ValidationResult(nameof(ScrollingResetDelay), true, Constants.Validation.Actions.Valid, Constants.Validation.Actions.WebsiteAction.ResetDelayGuidance));
+            else
+                result.Children.Add(new ValidationResult(nameof(ScrollingResetDelay), true, Constants.Validation.Actions.NotSet, Constants.Validation.Actions.WebsiteAction.ResetDelayGuidance));
 
             if (SettingsDisplayTime < 1)
-                errors.Add(Constants.ValidationMessages.Actions.WebsiteAction.InvalidSettingsDisplayTime);
+                result.Children.Add(new ValidationResult(nameof(SettingsDisplayTime), false, Constants.Validation.Actions.WebsiteAction.InvalidSettingsDisplayTime, Constants.Validation.Actions.WebsiteAction.DisplayTimeGuidance));
+            else
+                result.Children.Add(new ValidationResult(nameof(SettingsDisplayTime), true, Constants.Validation.Actions.Valid, Constants.Validation.Actions.WebsiteAction.DisplayTimeGuidance));
 
-            return (!errors.Any(), Name, errors);
+            return result;
         }
     }
 }

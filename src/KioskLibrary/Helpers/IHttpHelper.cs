@@ -6,6 +6,7 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Common;
 using System;
 using System.Threading.Tasks;
 using Windows.Web.Http;
@@ -26,7 +27,8 @@ namespace KioskLibrary.Helpers
         /// </summary>
         /// <param name="settingsUri">The settings URI</param>
         /// <param name="expectedResult">The expected result</param>
+        /// <param name="propertyName">The name of the property being validated</param>
         /// <returns>A boolean indicating whether or nor the validation succeeded as well as a corresponding message</returns>
-        Task<(bool IsValid, string Message)> ValidateURI(string settingsUri, HttpStatusCode expectedResult);
+        Task<ValidationResult> ValidateURI(string settingsUri, HttpStatusCode expectedResult, string propertyName = null);
     }
 }

@@ -15,19 +15,19 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
-using KioskLibrary.Orchestration;
+using KioskLibrary.Orchestrations;
 using Windows.ApplicationModel.Core;
 using KioskLibrary.Helpers;
 using Serilog;
 
-namespace KioskLibrary
+namespace KioskLibrary.Orchestrations
 {
     /// <summary>
-    /// Processes an <see cref="OrchestrationInstance" />
+    /// Processes an <see cref="Orchestration" />
     /// </summary>
     public class Orchestrator
     {
-        private OrchestrationInstance _orchestrationInstance;
+        private Orchestration _orchestration;
         private readonly ITimeHelper _durationtimer;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
@@ -35,14 +35,14 @@ namespace KioskLibrary
         private readonly IApplicationStorage _applicationStorage;
 
         /// <summary>
-        /// Delegate used for <see cref="OrchestrationInvalid" />
+        /// Delegate used for <see cref="OrchestrationValidationComplete" />
         /// </summary>
-        public delegate void OrchestrationInvalidDelegate(List<string> errors);
+        public delegate void OrchestrationValidationCompleteDelegate(Orchestration orchestration);
 
         /// <summary>
-        /// Event that's raised when the orchestration is invalid
+        /// Event that's raised when the orchestration validation is complete
         /// </summary>
-        public event OrchestrationInvalidDelegate OrchestrationInvalid;
+        public event OrchestrationValidationCompleteDelegate OrchestrationValidationComplete;
 
         /// <summary>
         /// Delegate used for <see cref="OrchestrationStarted" />
@@ -88,6 +88,17 @@ namespace KioskLibrary
         public event OrchestrationStatusUpdateDelegate OrchestrationStatusUpdate;
 
         /// <summary>
+        /// The delegate for receiving <see cref="OrchestrationStatusUpdate" /> events
+        /// </summary>
+        /// <param name="orchestration">The <see cref="Orchestration"/> that was loaded</param>
+        public delegate void OrchestrationLoadeedDelegate(Orchestration orchestration);
+
+        /// <summary>
+        /// Event that's fired when an Orchestration is loaded
+        /// </summary>
+        public event OrchestrationLoadeedDelegate OrchestrationLoaded;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public Orchestrator(ITimeHelper timeHelper = null)
@@ -100,7 +111,7 @@ namespace KioskLibrary
 
             _orchestrationSequence = new List<Action>();
 
-            _orchestrationInstance = null;
+            _orchestration = null;
             _currentAction = null;
 
             _durationtimer = timeHelper ?? new TimerHelper();
@@ -121,7 +132,7 @@ namespace KioskLibrary
         }
 
         /// <summary>
-        /// Gets the updated <see cref="OrchestrationInstance" /> from the web
+        /// Gets the updated <see cref="Orchestration" /> from the web
         /// </summary>
         public static async Task GetNextOrchestration(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
         {
@@ -135,7 +146,7 @@ namespace KioskLibrary
                 Log.Information("GetNextOrchestration - currentOrchestrationURI: {uri}", currentOrchestrationURI);
 
                 // Get orchestration from Settings URI
-                var nextOrchestration = await OrchestrationInstance.GetOrchestrationInstance(new Uri(currentOrchestrationURI), httpHelper);
+                var nextOrchestration = await Orchestration.GetOrchestration(new Uri(currentOrchestrationURI), httpHelper);
 
                 Log.Information("GetNextOrchestration - nextOrchestration: {nextOrchestration}", SerializationHelper.JSONSerialize(nextOrchestration));
 
@@ -145,7 +156,7 @@ namespace KioskLibrary
         }
 
         /// <summary>
-        /// Starts processing the current <see cref="OrchestrationInstance" />
+        /// Starts processing the current <see cref="Orchestration" />
         /// </summary>
         public async Task StartOrchestration()
         {
@@ -159,35 +170,30 @@ namespace KioskLibrary
 
             OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.Loading} {orchestrationSource}");
 
-            _orchestrationInstance = await LoadOrchestration(orchestrationSource, _httpHelper, _applicationStorage);
+            _orchestration = await LoadOrchestration(orchestrationSource, _httpHelper, _applicationStorage);
 
-            if (_orchestrationInstance != null)
+            if (_orchestration != null)
             {
                 OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.LoadedSuccessfully);
 
-                _orchestrationInstance.OrchestrationSource = orchestrationSource;
+                _orchestration.OrchestrationSource = orchestrationSource;
+                OrchestrationLoaded?.Invoke(_orchestration);
 
                 OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.ValidatingOrchestration);
 
-                (bool status, List<string> errors) = await _orchestrationInstance.ValidateAsync();
+                await _orchestration.ValidateAsync();
+                OrchestrationValidationComplete?.Invoke(_orchestration);
 
-                Log.Information("StartOrchestration - _orchestrationInstance validation: {status} | {errors}", status, errors);
+                Log.Information("StartOrchestration - _orchestration validation: {status} | {errors}", _orchestration.IsValid, _orchestration.ValidationResult);
 
-                if (!status)
-                {
-                    OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
-
-                    OrchestrationInvalid?.Invoke(errors);
-                    return;
-                }
-                else
+                if (_orchestration.IsValid)
                 {
                     OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationValid);
 
                     if (orchestrationSource == OrchestrationSource.URL)
                     {
-                        OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.SettingPollingInterval} {_orchestrationInstance.PollingIntervalMinutes} minutes");
-                        _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.PollingInterval, _orchestrationInstance.PollingIntervalMinutes);
+                        OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.SettingPollingInterval} {_orchestration.PollingIntervalMinutes} minutes");
+                        _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.PollingInterval, _orchestration.PollingIntervalMinutes);
                     }
 
                     OrchestrationStarted?.Invoke();
@@ -198,24 +204,29 @@ namespace KioskLibrary
                     }
                     catch (Exception ex) { Log.Error(ex, ex.Message); }
 
-                    if (_orchestrationInstance.Actions.Any())
+                    if (_orchestration.Actions.Any())
                     {
                         OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.SettingActionSequence);
 
                         // Populate the _orchestrationSequence with a sequence of actions to take
-                        Log.Information("Action order set to {order}", _orchestrationInstance.Order);
-                        if (_orchestrationInstance.Order == Ordering.Sequential)
+                        Log.Information("Action order set to {order}", _orchestration.Order);
+                        if (_orchestration.Order == Ordering.Sequential)
                         {
-                            _orchestrationSequence = new List<Action>(_orchestrationInstance.Actions);
+                            _orchestrationSequence = new List<Action>(_orchestration.Actions);
 
-                            foreach (var action in _orchestrationInstance.Actions)
+                            foreach (var action in _orchestration.Actions)
                                 Log.Information("Adding action: {action}", action);
                         }
                         else
-                            PopulateRandomSequenceOfActions(new List<Action>(_orchestrationInstance.Actions));
+                            PopulateRandomSequenceOfActions(new List<Action>(_orchestration.Actions));
 
                         await EvaluateNextAction();
                     }
+                }
+                else
+                {
+                    OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
+                    return;
                 }
             }
             else
@@ -223,7 +234,7 @@ namespace KioskLibrary
         }
 
         /// <summary>
-        /// Stop processing the current <see cref="OrchestrationInstance" />
+        /// Stop processing the current <see cref="Orchestration" />
         /// </summary>
         public void StopOrchestration(string message)
         {
@@ -235,23 +246,23 @@ namespace KioskLibrary
             OrchestrationCancelled?.Invoke(message);
         }
 
-        private static async Task<OrchestrationInstance> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
+        private static async Task<Orchestration> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
         {
             Log.Information("LoadOrchestration invoked: {source}", orchestrationSource);
 
-            OrchestrationInstance toReturn = null;
+            Orchestration toReturn = null;
 
-            if (orchestrationSource == OrchestrationSource.File) // Load OrchestrationInstance from Storage.
-                toReturn = await applicationStorage.GetFileFromStorageAsync<OrchestrationInstance>(Constants.ApplicationStorage.Files.DefaultOrchestration);
-            else if (orchestrationSource == OrchestrationSource.URL) // Load OrchestrationInstance from the web.
+            if (orchestrationSource == OrchestrationSource.File) // Load Orchestration from Storage.
+                toReturn = await applicationStorage.GetFileFromStorageAsync<Orchestration>(Constants.ApplicationStorage.Files.DefaultOrchestration);
+            else if (orchestrationSource == OrchestrationSource.URL) // Load Orchestration from the web.
             {
-                var orchestrationInstancePath = applicationStorage.GetSettingFromStorage<string>(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
-                if (!string.IsNullOrEmpty(orchestrationInstancePath)) // We are pulling from a URL
-                    if (Uri.TryCreate(orchestrationInstancePath, UriKind.Absolute, out var OrchestrationInstanceUri))
-                        toReturn = await OrchestrationInstance.GetOrchestrationInstance(OrchestrationInstanceUri, httpHelper); // Pull a new instace from the URL
+                var orchestrationPath = applicationStorage.GetSettingFromStorage<string>(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
+                if (!string.IsNullOrEmpty(orchestrationPath)) // We are pulling from a URL
+                    if (Uri.TryCreate(orchestrationPath, UriKind.Absolute, out var OrchestrationUri))
+                        toReturn = await Orchestration.GetOrchestration(OrchestrationUri, httpHelper); // Pull a new instace from the URL
             }
 
-            Log.Information("LoadOrchestration - result: {instance}", SerializationHelper.JSONSerialize(toReturn));
+            Log.Information("LoadOrchestration - result: {orchestration}", SerializationHelper.JSONSerialize(toReturn));
 
             return toReturn;
         }
@@ -315,7 +326,7 @@ namespace KioskLibrary
 
                 NextAction?.Invoke(_currentAction);
             }
-            else if (_orchestrationInstance.Lifecycle == LifecycleBehavior.ContinuousLoop) // We don't have any more actions to execute, so we see if we need to start over
+            else if (_orchestration.Lifecycle == LifecycleBehavior.ContinuousLoop) // We don't have any more actions to execute, so we see if we need to start over
             {
                 Log.Information(Constants.Orchestrator.StatusMessages.RestartingOrchestration);
                 OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.RestartingOrchestration);

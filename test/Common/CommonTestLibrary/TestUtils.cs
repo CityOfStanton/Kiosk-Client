@@ -8,7 +8,7 @@
 
 using KioskLibrary.Actions;
 using KioskLibrary.Common;
-using KioskLibrary.Orchestration;
+using KioskLibrary.Orchestrations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -74,14 +74,14 @@ namespace CommonTestLibrary
         /// <returns>A random number</returns>
         public static int CreateRandomNumber(int minimum = int.MinValue, int maximum = int.MaxValue) { return new Random().Next(minimum, maximum); }
 
-        public static OrchestrationInstance CreateRandomOrchestrationInstance()
+        public static Orchestration CreateRandomOrchestration()
         {
             var orchestrationSourceOptions = Enum.GetValues(typeof(OrchestrationSource));
             var lifecycleBehaviorOptions = Enum.GetValues(typeof(LifecycleBehavior));
             var orderingOptions = Enum.GetValues(typeof(Ordering));
             var r = new Random();
 
-            return new OrchestrationInstance(
+            return new Orchestration(
                 CreateRandomString(),
                 new List<Action>()
                 {

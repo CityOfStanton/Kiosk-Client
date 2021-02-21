@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-16"?>
-<OrchestrationInstance xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<Orchestration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Name>Example demo project for XML</Name>
+  <Version>1.0</Version>
   <PollingIntervalMinutes>15</PollingIntervalMinutes>
   <Lifecycle>ContinuousLoop</Lifecycle>
   <Order>Sequential</Order>
   <Actions>
     <Action xsi:type="ImageAction">
       <Name>Show the Kiosk Client Social Share image from GitHub</Name>
+      <Version>1.0</Version>
       <Duration>5</Duration>
-      <Path>https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_GitHub%20Social%20Preview.png</Path>
+      <Path>https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/main/logo/Kiosk-Client_GitHub%20Social%20Preview.png</Path>
       <Stretch>Uniform</Stretch>
     </Action>
     <Action xsi:type="WebsiteAction">
       <Name>Display the Kiosk Client GitHub page</Name>
+      <Version>1.0</Version>
       <Duration>20</Duration>
       <Path>https://github.com/CityOfStanton/Kiosk-Client</Path>
       <AutoScroll>true</AutoScroll>
@@ -21,4 +24,4 @@
       <SettingsDisplayTime>5</SettingsDisplayTime>
     </Action>
   </Actions>
-</OrchestrationInstance>
+</Orchestration>

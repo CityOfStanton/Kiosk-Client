@@ -21,6 +21,8 @@ using Serilog;
 using Serilog.Formatting.Json;
 using Windows.Storage;
 using KioskLibrary.Common;
+using KioskLibrary.Orchestrations;
+using System.Threading.Tasks;
 
 namespace KioskLibrary
 {
@@ -29,7 +31,7 @@ namespace KioskLibrary
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private bool? _loadSettings = null;
+        private Orchestration _orchestration;
         private readonly DispatcherTimer _initializationDelayTimer;
         private readonly DispatcherTimer _progressRing_LoadingTimer;
         private readonly Orchestrator _orchestrator;
@@ -57,9 +59,6 @@ namespace KioskLibrary
                     .MinimumLevel.Verbose()
                     .CreateLogger();
 
-            Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp; // Remove any pre-existing Common.CommonKeyUp handlers
-            Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp; // Add a single Common.CommonKeyUp handler
-
             _initializationDelayTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(_initialLoadTime + 0.5)
@@ -80,10 +79,10 @@ namespace KioskLibrary
 
             _orchestrator = new Orchestrator();
             _orchestrator.OrchestrationStarted += OrchestrationStarted;
-            _orchestrator.OrchestrationInvalid += OrchestrationInvalid;
             _orchestrator.NextAction += NextAction;
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
             _orchestrator.OrchestrationStatusUpdate += OrchestrationStatusUpdate;
+            _orchestrator.OrchestrationLoaded += _orchestrator_OrchestrationLoaded;
             OrchestrationStatusUpdate(Constants.Application.Main.AttemptingToLoadDefaultOrchestration);
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
@@ -96,7 +95,14 @@ namespace KioskLibrary
             ProgressRing_Loading.Value += (100.0 / _initialLoadTimeUpdatesPerSecond);
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e) => _loadSettings = e.Parameter as bool?;
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            var startImmediatley = e.Parameter as bool?;
+            if (startImmediatley.HasValue && startImmediatley.Value)
+                await StartOrchestration();
+            else
+                StartTimers();
+        }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e) => StopTimers();
 
@@ -115,6 +121,11 @@ namespace KioskLibrary
 
         private async void InitializationDelayTimer_Tick(object sender, object e)
         {
+            await StartOrchestration();
+        }
+
+        private async Task StartOrchestration()
+        {
             StopTimers();
             await _orchestrator.StartOrchestration();
         }
@@ -123,6 +134,11 @@ namespace KioskLibrary
         {
             _statusLog.Add(status);
             TextBlock_Status.Text = status;
+        }
+
+        private void _orchestrator_OrchestrationLoaded(Orchestration orchestration)
+        {
+            _orchestration = orchestration;
         }
 
         private void OrchestrationCancelled(string reason)
@@ -134,7 +150,7 @@ namespace KioskLibrary
         private void GoToSettings()
         {
             StopTimers();
-            Frame.Navigate(typeof(Settings), new SettingsPageArguments(_statusLog));
+            Frame.Navigate(typeof(Settings), new SettingsPageArguments(_statusLog, _orchestration));
         }
 
         private void NextAction(Actions.Action action)
@@ -148,33 +164,22 @@ namespace KioskLibrary
             else
                 throw new NotSupportedException($"{Constants.Application.Exceptions.PageDoesNotExist}[{action.GetType().Name}]");
 
-            Frame.Navigate(nextPage, action);
+            var apa = new ActionPageArguments(action, CancelOrchestrationFromActionPage);
+
+            Frame.Navigate(nextPage, apa);
         }
 
-        private void OrchestrationInvalid(List<string> errors)
+        private void CancelOrchestrationFromActionPage()
         {
-            Log.Information("OrchestrationInvalid: {errors}", errors);
-
-            foreach (var error in errors)
-                _statusLog.Add(error);
-
-            GoToSettings();
+            _orchestrator.StopOrchestration("User cancelled Orchestration");
         }
 
         private async void OrchestrationStarted()
         {
             Log.Information("OrchestrationStarted invoked");
 
-            // Start background task to poll for next OrchestrationInstance
-            await OrchestrationPollingManager.OrchestrationUpdateTask.RegisterOrchestrationInstanceUpdater();
-        }
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (_loadSettings.HasValue && _loadSettings.Value)
-                GoToSettings();
-            else
-                StartTimers();
+            // Start background task to poll for next Orchestration
+            await OrchestrationPollingManager.OrchestrationUpdateTask.RegisterOrchestrationUpdater();
         }
 
         private void Button_Settings_Click(object sender, RoutedEventArgs e)

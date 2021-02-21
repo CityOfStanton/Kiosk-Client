@@ -9,7 +9,7 @@
 using KioskLibrary.Actions;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
-using KioskLibrary.Orchestration;
+using KioskLibrary.Orchestrations;
 using System;
 using System.Collections.Generic;
 using Windows.Storage.Pickers;
@@ -30,9 +30,9 @@ namespace KioskClient.Dialogs
             Logs = new List<string>();
         }
 
-        private OrchestrationInstance ComposeExampleOrchestration(string fileFormat)
+        private Orchestration ComposeExampleOrchestration(string fileFormat)
         {
-            OrchestrationInstance orchestration = new OrchestrationInstance
+            Orchestration orchestration = new Orchestration
             {
                 Name = $"{Constants.Application.OrchestrationFileExample.Name}{fileFormat}",
                 PollingIntervalMinutes = 15,
@@ -70,13 +70,13 @@ namespace KioskClient.Dialogs
             Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
-                OrchestrationInstance orchestrationInstance = ComposeExampleOrchestration("JSON");
+                Orchestration orchestration = ComposeExampleOrchestration("JSON");
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var fileText = SerializationHelper.JSONSerialize(orchestrationInstance);
+                var fileText = SerializationHelper.JSONSerialize(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
 
-                Logs.Add($"Saved \"{orchestrationInstance.Name}\" to the following location: {file.Path}");
+                Logs.Add($"Saved \"{orchestration.Name}\" to the following location: {file.Path}");
             }
         }
 
@@ -92,13 +92,13 @@ namespace KioskClient.Dialogs
             Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
-                OrchestrationInstance orchestrationInstance = ComposeExampleOrchestration("XML");
+                Orchestration orchestration = ComposeExampleOrchestration("XML");
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
-                var serializedString = SerializationHelper.XMLSerialize<OrchestrationInstance>(orchestrationInstance);
+                var serializedString = SerializationHelper.XMLSerialize<Orchestration>(orchestration);
                 await Windows.Storage.FileIO.WriteTextAsync(file, serializedString);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
 
-                Logs.Add($"Saved \"{orchestrationInstance.Name}\" to the following location: {file.Path}");
+                Logs.Add($"Saved \"{orchestration.Name}\" to the following location: {file.Path}");
             }
         }
 

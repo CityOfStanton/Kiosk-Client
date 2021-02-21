@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using KioskLibrary.Helpers;
 using System.Linq;
 using Windows.UI.Xaml.Media;
+using KioskLibrary.Common;
 
 namespace KioskLibrary.Spec.Actions
 {
@@ -57,15 +58,12 @@ namespace KioskLibrary.Spec.Actions
         [DataTestMethod]
         [DataRow(true, 0, null)]
         [DataRow(false, 1, "ERROR, ERROR, ERROR")]
-        public async Task ValidateFailedAsyncTest(bool validationResult, int errorCount, string errorMessage)
+        public async Task ValidateFailedAsyncTest(bool expectedIsValid, int errorCount, string errorMessage)
         {
             var randomName = CreateRandomString();
             var randomPath = $"http://{CreateRandomString()}";
 
             Mock<IHttpHelper> mockHttpClient = new Mock<IHttpHelper>();
-            mockHttpClient
-                .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
-                .Returns(Task.FromResult((validationResult, errorMessage)));
 
             var action = new ImageAction(
                 randomName,
@@ -74,12 +72,15 @@ namespace KioskLibrary.Spec.Actions
                 Stretch.None,
                 mockHttpClient.Object);
 
-            var (IsValid, Name, Errors) = await action.ValidateAsync();
+            mockHttpClient
+                .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok), It.Is<string>(n => n == action.Name)))
+                .Returns(Task.FromResult(new ValidationResult(nameof(ImageAction.Path), expectedIsValid, errorMessage)));
 
-            Assert.AreEqual(validationResult, IsValid, $"The result is {validationResult}.");
-            Assert.AreEqual(randomName, Name, "The name is correct.");
-            Assert.AreEqual(errorCount, Errors.Count, $"The error count is {errorCount}");
-            Assert.AreEqual(errorMessage, Errors.FirstOrDefault(), $"The error message is {errorMessage}");
+            var validationResult = await action.ValidateAsync();
+
+            Assert.AreEqual(expectedIsValid, validationResult.IsValid, $"The result is {expectedIsValid}.");
+            Assert.AreEqual(errorCount, validationResult.Children.Count, $"The error count is {errorCount}");
+            Assert.AreEqual(errorMessage, validationResult.Children.FirstOrDefault(), $"The error message is {errorMessage}");
         }
     }
 }

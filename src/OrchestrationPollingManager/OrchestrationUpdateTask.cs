@@ -9,6 +9,7 @@
 using KioskLibrary;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
+using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using Serilog;
 using System;
@@ -24,7 +25,7 @@ namespace OrchestrationPollingManager
     /// </summary>
     public sealed class OrchestrationUpdateTask : IBackgroundTask
     {
-        private static readonly string _taskName = "OrchestrationInstanceUpdateTask";
+        private static readonly string _taskName = "OrchestrationUpdateTask";
 
         /// <summary>
         /// The method called by the background worker framework
@@ -42,19 +43,19 @@ namespace OrchestrationPollingManager
         }
 
         /// <summary>
-        /// Registers the Orchestration Instance updater
+        /// Registers the Orchestration updater
         /// </summary>
-        public static IAsyncOperation<bool> RegisterOrchestrationInstanceUpdater()
+        public static IAsyncOperation<bool> RegisterOrchestrationUpdater()
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks.Where(x => x.Value.Name.Contains(_taskName)))
                 task.Value.Unregister(true);
 
-            return RegisterOrchestrationInstanceUpdaterHelper().AsAsyncOperation();
+            return RegisterOrchestrationUpdaterHelper().AsAsyncOperation();
         }
 
-        private async static Task<bool> RegisterOrchestrationInstanceUpdaterHelper()
+        private async static Task<bool> RegisterOrchestrationUpdaterHelper()
         {
-            Log.Information("RegisterOrchestrationInstanceUpdaterHelper invoked");
+            Log.Information("RegisterOrchestrationUpdaterHelper invoked");
 
             var pollingInterval = new ApplicationStorage().GetSettingFromStorage<int>(Constants.ApplicationStorage.Settings.PollingInterval);
 

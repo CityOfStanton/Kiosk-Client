@@ -9,7 +9,7 @@
 namespace KioskLibrary.Common
 {
     /// <summary>
-    /// The source of an <see cref="OrchestrationInstance" />
+    /// The source of an <see cref="Orchestration" />
     /// </summary>
     public enum OrchestrationSource
     {

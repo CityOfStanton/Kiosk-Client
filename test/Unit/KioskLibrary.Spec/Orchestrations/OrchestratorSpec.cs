@@ -1,7 +1,7 @@
 ﻿using KioskLibrary.Actions;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
-using KioskLibrary.Orchestration;
+using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Windows.Web.Http;
 using static CommonTestLibrary.TestUtils;
 
-namespace KioskLibrary.Spec.Orchestration
+namespace KioskLibrary.Spec.Orchestrations
 {
     [TestClass]
     public class OrchestratorSpec
@@ -19,14 +19,14 @@ namespace KioskLibrary.Spec.Orchestration
         public async Task GetNextOrchestrationTest()
         {
             var currentOrchestrationPath = $"http://{CreateRandomString()}";
-            var testInstance = CreateRandomOrchestrationInstance();
-            var testInstanceAsString = SerializationHelper.JSONSerialize(testInstance);
+            var testOrchestration = CreateRandomOrchestration();
+            var testOrchestrationAsString = SerializationHelper.JSONSerialize(testOrchestration);
             var mockApplicationStorage = new Mock<IApplicationStorage>();
             var mockhttphelper = new Mock<IHttpHelper>();
 
             var responseMessage = new HttpResponseMessage(HttpStatusCode.Ok)
             {
-                Content = new HttpStringContent(testInstanceAsString)
+                Content = new HttpStringContent(testOrchestrationAsString)
             };
 
             mockApplicationStorage
@@ -35,7 +35,7 @@ namespace KioskLibrary.Spec.Orchestration
                 .Verifiable();
 
             mockApplicationStorage
-                .Setup(x => x.SaveFileToStorageAsync(It.Is<string>(s => s == Constants.ApplicationStorage.Files.NextOrchestration), It.Is<OrchestrationInstance>(t => SerializationHelper.JSONSerialize(t) == SerializationHelper.JSONSerialize(testInstance))))
+                .Setup(x => x.SaveFileToStorageAsync(It.Is<string>(s => s == Constants.ApplicationStorage.Files.NextOrchestration), It.Is<Orchestration>(t => SerializationHelper.JSONSerialize(t) == SerializationHelper.JSONSerialize(testOrchestration))))
                 .Verifiable();
 
             mockhttphelper
@@ -92,21 +92,21 @@ namespace KioskLibrary.Spec.Orchestration
             var mockTimeHelper = new Mock<ITimeHelper>();
 
             var currentOrchestrationPath = $"http://{CreateRandomString()}";
-            var testInstance = CreateRandomOrchestrationInstance();
-            var testInstanceAsString = SerializationHelper.JSONSerialize(testInstance);
+            var testOrchestration = CreateRandomOrchestration();
+            var testOrchestrationAsString = SerializationHelper.JSONSerialize(testOrchestration);
             var responseMessage = new HttpResponseMessage(HttpStatusCode.Ok)
             {
-                Content = new HttpStringContent(testInstanceAsString)
+                Content = new HttpStringContent(testOrchestrationAsString)
             };
-            testInstance.HttpHelper = mockhttphelper.Object;
+            testOrchestration.HttpHelper = mockhttphelper.Object;
 
             mockApplicationStorage
                 .Setup(x => x.GetSettingFromStorage<OrchestrationSource>(It.Is<string>(s => s == Constants.ApplicationStorage.Settings.DefaultOrchestrationSource)))
                 .Returns(orchestrationSource);
 
             mockApplicationStorage
-                .Setup(x => x.GetFileFromStorageAsync<OrchestrationInstance>(It.Is<string>(s => s == Constants.ApplicationStorage.Files.DefaultOrchestration)))
-                .Returns(Task.FromResult(testInstance));
+                .Setup(x => x.GetFileFromStorageAsync<Orchestration>(It.Is<string>(s => s == Constants.ApplicationStorage.Files.DefaultOrchestration)))
+                .Returns(Task.FromResult(testOrchestration));
 
             mockApplicationStorage
                 .Setup(x => x.GetSettingFromStorage<string>(It.Is<string>(s => s == Constants.ApplicationStorage.Settings.DefaultOrchestrationURI)))
@@ -117,12 +117,12 @@ namespace KioskLibrary.Spec.Orchestration
                 .Returns(Task.FromResult(responseMessage));
 
             mockhttphelper
-                .Setup(x => x.ValidateURI(It.Is<string>(p => p == (testInstance.Actions[0] as ImageAction).Path), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
-                .Returns(Task.FromResult((true, null as string)));
+                .Setup(x => x.ValidateURI(It.Is<string>(p => p == (testOrchestration.Actions[0] as ImageAction).Path), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok), It.IsAny<string>()))
+                .Returns(Task.FromResult(new ValidationResult(CreateRandomString(), true)));
 
             mockhttphelper
-                .Setup(x => x.ValidateURI(It.Is<string>(p => p == (testInstance.Actions[1] as WebsiteAction).Path), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
-                .Returns(Task.FromResult((true, null as string)));
+                .Setup(x => x.ValidateURI(It.Is<string>(p => p == (testOrchestration.Actions[1] as WebsiteAction).Path), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok), It.IsAny<string>()))
+                .Returns(Task.FromResult(new ValidationResult(CreateRandomString(), true)));
 
             var orchestrator = new Orchestrator(mockhttphelper.Object, mockApplicationStorage.Object, mockTimeHelper.Object);
             await orchestrator.StartOrchestration();
