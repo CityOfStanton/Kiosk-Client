@@ -119,43 +119,59 @@ namespace KioskLibrary.Spec.Orchestrations
             yield return new object[] {
                 orchestration,
                 true,
+                6,
                 new List<string>()
+                {
+                    $"PollingIntervalMinutes: {Constants.Validation.Actions.Valid}",
+                    $"Duration: {Constants.Validation.Actions.Valid}",
+                    $"ScrollingTime: {Constants.Validation.Actions.Valid}",
+                    $"ScrollingResetDelay: {Constants.Validation.Actions.Valid}",
+                    $"SettingsDisplayTime: {Constants.Validation.Actions.Valid}"
+                }
             };
 
             yield return new object[] {
                 orchestrationWithInvalidPollingInterval,
                 false,
-                new List<string>() { Constants.Validation.Orchestration.InvalidPollingInterval}
+                6,
+                new List<string>() { 
+                    $"PollingIntervalMinutes: {Constants.Validation.Orchestration.InvalidPollingInterval}",
+                    $"Duration: {Constants.Validation.Actions.Valid}",
+                    $"ScrollingTime: {Constants.Validation.Actions.Valid}",
+                    $"ScrollingResetDelay: {Constants.Validation.Actions.Valid}",
+                    $"SettingsDisplayTime: {Constants.Validation.Actions.Valid}"
+                }
             };
 
             yield return new object[] {
                 orchestrationWithInvalidActions,
                 false,
+                8,
                 new List<string>()
                 {
-                    $"{orchestrationWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
-                    $"{orchestrationWithInvalidActions.Actions[0].Name}: {Constants.Validation.Actions.InvalidDuration}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {invalidMessage2}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.InvalidDuration}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingResetDelay}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.WebsiteAction.InvalidSettingsDisplayTime}"
+                    $"{invalidMessage1}",
+                    $"{invalidMessage2}",
+                    $"PollingIntervalMinutes: {Constants.Validation.Actions.Valid}",
+                    $"Duration: {Constants.Validation.Actions.InvalidDuration}",
+                    $"ScrollingTime: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime}",
+                    $"ScrollingResetDelay: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingResetDelay}",
+                    $"SettingsDisplayTime: {Constants.Validation.Actions.WebsiteAction.InvalidSettingsDisplayTime}"
                 }
             };
 
             yield return new object[] {
                 orchestrationWithInvalidPollingIntervalAndActions,
                 false,
+                8,
                 new List<string>()
                 {
-                    Constants.Validation.Orchestration.InvalidPollingInterval,
-                    $"{orchestrationWithInvalidActions.Actions[0].Name}: {invalidMessage1}",
-                    $"{orchestrationWithInvalidActions.Actions[0].Name}: {Constants.Validation.Actions.InvalidDuration}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {invalidMessage2}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.InvalidDuration}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingResetDelay}",
-                    $"{orchestrationWithInvalidActions.Actions[1].Name}: {Constants.Validation.Actions.WebsiteAction.InvalidSettingsDisplayTime}"
+                    $"{invalidMessage1}",
+                    $"{invalidMessage2}",
+                    $"PollingIntervalMinutes: {Constants.Validation.Orchestration.InvalidPollingInterval}",
+                    $"Duration: {Constants.Validation.Actions.InvalidDuration}",
+                    $"ScrollingTime: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime}",
+                    $"ScrollingResetDelay: {Constants.Validation.Actions.WebsiteAction.InvalidScrollingResetDelay}",
+                    $"SettingsDisplayTime: {Constants.Validation.Actions.WebsiteAction.InvalidSettingsDisplayTime}"
                 }
             };
         }
@@ -226,14 +242,29 @@ namespace KioskLibrary.Spec.Orchestrations
 
         [DataTestMethod]
         [DynamicData(nameof(ValidateAsyncTestData), DynamicDataSourceType.Method)]
-        public async Task ValidateAsyncTest(Orchestration orchestration, bool isValid, List<string> errors)
+        public async Task ValidateAsyncTest(Orchestration orchestration, bool isValid, int validationMessageCount, List<string> validationMessages)
         {
             await orchestration.ValidateAsync();
 
             Assert.AreEqual(isValid, orchestration.IsValid, $"The validity of the orchestration is {isValid}");
-            Assert.AreEqual(errors.Count, orchestration.ValidationResult.FirstOrDefault()?.Children?.Count, $"The number of errors is {errors.Count}");
-            foreach (var error in errors)
-                Assert.IsTrue(orchestration.ValidationResult.FirstOrDefault().Children.Any(x => x.Message == error), $"The validation result contains '{error}'");
+
+            var listOfMessages = new List<string>();
+            foreach (var result in orchestration.ValidationResult)
+                GetListOfValidationMessages(result, ref listOfMessages);
+
+            Assert.AreEqual(validationMessageCount, listOfMessages.Count, $"The number of errors is {validationMessageCount}");
+
+            foreach (var message in listOfMessages)
+                Assert.IsTrue(validationMessages.Contains(message), $"The validation result contains '{message}'");
+        }
+
+        private void GetListOfValidationMessages(ValidationResult result, ref List<string> listOfMessages)
+        {
+            if (!string.IsNullOrEmpty(result.Message))
+                listOfMessages.Add(result.ToString());
+
+            foreach (var childResult in result.Children)
+                GetListOfValidationMessages(childResult, ref listOfMessages);
         }
     }
 }

@@ -113,12 +113,5 @@ namespace KioskLibrary.Common
 
         /// <inheritdoc/>
         public override string ToString() => $"{Identifier}{(string.IsNullOrEmpty(Message) ? "" : $": {Message}")}";
-
-        /// <summary>
-        /// Returns a string that represents the current object.
-        /// </summary>
-        /// <param name="indention">The number of spaces to indent the start of the returned string</param>
-        /// <returns>A string that represents the current object.</returns>
-        public string ToString(int indention = 0) => $"{new string(' ', indention)}{ToString()}";
     }
 }

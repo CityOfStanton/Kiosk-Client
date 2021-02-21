@@ -56,9 +56,9 @@ namespace KioskLibrary.Spec.Actions
         }
 
         [DataTestMethod]
-        [DataRow(true, 0, null)]
-        [DataRow(false, 1, "ERROR, ERROR, ERROR")]
-        public async Task ValidateFailedAsyncTest(bool expectedIsValid, int errorCount, string errorMessage)
+        [DataRow(true, "Valid")]
+        [DataRow(false, "ERROR, ERROR, ERROR")]
+        public async Task ValidateFailedAsyncTest(bool expectedIsValid, string validationResultMessage)
         {
             var randomName = CreateRandomString();
             var randomPath = $"http://{CreateRandomString()}";
@@ -73,14 +73,17 @@ namespace KioskLibrary.Spec.Actions
                 mockHttpClient.Object);
 
             mockHttpClient
-                .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok), It.Is<string>(n => n == action.Name)))
-                .Returns(Task.FromResult(new ValidationResult(nameof(ImageAction.Path), expectedIsValid, errorMessage)));
+                .Setup(x => x.ValidateURI(
+                    It.Is<string>(p => p == randomPath),
+                    It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok),
+                    It.Is<string>(n => n == nameof(ImageAction.Path))))
+                .Returns(Task.FromResult(new ValidationResult(nameof(ImageAction.Path), expectedIsValid, validationResultMessage)));
 
             var validationResult = await action.ValidateAsync();
 
             Assert.AreEqual(expectedIsValid, validationResult.IsValid, $"The result is {expectedIsValid}.");
-            Assert.AreEqual(errorCount, validationResult.Children.Count, $"The error count is {errorCount}");
-            Assert.AreEqual(errorMessage, validationResult.Children.FirstOrDefault(), $"The error message is {errorMessage}");
+            Assert.AreEqual(2, validationResult.Children.Count, "There are 2 validation results");
+            Assert.IsTrue(validationResult.Children.Select(x => x.Message).Contains(validationResultMessage), $"The validation results contain '{validationResultMessage}'");
         }
     }
 }
