@@ -134,6 +134,7 @@ namespace KioskLibrary.Orchestrations
         /// <param name="lifecycle">The lifecycle behavior of an <see cref="Orchestration" /></param>
         /// <param name="order">The order to iterate through the set of <see cref="Actions" /></param>
         public Orchestration(string name, List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle = LifecycleBehavior.SingleRun, Ordering order = Ordering.Sequential, IHttpHelper httpHelper = null)
+            : this()
         {
             Name = name;
             PollingIntervalMinutes = pollingInterval;
@@ -214,7 +215,7 @@ namespace KioskLibrary.Orchestrations
                     result.Children.Add(actionValidationResult);
                 }
 
-            ValidationResult.Clear();
+            ValidationResult?.Clear();
             ValidationResult.Add(result);
         }
 
