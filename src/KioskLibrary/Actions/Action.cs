@@ -10,8 +10,6 @@ using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -35,6 +33,11 @@ namespace KioskLibrary.Actions
         /// The name of the action
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// The version of this action
+        /// </summary>
+        public string Version { get; set; } = Constants.Actions.CurrentVersion;
 
         /// <summary>
         /// The duration of the action
@@ -66,15 +69,20 @@ namespace KioskLibrary.Actions
         /// </summary>
         /// <param name="httpHelper">The HTTP helper</param>
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async virtual Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
+        public async virtual Task<ValidationResult> ValidateAsync(IHttpHelper httpHelper = null)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            var errors = new List<string>();
+            var result = new ValidationResult(Name);
 
-            if (Duration.HasValue && Duration <= 0)
-                errors.Add(Constants.ValidationMessages.Actions.InvalidDuration);
+            if (Duration.HasValue)
+                if (Duration <= 0)
+                    result.Children.Add(new ValidationResult(nameof(Duration), false, Constants.Validation.Actions.InvalidDuration, Constants.Validation.Actions.DurationGuidance));
+                else
+                    result.Children.Add(new ValidationResult(nameof(Duration), true, Constants.Validation.Actions.Valid, Constants.Validation.Actions.DurationGuidance));
+            else
+                result.Children.Add(new ValidationResult(nameof(Duration), true, Constants.Validation.Actions.NotSet, Constants.Validation.Actions.DurationGuidance));
 
-            return (!errors.Any(), null as string, errors);
+            return result;
         }
 
         public override string ToString() => $"{Id} | {Name}";

@@ -6,10 +6,10 @@
  * github.com/CityOfStanton
  */
 
-namespace KioskLibrary.Orchestration
+namespace KioskLibrary.Orchestrations
 {
     /// <summary>
-    /// The lifecycle behavior of an <see cref="OrchestrationInstance" />
+    /// The lifecycle behavior of an <see cref="Orchestration" />
     /// </summary>
     public enum LifecycleBehavior
     {

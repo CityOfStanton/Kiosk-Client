@@ -15,9 +15,8 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using KioskLibrary.Orchestration;
+using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
-using Windows.Web.Http;
 using KioskLibrary.Common;
 using KioskClient.Dialogs;
 using KioskLibrary.Helpers;
@@ -26,6 +25,7 @@ using KioskClient.Pages.PageArguments;
 using Serilog;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
+using System.Linq;
 
 namespace KioskLibrary.Pages
 {
@@ -41,6 +41,7 @@ namespace KioskLibrary.Pages
         private readonly IApplicationStorage _applicationStorage;
         private Queue<TeachingTip> _walkThrough;
         private bool Walkthrough_StartingIsLocalState;
+        private int Walkthrough_StartingPivotItem;
 
         /// <summary>
         /// Constructor
@@ -89,7 +90,7 @@ namespace KioskLibrary.Pages
             var stateFromStorage = await _applicationStorage.GetFileFromStorageAsync<SettingsViewModel>(Constants.ApplicationStorage.Files.SettingsViewModel);
             State.IsLocalFile = stateFromStorage?.IsLocalFile ?? default;
             State.LocalPath = stateFromStorage?.LocalPath ?? default;
-            State.OrchestrationInstance = stateFromStorage?.OrchestrationInstance ?? default;
+            State.Orchestration = stateFromStorage?.Orchestration ?? default;
             State.UriPath = stateFromStorage?.UriPath ?? default;
             State.IsFileLoading = false;
             State.IsUriLoading = false;
@@ -115,13 +116,15 @@ namespace KioskLibrary.Pages
         {
             Log.Information("Settings OnNavigatedTo");
 
-            Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
+            //Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
             _currentPageArguments = e.Parameter as SettingsPageArguments;
 
             if (_currentPageArguments != null)
                 if (_currentPageArguments.Log != null)
                     foreach (var error in _currentPageArguments.Log)
                         LogToListbox(error);
+
+            await ValidateOrchestration(_currentPageArguments.Orchestration);
 
             var doNotShowTutorialOnStartup = _applicationStorage.GetSettingFromStorage<bool>(Constants.ApplicationStorage.Settings.DoNotShowTutorialOnStartup);
 
@@ -137,11 +140,6 @@ namespace KioskLibrary.Pages
             }
         }
 
-        /// <summary>
-        /// Add the KeyDown binding back when we leave
-        /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown += PagesHelper.CommonKeyUp;
-
         private void LogToListbox(string message)
         {
             var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
@@ -152,26 +150,13 @@ namespace KioskLibrary.Pages
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
             State.IsUriLoading = true;
-            OrchestrationInstance tmpOrchestrationInstance;
+            Orchestration orchestration;
 
             Log.Information("Button_UrlLoad_Click UriPath: {UriPath}", State.UriPath);
 
-            (bool isValid, string message) = await _httpHelper.ValidateURI(State.UriPath, HttpStatusCode.Ok);
-            State.PathValidationMessage = message;
-            State.IsUriPathVerified = isValid;
-
-            if (isValid)
-            {
-                tmpOrchestrationInstance = await OrchestrationInstance.GetOrchestrationInstance(new Uri(State.UriPath), _httpHelper);
-                await ValidateOrchestration(tmpOrchestrationInstance, OrchestrationSource.URL);
-            }
-            else
-            {
-                State.OrchestrationInstance = null;
-                if (!string.IsNullOrEmpty(State.UriPath))
-                    LogToListbox($"Unable to resolve: {State.UriPath}");
-                LogToListbox("Orchestration failed validation");
-            }
+            orchestration = await Orchestration.GetOrchestration(new Uri(State.UriPath), _httpHelper);
+            orchestration.OrchestrationSource = OrchestrationSource.URL;
+            await ValidateOrchestration(orchestration);
 
             State.IsUriLoading = false;
         }
@@ -200,29 +185,39 @@ namespace KioskLibrary.Pages
                 sr.Close();
                 fileStream.Close();
 
-                var orchestration = OrchestrationInstance.ConvertStringToOrchestrationInstance(content);
-                State.OrchestrationInstance = orchestration;
+                var orchestration = Orchestration.ConvertStringToOrchestration(content);
+                orchestration.OrchestrationSource = OrchestrationSource.File;
+                State.Orchestration = orchestration;
 
-                await ValidateOrchestration(orchestration, OrchestrationSource.File);
+                await ValidateOrchestration(orchestration);
                 State.IsFileLoading = false;
             }
         }
 
-        private void TeachTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
+        private void TeachingTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
         {
             if (_walkThrough.Count > 0)
             {
                 var tip = _walkThrough.Dequeue();
 
-                if (tip == TeachTip_FileInputMode)
+                if (tip == TeachingTip_FileInputMode)
                     State.IsLocalFile = true;
-                else if (tip == TeachTip_SaveFileToTheWeb)
+                else if (tip == TeachingTip_SaveFileToTheWeb)
                     State.IsLocalFile = false;
+                else if (tip == TeachingTip_Log)
+                    Pivot_Orchestration.SelectedItem = PivotItem_Log;
+                else if (tip == TeachingTip_Validation)
+                    Pivot_Orchestration.SelectedItem = PivotItem_Validation;
+                else if (tip == TeachingTip_Summary)
+                    Pivot_Orchestration.SelectedItem = PivotItem_Summary;
 
                 tip.IsOpen = true;
             }
             else
+            {
                 State.IsLocalFile = Walkthrough_StartingIsLocalState; // Restore the state of the IsLocal toggle after the walkthrough.
+                Pivot_Orchestration.SelectedIndex = Walkthrough_StartingPivotItem; // Restore the selected pivot item
+            }
         }
 
         private void ListBox_Log_Clear_Click(object sender, RoutedEventArgs e)
@@ -277,13 +272,12 @@ namespace KioskLibrary.Pages
                     await Save();
                     break;
 
-                case "Clear":
-                    Clear();
+                case "Reset":
+                    Reset();
                     break;
 
                 case "Examples":
                     await Examples();
-
                     break;
 
                 case "Tutorial":
@@ -300,44 +294,49 @@ namespace KioskLibrary.Pages
             }
         }
 
+        private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            Pivot_Orchestration.SelectedItem = PivotItem_Validation;
+        }
+
         #endregion
 
         #region Private Methods
 
-        private async Task ValidateOrchestration(OrchestrationInstance orchestrationInstance, OrchestrationSource orchestrationSource)
+        private async Task ValidateOrchestration(Orchestration orchestration)
         {
             LogToListbox("Validating orchestration...");
 
-            if (orchestrationInstance == null)
+            if (orchestration == null)
                 LogToListbox("Orchestration has no content or is corrupt");
             else
             {
-                (bool status, List<string> errors) = await orchestrationInstance.ValidateAsync();
-                if (status)
-                {
-                    State.OrchestrationInstance = orchestrationInstance;
-                    LogToListbox($"Orchestration Instance: \"{orchestrationInstance.Name ?? "[No Name]"}\"");
+                await orchestration.ValidateAsync();
+                State.Orchestration = orchestration;
 
-                    if (orchestrationInstance.Actions != null)
-                        foreach (var action in orchestrationInstance.Actions)
+                if (orchestration.ValidationResult.FirstOrDefault()?.IsValid ?? false)
+                {
+                    LogToListbox($"Orchestration: \"{orchestration.Name ?? "[No Name]"}\"");
+
+                    if (orchestration.Actions != null)
+                        foreach (var action in orchestration.Actions)
                             LogToListbox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
 
-                    LogToListbox($"Orchestration valid: \"{orchestrationInstance.Name ?? "[No Name]"}\"");
+                    LogToListbox($"Orchestration valid: \"{orchestration.Name ?? "[No Name]"}\"");
 
-                    if (orchestrationSource == OrchestrationSource.File)
+                    if (orchestration.OrchestrationSource == OrchestrationSource.File)
                         State.IsLocalPathVerified = true;
                     else
                         State.IsUriPathVerified = true;
                 }
                 else
                 {
-                    foreach (var error in errors)
-                        LogToListbox(error);
-
-                    if (orchestrationSource == OrchestrationSource.File)
+                    if (orchestration.OrchestrationSource == OrchestrationSource.File)
                         State.IsLocalPathVerified = false;
                     else
                         State.IsUriPathVerified = false;
+
+                    Pivot_Orchestration.SelectedItem = PivotItem_Validation;
 
                     LogToListbox("Orchestration failed validation");
                 }
@@ -364,7 +363,7 @@ namespace KioskLibrary.Pages
             Log.Information("Saving Orchestration to Application Storage");
 
             await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.SettingsViewModel, State);
-            await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration, State.OrchestrationInstance);
+            await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration, State.Orchestration);
 
             _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI, State.UriPath);
             _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
@@ -377,10 +376,10 @@ namespace KioskLibrary.Pages
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.
             var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(MainPage));
+            rootFrame.Navigate(typeof(MainPage), true);
         }
 
-        private void Clear()
+        private void Reset()
         {
             _applicationStorage.ClearFileFromStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration);
             _applicationStorage.ClearFileFromStorageAsync(Constants.ApplicationStorage.Files.NextOrchestration);
@@ -388,7 +387,7 @@ namespace KioskLibrary.Pages
             _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource);
             _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
 
-            State.OrchestrationInstance = null;
+            State.Reset();
 
             LogToListbox("Startup Orchestration has been removed");
         }
@@ -396,22 +395,26 @@ namespace KioskLibrary.Pages
         private void StartTutorial()
         {
             Walkthrough_StartingIsLocalState = State.IsLocalFile; // Capture the state of the IsLocal toggle when we start the walkthrough.
+            Walkthrough_StartingPivotItem = Pivot_Orchestration.SelectedIndex;
             State.IsLocalFile = false;
 
             _walkThrough = new Queue<TeachingTip>();
-            _walkThrough.Enqueue(TeachTip_Wiki);
-            _walkThrough.Enqueue(TeachTip_FileInputMode);
-            _walkThrough.Enqueue(TeachTip_LoadFile);
-            _walkThrough.Enqueue(TeachTip_SaveFileToTheWeb);
-            _walkThrough.Enqueue(TeachTip_SaveLocally);
-            _walkThrough.Enqueue(TeachTip_Clear);
-            _walkThrough.Enqueue(TeachTip_Start);
-            _walkThrough.Enqueue(TeachTip_Update);
-            _walkThrough.Enqueue(TeachTip_FileLoad);
-            _walkThrough.Enqueue(TeachTip_About);
-            _walkThrough.Enqueue(TeachTip_Enjoy);
+            _walkThrough.Enqueue(TeachingTip_Wiki);
+            _walkThrough.Enqueue(TeachingTip_FileInputMode);
+            _walkThrough.Enqueue(TeachingTip_LoadFile);
+            _walkThrough.Enqueue(TeachingTip_Log);
+            _walkThrough.Enqueue(TeachingTip_Validation);
+            _walkThrough.Enqueue(TeachingTip_Summary);
+            _walkThrough.Enqueue(TeachingTip_SaveFileToTheWeb);
+            _walkThrough.Enqueue(TeachingTip_SaveLocally);
+            _walkThrough.Enqueue(TeachingTip_Reset);
+            _walkThrough.Enqueue(TeachingTip_Start);
+            _walkThrough.Enqueue(TeachingTip_Update);
+            _walkThrough.Enqueue(TeachingTip_FileLoad);
+            _walkThrough.Enqueue(TeachingTip_About);
+            _walkThrough.Enqueue(TeachingTip_Enjoy);
 
-            TeachTip_Welcome.IsOpen = true;
+            TeachingTip_Welcome.IsOpen = true;
         }
 
         private static async Task LaunchHelpSite()

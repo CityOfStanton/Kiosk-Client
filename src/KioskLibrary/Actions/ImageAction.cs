@@ -6,10 +6,10 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media;
 using Windows.Web.Http;
@@ -56,16 +56,15 @@ namespace KioskLibrary.Actions
         }
 
         /// <inheritdoc/>
-        public async override Task<(bool IsValid, string Name, List<string> Errors)> ValidateAsync(IHttpHelper httpHelper = null)
+        public async override Task<ValidationResult> ValidateAsync(IHttpHelper httpHelper = null)
         {
-            (_, _, var errors) = await base.ValidateAsync(httpHelper);
+            var result = await base.ValidateAsync(httpHelper);
 
-            (bool isValid, string message) = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok);
+            var pathResult = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok, nameof(Path));
 
-            if (!isValid)
-                errors.Add(message);
+            result.Children.Add(pathResult);
 
-            return (isValid, Name, errors);
+            return result;
         }
     }
 }

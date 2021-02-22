@@ -14,49 +14,97 @@ namespace KioskLibrary.Common
     public class Constants
     {
         /// <summary>
-        /// Warning, errors, and notifications relating to values supplied for various objects
+        /// Message used by <see cref="KioskLibrary.Actions.Action"/>s
         /// </summary>
-        public class ValidationMessages
+        public class Actions
         {
             /// <summary>
-            /// Warning, errors, and notifications relating to values supplied for <see cref="Orchestration.OrchestrationInstance"/>s
+            /// The current version
             /// </summary>
-            public class OrchestrationInstance
+            public static string CurrentVersion = "1.0";
+        }
+
+        /// <summary>
+        /// Messages used by the Kiosk Client appplication
+        /// </summary>
+        public class Application
+        {
+            /// <summary>
+            /// Messages used in the Main page
+            /// </summary>
+            public class Main
             {
                 /// <summary>
-                /// Message that indicates a URL has passed validation
+                /// Attempting to load the default Orchestration unless the user presses the Settings button
                 /// </summary>
-                public static string ValidURIMessage = "URL is valid!";
+                public static string AttemptingToLoadDefaultOrchestration = "Attempting to load the default Orchestration...";
+
                 /// <summary>
-                /// Error that indicates the polling interval cannot be less than 15 minutes according to <see cref="https://docs.microsoft.com/en-us/windows/uwp/launch-resume/run-a-background-task-on-a-timer-#create-a-time-trigger"/>
+                /// Opening the Settings page
                 /// </summary>
-                public static string InvalidPollingInterval = $"{nameof(Orchestration.OrchestrationInstance)}: {nameof(Orchestration.OrchestrationInstance.PollingIntervalMinutes)} cannot be less than 15 minutes.";
+                public static string OpeningSettings = "Opening Settings...";
             }
 
             /// <summary>
-            /// Warning and errors with the values supplied for <see cref="KioskLibrary.Actions.Action"/>s
+            /// Error messages thrown by the application
             /// </summary>
-            public class Actions
+            public class Exceptions
             {
                 /// <summary>
-                /// Error that indicates the duration for an Action must be greater than 0
+                /// Partial error message that occurs when there is no Page mapped to an <see cref="Actions.Action"/>
                 /// </summary>
-                public static string InvalidDuration = $"{nameof(KioskLibrary.Actions.Action.Duration)} must be greater than or equal to 1.";
+                public static string PageDoesNotExist = "There is no corresponding Page mapped to ";
+            }
 
-                public class WebsiteAction
+            /// <summary>
+            /// Message returned from the <see cref="PageHelper"/>
+            /// </summary>
+            public class PageHelper
+            {
+                /// <summary>
+                /// Message that occurs when the Orchestration is cancelled.
+                /// </summary>
+                public static string OrchestrationCancelled = "Orchestration was cancelled.";
+            }
+
+            /// <summary>
+            /// Values supplied to the Example Orchestration file
+            /// </summary>
+            public class OrchestrationFileExample
+            {
+                /// <summary>
+                /// The name of the <see cref="Orchestration.Orchestration"/>
+                /// </summary>
+                public static string Name = "Example demo project for ";
+
+                /// <summary>
+                /// Values supplied to the <see cref="Actions.ImageAction"/>
+                /// </summary>
+                public class ImageActionExample
                 {
                     /// <summary>
-                    /// Error that indicates the <see cref="KioskLibrary.Actions.WebsiteAction.ScrollingTime"/> is less that 1
+                    /// The name of the <see cref="Actions.ImageAction"/>
                     /// </summary>
-                    public static string InvalidScrollingTime = $"{nameof(KioskLibrary.Actions.WebsiteAction.ScrollingTime)} must be greater than or equal to 1.";
+                    public static string Name = "Show the Kiosk Client Social Share image from GitHub";
                     /// <summary>
-                    /// Error that indicates the <see cref="KioskLibrary.Actions.WebsiteAction.SettingsDisplayTime"/> is less that 1
+                    /// The path of the <see cref="Actions.ImageAction"/>
                     /// </summary>
-                    public static string InvalidSettingsDisplayTime = $"{nameof(KioskLibrary.Actions.WebsiteAction.SettingsDisplayTime)} must be greater than or equal to 1.";
+                    public static string Path = "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/main/logo/Kiosk-Client_GitHub%20Social%20Preview.png";
+                }
+
+                /// <summary>
+                /// Values supplied to the <see cref="Actions.WebsiteAction"/>
+                /// </summary>
+                public class WebsiteExample
+                {
                     /// <summary>
-                    /// Error that indicates the <see cref="KioskLibrary.Actions.WebsiteAction.ScrollingResetDelay"/> is less that 0
+                    /// The name of the <see cref="Actions.WebsiteAction"/>
                     /// </summary>
-                    public static string InvalidScrollingResetDelay = $"{nameof(KioskLibrary.Actions.WebsiteAction.ScrollingResetDelay)} must be greater than or equal to 0.";
+                    public static string Name = "Display the Kiosk Client GitHub page";
+                    /// <summary>
+                    /// The path of the <see cref="Actions.WebsiteAction"/>
+                    /// </summary>
+                    public static string Path = "https://github.com/CityOfStanton/Kiosk-Client";
                 }
             }
         }
@@ -72,12 +120,12 @@ namespace KioskLibrary.Common
             public class Settings
             {
                 /// <summary>
-                /// The <see cref="OrchestrationSource" /> of the default <see cref="Orchestration.OrchestrationInstance" />
+                /// The <see cref="OrchestrationSource" /> of the default <see cref="Orchestration.Orchestration" />
                 /// </summary>
                 public static string DefaultOrchestrationSource = "#DefaultOrchestrationSource";
 
                 /// <summary>
-                /// The URI of the default <see cref="Orchestration.OrchestrationInstance" />
+                /// The URI of the default <see cref="Orchestration.Orchestration" />
                 /// </summary>
                 public static string DefaultOrchestrationURI = "#DefaultOrchestrationURI";
 
@@ -103,12 +151,12 @@ namespace KioskLibrary.Common
             public class Files
             {
                 /// <summary>
-                /// The default <see cref="Orchestration.OrchestrationInstance" />
+                /// The default <see cref="Orchestration.Orchestration" />
                 /// </summary>
                 public static string DefaultOrchestration = "#DefaultOrchestration";
 
                 /// <summary>
-                /// The next <see cref="Orchestration.OrchestrationInstance" /> that was pulled in from the OrchestrationPollingManager
+                /// The next <see cref="Orchestration.Orchestration" /> that was pulled in from the OrchestrationPollingManager
                 /// </summary>
                 public static string NextOrchestration = "#NextOrchestration";
 
@@ -117,6 +165,33 @@ namespace KioskLibrary.Common
                 /// </summary>
                 public static string SettingsViewModel = "#SettingsViewModel";
             }
+        }
+
+        /// <summary>
+        /// Messages used with <see cref="ValidationResult"/>
+        /// </summary>
+        public class ValidationResult
+        {
+            /// <summary>
+            /// Failed properties message
+            /// </summary>
+            public static string FailedProperties = "Failing properties:";
+
+            /// <summary>
+            /// Insufficient information message
+            /// </summary>
+            public static string InsufficientInformation = "Insufficient information available to determine";
+        }
+
+        /// <summary>
+        /// Message used by <see cref="KioskLibrary.Orchestrations.Orchestration"/>s
+        /// </summary>
+        public class Orchestrations
+        {
+            /// <summary>
+            /// The current version
+            /// </summary>
+            public static string CurrentVersion = "1.0";
         }
 
         /// <summary>
@@ -197,86 +272,100 @@ namespace KioskLibrary.Common
         }
 
         /// <summary>
-        /// Messages used by the Kiosk Client appplication
+        /// Warning, errors, and notifications relating to values supplied for various objects
         /// </summary>
-        public class Application
+        public class Validation
         {
             /// <summary>
-            /// Messages used in the Main page
+            /// Warning, errors, and notifications relating to values supplied for <see cref="Orchestration.Orchestration"/>s
             /// </summary>
-            public class Main
+            public class Orchestration
             {
                 /// <summary>
-                /// Attempting to load the default Orchestration unless the user presses the Settings button
+                /// Message that indicates a URL has passed validation
                 /// </summary>
-                public static string AttemptingToLoadDefaultOrchestration = "Attempting to load the default Orchestration...";
+                public static string ValidURIMessage = "URL is valid!";
 
                 /// <summary>
-                /// Opening the Settings page
+                /// Error that indicates the polling interval cannot be less than 15 minutes according to <see cref="https://docs.microsoft.com/en-us/windows/uwp/launch-resume/run-a-background-task-on-a-timer-#create-a-time-trigger"/>
                 /// </summary>
-                public static string OpeningSettings = "Opening Settings...";
+                public static string InvalidPollingInterval = $"{nameof(KioskLibrary.Orchestrations.Orchestration)}: {nameof(KioskLibrary.Orchestrations.Orchestration.PollingIntervalMinutes)} cannot be less than 15 minutes.";
+
+                /// <summary>
+                /// Guidance for the Path
+                /// </summary>
+                public static string PathGuidance = "The path must be valid, meaning that a GET returns a 2xx status code.";
+
+                /// <summary>
+                /// Guidance for the PollingInterval
+                /// </summary>
+                public static string PollingIntervalGuidance = $"PollingIntervalMinutes must be between 15 and {int.MaxValue}, inclusively.";
             }
 
             /// <summary>
-            /// Error messages thrown by the application
+            /// Warning and errors with the values supplied for <see cref="KioskLibrary.Actions.Action"/>s
             /// </summary>
-            public class Exceptions
+            public class Actions
             {
                 /// <summary>
-                /// Partial error message that occurs when there is no Page mapped to an <see cref="Actions.Action"/>
+                /// Error that indicates the duration for an Action must be greater than 0
                 /// </summary>
-                public static string PageDoesNotExist = "There is no corresponding Page mapped to ";
-            }
-
-            /// <summary>
-            /// Message returned from the <see cref="PageHelper"/>
-            /// </summary>
-            public class PageHelper
-            {
-                /// <summary>
-                /// Message that occurs when the Orchestration is cancelled.
-                /// </summary>
-                public static string OrchestrationCancelled = "Orchestration was cancelled.";
-            }
-
-            /// <summary>
-            /// Values supplied to the Example Orchestration file
-            /// </summary>
-            public class OrchestrationFileExample
-            {
-                /// <summary>
-                /// The name of the <see cref="Orchestration.OrchestrationInstance"/>
-                /// </summary>
-                public static string Name = "Example demo project for ";
+                public static string InvalidDuration = $"{nameof(KioskLibrary.Actions.Action.Duration)} must be greater than or equal to 1.";
 
                 /// <summary>
-                /// Values supplied to the <see cref="Actions.ImageAction"/>
+                /// Guidance for the Path
                 /// </summary>
-                public class ImageActionExample
+                public static string DurationGuidance = $"Duration must be between 1 and {int.MaxValue}, inclusively.";
+
+                /// <summary>
+                /// Property not set
+                /// </summary>
+                public static string NotSet = "Not Set";
+
+                /// <summary>
+                /// Property is valid
+                /// </summary>
+                public static string Valid = "Valid";
+
+                /// <summary>
+                /// The path is invalid
+                /// </summary>
+                public static string PathInvalid = "The path is invalid";
+
+                /// <summary>
+                /// Warning and errors with the values supplied for <see cref="KioskLibrary.Actions.WebsiteAction"/>s
+                /// </summary>
+                public class WebsiteAction
                 {
                     /// <summary>
-                    /// The name of the <see cref="Actions.ImageAction"/>
+                    /// Error that indicates the <see cref="KioskLibrary.Actions.WebsiteAction.ScrollingTime"/> is less that 1
                     /// </summary>
-                    public static string Name = "Show the Kiosk Client Social Share image from GitHub";
-                    /// <summary>
-                    /// The path of the <see cref="Actions.ImageAction"/>
-                    /// </summary>
-                    public static string Path = "https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/main/logo/Kiosk-Client_GitHub%20Social%20Preview.png";
-                }
+                    public static string InvalidScrollingTime = $"{nameof(KioskLibrary.Actions.WebsiteAction.ScrollingTime)} must be greater than or equal to 1.";
 
-                /// <summary>
-                /// Values supplied to the <see cref="Actions.WebsiteAction"/>
-                /// </summary>
-                public class WebsiteExample
-                {
                     /// <summary>
-                    /// The name of the <see cref="Actions.WebsiteAction"/>
+                    /// ScrollingTime for the Path
                     /// </summary>
-                    public static string Name = "Display the Kiosk Client GitHub page";
+                    public static string ScrollingTimeGuidance = $"ScrollingTime must be between 1 and {int.MaxValue}, inclusively.";
+
                     /// <summary>
-                    /// The path of the <see cref="Actions.WebsiteAction"/>
+                    /// Error that indicates the <see cref="KioskLibrary.Actions.WebsiteAction.SettingsDisplayTime"/> is less that 1
                     /// </summary>
-                    public static string Path = "https://github.com/CityOfStanton/Kiosk-Client";
+                    public static string InvalidSettingsDisplayTime = $"{nameof(KioskLibrary.Actions.WebsiteAction.SettingsDisplayTime)} must be greater than or equal to 1.";
+
+                    /// <summary>
+                    /// ScrollingTime for the Path
+                    /// </summary>
+                    public static string DisplayTimeGuidance = $"DisplayTime must be between 1 and {int.MaxValue}, inclusively.";
+
+                    /// <summary>
+                    /// Error that indicates the <see cref="KioskLibrary.Actions.WebsiteAction.ScrollingResetDelay"/> is less that 0
+                    /// </summary>
+                    public static string InvalidScrollingResetDelay = $"{nameof(KioskLibrary.Actions.WebsiteAction.ScrollingResetDelay)} must be greater than or equal to 0.";
+
+                    /// <summary>
+                    /// ScrollingTime for the Path
+                    /// </summary>
+                    public static string ResetDelayGuidance = $"ResetDelay must be between 0 and {int.MaxValue}, inclusively.";
                 }
             }
         }

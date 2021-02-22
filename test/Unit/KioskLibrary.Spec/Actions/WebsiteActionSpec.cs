@@ -16,6 +16,7 @@ using Windows.Web.Http;
 using System.Threading.Tasks;
 using KioskLibrary.Helpers;
 using KioskLibrary.Common;
+using System.Linq;
 
 namespace KioskLibrary.Spec.Actions
 {
@@ -66,9 +67,6 @@ namespace KioskLibrary.Spec.Actions
             var randomPath = $"http://{CreateRandomString()}";
 
             Mock<IHttpHelper> mockHttpClient = new Mock<IHttpHelper>();
-            mockHttpClient
-                .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
-                .Returns(Task.FromResult((true, null as string)));
 
             var action = new WebsiteAction(
                 randomName,
@@ -80,11 +78,17 @@ namespace KioskLibrary.Spec.Actions
                 CreateRandomNumber(1),
                 mockHttpClient.Object);
 
-            var (IsValid, Name, Errors) = await action.ValidateAsync();
+            mockHttpClient
+                .Setup(
+                    x => x.ValidateURI(It.Is<string>(p => p == randomPath), 
+                    It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok),
+                    It.Is<string>(n => n == nameof(WebsiteAction.Path))))
+                .Returns(Task.FromResult(new ValidationResult(CreateRandomString(), true)));
 
-            Assert.IsTrue(IsValid, "The validation result is True.");
-            Assert.AreEqual(randomName, Name, "The name is correct.");
-            Assert.AreEqual(0, Errors.Count, "The error count is 0");
+            var validationResult = await action.ValidateAsync();
+
+            Assert.IsTrue(validationResult.IsValid, "The validation result is True.");
+            Assert.AreEqual(5, validationResult.Children.Count, "There are 5 validation results.");
         }
 
         [TestMethod]
@@ -92,12 +96,8 @@ namespace KioskLibrary.Spec.Actions
         {
             var randomName = CreateRandomString();
             var randomPath = $"http://{CreateRandomString()}";
-            var uriValidationErrorMessage = $"The error message is {CreateRandomString()}";
 
             Mock<IHttpHelper> mockHttpClient = new Mock<IHttpHelper>();
-            mockHttpClient
-                .Setup(x => x.ValidateURI(It.Is<string>(p => p == randomPath), It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok)))
-                .Returns(Task.FromResult((false, uriValidationErrorMessage)));
 
             var invalidActionWithSmallScrollingTime = new WebsiteAction(
                 randomName,
@@ -109,16 +109,25 @@ namespace KioskLibrary.Spec.Actions
                 -1,
                 mockHttpClient.Object);
 
-            var (IsValid, Name, Errors) = await invalidActionWithSmallScrollingTime.ValidateAsync();
+            var uriValidationMessage = new ValidationResult(invalidActionWithSmallScrollingTime.Name, true);
+            uriValidationMessage.Children.Add(new ValidationResult(nameof(WebsiteAction.ScrollingTime), false, Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime));
 
-            Assert.IsFalse(IsValid, "The result is False.");
-            Assert.AreEqual(randomName, Name, "The name is correct.");
-            Assert.AreEqual(5, Errors.Count, "The error count is 5");
-            Assert.IsTrue(Errors.Contains(uriValidationErrorMessage));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.InvalidDuration));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingTime));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.WebsiteAction.InvalidScrollingResetDelay));
-            Assert.IsTrue(Errors.Contains(Constants.ValidationMessages.Actions.WebsiteAction.InvalidSettingsDisplayTime));
+            mockHttpClient
+                .Setup(
+                    x => x.ValidateURI(It.Is<string>(p => p == randomPath), 
+                    It.Is<HttpStatusCode>(h => h == HttpStatusCode.Ok), 
+                    It.Is<string>(n => n == nameof(WebsiteAction.Path))))
+                .Returns(Task.FromResult(uriValidationMessage));
+
+            var validationResult = await invalidActionWithSmallScrollingTime.ValidateAsync();
+
+            Assert.IsFalse(validationResult.IsValid, "The result is False.");
+            Assert.AreEqual(5, validationResult.Children.Count, "There are 5 validation results.");
+            Assert.IsTrue(validationResult.Children.Contains(uriValidationMessage));
+            Assert.IsTrue(validationResult.Children.Any(x => x.Message == Constants.Validation.Actions.InvalidDuration));
+            Assert.IsTrue(validationResult.Children.Any(x => x.Message == Constants.Validation.Actions.WebsiteAction.InvalidScrollingTime));
+            Assert.IsTrue(validationResult.Children.Any(x => x.Message == Constants.Validation.Actions.WebsiteAction.InvalidScrollingResetDelay));
+            Assert.IsTrue(validationResult.Children.Any(x => x.Message == Constants.Validation.Actions.WebsiteAction.InvalidSettingsDisplayTime));
         }
     }
 }

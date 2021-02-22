@@ -41,18 +41,22 @@ namespace KioskLibrary.Helpers
         public virtual async Task<HttpResponseMessage> GetAsync(Uri uri) => await _httpClient.GetAsync(uri);
                 
         /// <inheritDoc />
-        public virtual async Task<(bool IsValid, string Message)> ValidateURI(string settingsUri, HttpStatusCode expectedResult)
+        public virtual async Task<ValidationResult> ValidateURI(string settingsUri, HttpStatusCode expectedResult, string propertyName = null)
         {
             try
             {
                 var uri = new Uri(settingsUri);
                 var result = await GetAsync(uri);
 
-                return (result.StatusCode == expectedResult, Constants.ValidationMessages.OrchestrationInstance.ValidURIMessage);
+                return (new ValidationResult(
+                    propertyName, 
+                    result.StatusCode == expectedResult, 
+                    result.StatusCode == expectedResult ? Constants.Validation.Actions.Valid : Constants.Validation.Actions.PathInvalid,
+                    Constants.Validation.Orchestration.PathGuidance));
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return new ValidationResult(propertyName, false, ex.Message);
             }
         }
     }
