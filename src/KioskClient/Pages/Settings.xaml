@@ -29,7 +29,7 @@
         <muxc:NavigationView.MenuItems>
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Start" Icon="Play" Content="Run the Orchestration" Tag="Run" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" Background="#267B30" KeyboardAcceleratorPlacementMode="Auto" />
             <muxc:NavigationViewItem x:Name="NavigationViewItem_Save" Icon="SaveLocal" Content="Save as startup Orchestration" Tag="Save" IsEnabled="{x:Bind Path=State.CanStart, Mode=OneWay}" />
-            <muxc:NavigationViewItem x:Name="NavigationViewItem_Clear" Icon="Clear" Content="Clear startup  Orchestration" Tag="Clear" />
+            <muxc:NavigationViewItem x:Name="NavigationViewItem_Reset" Icon="Clear" Content="Reset to original settings" Tag="Reset" />
         </muxc:NavigationView.MenuItems>
 
         <muxc:NavigationView.FooterMenuItems>
@@ -334,14 +334,14 @@
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
-            <muxc:TeachingTip x:Name="TeachingTip_Clear"
-	        Target="{x:Bind NavigationViewItem_Clear}"
+            <muxc:TeachingTip x:Name="TeachingTip_Reset"
+	        Target="{x:Bind NavigationViewItem_Reset}"
             IsLightDismissEnabled="true"
-	        Title="Clear your saved Orchestration"
-	        Subtitle="Clear the startup Orchestration to prevent Kiosk Client from starting with it the next time the app is launched."
+	        Title="Reset the UI and default Orchestration"
+	        Subtitle="Reset the UI to the original settings and remove the default Orchestration from loading on startup."
             Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
-                    <muxc:SymbolIconSource Symbol="SaveLocal" />
+                    <muxc:SymbolIconSource Symbol="Clear" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
@@ -363,7 +363,7 @@
 	        Subtitle="Note that when using an Orchestration URL, the app will check for updates based on the PollingIntervalMinutes field in the Orchestration File."
             Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
-                    <muxc:SymbolIconSource Symbol="RepeatAll" />
+                    <muxc:SymbolIconSource Symbol="Globe" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 

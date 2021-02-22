@@ -272,8 +272,8 @@ namespace KioskLibrary.Pages
                     await Save();
                     break;
 
-                case "Clear":
-                    Clear();
+                case "Reset":
+                    Reset();
                     break;
 
                 case "Examples":
@@ -379,7 +379,7 @@ namespace KioskLibrary.Pages
             rootFrame.Navigate(typeof(MainPage), true);
         }
 
-        private void Clear()
+        private void Reset()
         {
             _applicationStorage.ClearFileFromStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration);
             _applicationStorage.ClearFileFromStorageAsync(Constants.ApplicationStorage.Files.NextOrchestration);
@@ -387,7 +387,7 @@ namespace KioskLibrary.Pages
             _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource);
             _applicationStorage.ClearSettingFromStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI);
 
-            State.Orchestration = null;
+            State.Reset();
 
             LogToListbox("Startup Orchestration has been removed");
         }
@@ -407,7 +407,7 @@ namespace KioskLibrary.Pages
             _walkThrough.Enqueue(TeachingTip_Summary);
             _walkThrough.Enqueue(TeachingTip_SaveFileToTheWeb);
             _walkThrough.Enqueue(TeachingTip_SaveLocally);
-            _walkThrough.Enqueue(TeachingTip_Clear);
+            _walkThrough.Enqueue(TeachingTip_Reset);
             _walkThrough.Enqueue(TeachingTip_Start);
             _walkThrough.Enqueue(TeachingTip_Update);
             _walkThrough.Enqueue(TeachingTip_FileLoad);

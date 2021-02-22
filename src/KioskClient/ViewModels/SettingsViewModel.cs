@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 
 namespace KioskLibrary.ViewModels
 {
@@ -288,6 +289,17 @@ namespace KioskLibrary.ViewModels
         public string OrchestrationSummarySourceDisplay
         {
             get { return Orchestration?.OrchestrationSource.Humanize() ?? OrchestrationSource.File.Humanize(); }
+        }
+
+        /// <summary>
+        /// Resets an Orchestration
+        /// </summary>
+        public void Reset()
+        {
+            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var p in properties)
+                if (p.CanRead && p.CanWrite)
+                    p.SetValue(this, null, null);
         }
     }
 }

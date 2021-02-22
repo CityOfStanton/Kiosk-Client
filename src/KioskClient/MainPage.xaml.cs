@@ -59,6 +59,9 @@ namespace KioskLibrary
                     .MinimumLevel.Verbose()
                     .CreateLogger();
 
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
+
             _initializationDelayTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(_initialLoadTime + 0.5)
@@ -104,7 +107,16 @@ namespace KioskLibrary
                 StartTimers();
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => StopTimers();
+        /// <summary>
+        /// Remove the KeyDown binding when we leave
+        /// </summary>
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+
+        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        {
+            if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
+                CancelOrchestrationFromActionPage();
+        }
 
         private void StopTimers()
         {

@@ -46,7 +46,6 @@ namespace KioskLibrary.Pages.Actions
         {
             try
             {
-
                 var apa = e.Parameter as ActionPageArguments;
                 var action = apa.Action as ImageAction;
                 _cancelOrchestration = apa.CancelOrchestration;
