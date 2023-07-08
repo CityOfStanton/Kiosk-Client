@@ -6,7 +6,6 @@
  * github.com/CityOfStanton
  */
 
-using KioskLibrary;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using KioskLibrary.Orchestrations;
@@ -37,7 +36,7 @@ namespace OrchestrationPollingManager
 
             Log.Information("OrchestrationUpdateTask Run invoked");
 
-            await Orchestrator.GetNextOrchestration(new HttpHelper(), new ApplicationStorage());
+            await Orchestrator.GetNextOrchestration(new HttpHelper(), new ApplicationSettings());
 
             deferral.Complete();
         }
@@ -57,7 +56,7 @@ namespace OrchestrationPollingManager
         {
             Log.Information("RegisterOrchestrationUpdaterHelper invoked");
 
-            var pollingInterval = new ApplicationStorage().GetSettingFromStorage<int>(Constants.ApplicationStorage.Settings.PollingInterval);
+            var pollingInterval = new ApplicationSettings().GetSettingFromStorage<int>(Constants.ApplicationStorage.Settings.PollingInterval);
 
             if (pollingInterval > 0)
             {

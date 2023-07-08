@@ -11,7 +11,7 @@ using Windows.Foundation;
 
 namespace KioskLibrary.Storage
 {
-    public interface IApplicationStorage
+    public interface IApplicationSettings
     {
         /// <summary>
         /// Gets the contents for a settings

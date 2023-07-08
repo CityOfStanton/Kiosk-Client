@@ -17,7 +17,7 @@ namespace KioskLibrary.Actions
     /// Settings for displaying a webpage.
     /// </summary>
     public class WebsiteAction
-        : Action
+        : Action, IActionPath
     {
         /// <summary>
         /// The path to the website

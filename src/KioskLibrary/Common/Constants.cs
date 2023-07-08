@@ -115,10 +115,15 @@ namespace KioskLibrary.Common
         public class ApplicationStorage
         {
             /// <summary>
-            /// Settings stored in Appplication Storage
+            /// Settings stored in Application Storage
             /// </summary>
             public class Settings
             {
+                /// <summary>
+                /// The name of the internal settings container
+                /// </summary>
+                public static string SettingsContainerName = "#ApplicationSettings";
+
                 /// <summary>
                 /// The <see cref="OrchestrationSource" /> of the default <see cref="Orchestration.Orchestration" />
                 /// </summary>
@@ -164,6 +169,22 @@ namespace KioskLibrary.Common
                 /// The ViewModel for the Settings page
                 /// </summary>
                 public static string SettingsViewModel = "#SettingsViewModel";
+
+                /// <summary>
+                /// Names of Cache Folders
+                /// </summary>
+                public class CacheFolders
+                {
+                    /// <summary>
+                    /// The cache folder for <see cref="Storage.CacheStore.OrchestrationCache"/>
+                    /// </summary>
+                    public static string OrchestrationCache = "OrchestrationCache";
+
+                    /// <summary>
+                    /// The cache folder for <see cref="Storage.CacheStore.Temporary"/>
+                    /// </summary>
+                    public static string Temporary = "Temporary";
+                }
             }
         }
 

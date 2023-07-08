@@ -19,7 +19,8 @@ namespace KioskLibrary.Actions
     /// <summary>
     /// Settings for displaying a single image
     /// </summary>
-    public class ImageAction : Action
+    [Cacheable]
+    public class ImageAction : Action, IActionPath
     {
         /// <summary>
         /// The path to the image

@@ -124,6 +124,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Actions\Action.cs" />
+    <Compile Include="Actions\CacheableAttribute.cs" />
+    <Compile Include="Actions\IActionPath.cs" />
     <Compile Include="Common\Constants.cs" />
     <Compile Include="Common\ValidationResult.cs" />
     <Compile Include="Common\OrchestrationSource.cs" />
@@ -140,8 +142,13 @@
     <Compile Include="IsExternalInit.cs" />
     <Compile Include="Orchestrations\Orchestrator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Storage\ApplicationStorage.cs" />
-    <Compile Include="Storage\IApplicationStorage.cs" />
+    <Compile Include="Storage\ApplicationCache.cs" />
+    <Compile Include="Storage\ApplicationCacheProcessor.cs" />
+    <Compile Include="Storage\ApplicationSettings.cs" />
+    <Compile Include="Storage\DownloadFile.cs" />
+    <Compile Include="Storage\CacheStore.cs" />
+    <Compile Include="Storage\IApplicationSettings.cs" />
+    <Compile Include="Storage\IApplicationCache.cs" />
     <EmbeddedResource Include="Properties\KioskLibrary.rd.xml" />
   </ItemGroup>
   <ItemGroup>

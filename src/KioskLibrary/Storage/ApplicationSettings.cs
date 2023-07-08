@@ -16,9 +16,9 @@ using System.IO;
 namespace KioskLibrary.Storage
 {
     /// <summary>
-    /// Handles working with the Application Storage
+    /// Handles working with the Local Settings
     /// </summary>
-    public class ApplicationStorage : IApplicationStorage
+    public class ApplicationSettings : IApplicationSettings
     {
         /// <inheritdoc />
         public virtual T GetSettingFromStorage<T>(string key)

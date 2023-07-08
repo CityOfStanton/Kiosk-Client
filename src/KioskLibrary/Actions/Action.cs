@@ -46,6 +46,12 @@ namespace KioskLibrary.Actions
         public int? Duration { get; set; }
 
         /// <summary>
+        /// The local key of the action content in the cache
+        /// </summary>
+        [JsonIgnore, XmlIgnore]
+        public string LocalKey { get; set; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public Action()

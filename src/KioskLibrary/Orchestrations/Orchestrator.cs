@@ -15,10 +15,12 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
-using KioskLibrary.Orchestrations;
 using Windows.ApplicationModel.Core;
 using KioskLibrary.Helpers;
 using Serilog;
+using Windows.Networking.BackgroundTransfer;
+using KioskLibrary.Actions;
+using Windows.ApplicationModel.Background;
 
 namespace KioskLibrary.Orchestrations
 {
@@ -28,11 +30,11 @@ namespace KioskLibrary.Orchestrations
     public class Orchestrator
     {
         private Orchestration _orchestration;
-        private readonly ITimeHelper _durationtimer;
+        private readonly ITimeHelper _durationTimer;
         private Action _currentAction;
         private List<Action> _orchestrationSequence;
         private readonly IHttpHelper _httpHelper;
-        private readonly IApplicationStorage _applicationStorage;
+        private readonly IApplicationSettings _applicationStorage;
 
         /// <summary>
         /// Delegate used for <see cref="OrchestrationValidationComplete" />
@@ -103,28 +105,26 @@ namespace KioskLibrary.Orchestrations
         /// </summary>
         public Orchestrator(ITimeHelper timeHelper = null)
         {
-            if (_httpHelper == null)
-                _httpHelper = new HttpHelper();
+            _httpHelper ??= new HttpHelper();
 
-            if (_applicationStorage == null)
-                _applicationStorage = new ApplicationStorage();
+            _applicationStorage ??= new ApplicationSettings();
 
             _orchestrationSequence = new List<Action>();
 
             _orchestration = null;
             _currentAction = null;
 
-            _durationtimer = timeHelper ?? new TimerHelper();
-            _durationtimer.Tick += Durationtime_Tick;
+            _durationTimer = timeHelper ?? new TimerHelper();
+            _durationTimer.Tick += Durationtime_Tick;
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        /// <param name="applicationStorage">The <see cref="IApplicationStorage"/> to use for interacting with local application storage</param>
+        /// <param name="applicationStorage">The <see cref="IApplicationSettings"/> to use for interacting with local application storage</param>
         /// <param name="timeHelper">The <see cref="ITimeHelper"/> to use for interacting with the <see cref="DispatcherTimer"/></param>
-        public Orchestrator(IHttpHelper httpHelper, IApplicationStorage applicationStorage, ITimeHelper timeHelper)
+        public Orchestrator(IHttpHelper httpHelper, IApplicationSettings applicationStorage, ITimeHelper timeHelper)
             : this(timeHelper)
         {
             _httpHelper = httpHelper;
@@ -134,7 +134,7 @@ namespace KioskLibrary.Orchestrations
         /// <summary>
         /// Gets the updated <see cref="Orchestration" /> from the web
         /// </summary>
-        public static async Task GetNextOrchestration(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
+        public static async Task GetNextOrchestration(IHttpHelper httpHelper, IApplicationSettings applicationStorage)
         {
             Log.Information("GetNextOrchestration invoked");
 
@@ -190,6 +190,10 @@ namespace KioskLibrary.Orchestrations
                 {
                     OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationValid);
 
+                    await (await ApplicationCache.CreateApplicationCacheInstance(CacheStore.Temporary)).ClearAllAsync();
+
+                    await PopulateCacheAsync(_orchestration);
+
                     if (orchestrationSource == OrchestrationSource.URL)
                     {
                         OrchestrationStatusUpdate?.Invoke($"{Constants.Orchestrator.StatusMessages.SettingPollingInterval} {_orchestration.PollingIntervalMinutes} minutes");
@@ -233,6 +237,66 @@ namespace KioskLibrary.Orchestrations
                 StopOrchestration(Constants.Orchestrator.StatusMessages.NoValidOrchestration);
         }
 
+        private async Task PopulateCacheAsync(Orchestration _orchestration)
+        {
+            foreach (Action action in _orchestration.Actions)
+                if (action != null)
+                {
+                    // Download file to temp location
+                    await DownloadFileAsync(action);
+                    // See if it exists in common cache location
+                    // If it doesn't
+                    //  Copy it to common cache location
+                    //  Generate the checksum
+                    //  Store path and checksum to local KVP store
+                    //  Delete from the temp cache location
+                    // If it does
+                    //  Generate the checksum for the temp item
+                    //  Compare it to existing item
+                    //  Replace the exiting item with the temp item if the checksum is different
+                    //  Delete from the temp cache location
+                }
+        }
+
+        private async Task DownloadFileAsync(Action action)
+        {
+            try
+            {
+                if (action is IActionPath && Attribute.IsDefined(action.GetType(), typeof(CacheableAttribute)))
+                {
+                    var df = new DownloadFile();
+                    await df.StartDownload(action);
+
+                    //var completionGroup = new BackgroundTransferCompletionGroup();
+                    //BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
+
+                    //builder.Name = "MyDownloadProcessingTask";
+                    //builder.SetTrigger(completionGroup.Trigger);
+                    //builder.TaskEntryPoint = "KioskLibrary.Storage.ApplicationCacheProcessor";
+
+                    //BackgroundTaskRegistration downloadProcessingTask = builder.Register();
+
+                    //var source = new Uri((action as IActionPath).Path);
+
+                    //var key = action.LocalKey ?? Guid.NewGuid().ToString();
+
+                    //var tempCacheStore = await ApplicationCache.CreateApplicationCacheInstance(CacheStore.Temporary);
+                    //var destinationFile = await tempCacheStore.CreateAsync(key);
+
+                    //var downloader = new BackgroundDownloader(completionGroup);
+                    //DownloadOperation download = downloader.CreateDownload(source, destinationFile);
+
+                    //Task<DownloadOperation> startTask = download.StartAsync().AsTask();
+
+                    //downloader.CompletionGroup.Enable();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Information(ex, "Download Error");
+            }
+        }
+
         /// <summary>
         /// Stop processing the current <see cref="Orchestration" />
         /// </summary>
@@ -240,13 +304,12 @@ namespace KioskLibrary.Orchestrations
         {
             Log.Information("StopOrchestration - Stopping orchestration");
 
-            if (_durationtimer != null)
-                _durationtimer.Stop();
+            _durationTimer?.Stop();
 
             OrchestrationCancelled?.Invoke(message);
         }
 
-        private static async Task<Orchestration> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)
+        private static async Task<Orchestration> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationSettings applicationStorage)
         {
             Log.Information("LoadOrchestration invoked: {source}", orchestrationSource);
 
@@ -314,10 +377,10 @@ namespace KioskLibrary.Orchestrations
                 // After we have set the _currentAction, we can assess the duration
                 if (_currentAction.Duration != null && _currentAction.Duration.HasValue)
                 {
-                    _durationtimer.Stop();
+                    _durationTimer.Stop();
                     _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.EndOrchestration, false);
-                    _durationtimer.Interval = TimeSpan.FromSeconds(_currentAction.Duration.Value);
-                    _durationtimer.Start();
+                    _durationTimer.Interval = TimeSpan.FromSeconds(_currentAction.Duration.Value);
+                    _durationTimer.Start();
                 }
 
                 _orchestrationSequence.Remove(_currentAction); // Remove the current action from the sequence of actions
