@@ -111,6 +111,14 @@
                             <TextBlock x:Name="TextBlock_FilePath" Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.LocalPath, Mode=OneWay}" />
                         </Grid>
                     </Grid>
+                    <Button x:Name="Button_AutoReconnect" VerticalAlignment="Top" HorizontalAlignment="Right" Style="{ThemeResource ButtonRevealStyle}" Click="Button_AutoReconnect_Click" >
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <SymbolIcon Symbol="{x:Bind Path=State.AutoReconnectIcon, Mode=OneWay}"/>
+                                <TextBlock Text="{x:Bind Path=State.AutoReconnectText, Mode=OneWay}"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
                 </StackPanel>
             </Grid>
 

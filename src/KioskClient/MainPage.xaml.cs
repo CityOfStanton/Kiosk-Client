@@ -7,15 +7,12 @@
  */
 
 using KioskLibrary.Pages;
-using KioskLibrary.Pages.Actions;
-using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using KioskClient.Dialogs;
 using KioskClient.Pages.PageArguments;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -23,6 +20,8 @@ using Windows.Storage;
 using KioskLibrary.Common;
 using KioskLibrary.Orchestrations;
 using System.Threading.Tasks;
+using KioskLibrary.Actions;
+using KioskLibrary.Pages.Actions;
 
 namespace KioskLibrary
 {
@@ -85,7 +84,7 @@ namespace KioskLibrary
             _orchestrator.NextAction += NextAction;
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
             _orchestrator.OrchestrationStatusUpdate += OrchestrationStatusUpdate;
-            _orchestrator.OrchestrationLoaded += _orchestrator_OrchestrationLoaded;
+            _orchestrator.OrchestrationLoaded += OrchestrationLoaded;
             OrchestrationStatusUpdate(Constants.Application.Main.AttemptingToLoadDefaultOrchestration);
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
@@ -100,8 +99,8 @@ namespace KioskLibrary
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            var startImmediatley = e.Parameter as bool?;
-            if (startImmediatley.HasValue && startImmediatley.Value)
+            var startImmediately = e.Parameter as bool?;
+            if (startImmediately.HasValue && startImmediately.Value)
                 await StartOrchestration();
             else
                 StartTimers();
@@ -148,7 +147,7 @@ namespace KioskLibrary
             TextBlock_Status.Text = status;
         }
 
-        private void _orchestrator_OrchestrationLoaded(Orchestration orchestration)
+        private void OrchestrationLoaded(Orchestration orchestration)
         {
             _orchestration = orchestration;
         }

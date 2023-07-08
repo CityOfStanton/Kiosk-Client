@@ -32,7 +32,7 @@ namespace KioskClient.Dialogs
 
         private Orchestration ComposeExampleOrchestration(string fileFormat)
         {
-            Orchestration orchestration = new Orchestration
+            Orchestration orchestration = new()
             {
                 Name = $"{Constants.Application.OrchestrationFileExample.Name}{fileFormat}",
                 PollingIntervalMinutes = 15,

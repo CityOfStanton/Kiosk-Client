@@ -32,18 +32,19 @@ namespace KioskLibrary.ViewModels
         private Orchestration _orchestration;
         private bool _isUriLoading;
         private bool _isFileLoading;
-        private ObservableCollection<ValidationResult> _orchestrationValidation;
+        private bool _autoReconnect;
+        private int _autoReconnectTimeRemaining;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public SettingsViewModel()
-            : base(new List<string>() { 
-                nameof(OrchestrationValidationResult), 
-                nameof(IsOrchestrationLoaded), 
-                nameof(IsOrchestrationValid), 
-                nameof(CanStart), 
-                nameof(CanLoadFile), 
+            : base(new List<string>() {
+                nameof(OrchestrationValidationResult),
+                nameof(IsOrchestrationLoaded),
+                nameof(IsOrchestrationValid),
+                nameof(CanStart),
+                nameof(CanLoadFile),
                 nameof(CanLoadUri),
                 nameof(OrchestrationSummaryActionCount),
                 nameof(OrchestrationSummaryIsValid),
@@ -59,9 +60,7 @@ namespace KioskLibrary.ViewModels
                 nameof(OrchestrationSummaryIsValid),
                 nameof(OrchestrationSummaryIsValidDisplay)
             })
-        {
-            _orchestrationValidation = new ObservableCollection<ValidationResult>();
-        }
+        { }
 
         /// <summary>
         /// The Uri Path
@@ -256,7 +255,7 @@ namespace KioskLibrary.ViewModels
         /// </summary>
         public string OrchestrationSummaryRuntime
         {
-            get { return new TimeSpan(0,0, Orchestration?.Actions?.Sum(x => x.Duration) ?? 0).Humanize(); }
+            get { return new TimeSpan(0, 0, Orchestration?.Actions?.Sum(x => x.Duration) ?? 0).Humanize(); }
         }
 
         /// <summary>
@@ -300,6 +299,56 @@ namespace KioskLibrary.ViewModels
             foreach (var p in properties)
                 if (p.CanRead && p.CanWrite)
                     p.SetValue(this, null, null);
+        }
+
+        /// <summary>
+        /// Is Auto-Reconnect enabled
+        /// </summary>
+        public bool AutoReconnect
+        {
+            get { return _autoReconnect; }
+            set
+            {
+                _autoReconnect = value;
+                NotifyPropertyChanged();
+
+                AutoReconnectIcon = ""; // This should trigger the re-evaluation
+
+            }
+        }
+
+        /// <summary>
+        /// The Auto-Reconnect icon
+        /// </summary>
+        public string AutoReconnectIcon
+        {
+            get { return _autoReconnect ? "Stop" : "Play"; }
+            set { NotifyPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Is Auto-Reconnect enabled
+        /// </summary>
+        public string AutoReconnectText
+        {
+            get { return $" Auto-Reconnect: {(AutoReconnect ? AutoReconnectTimeRemaining : "Disabled")}"; }
+            set { NotifyPropertyChanged(); }
+
+        }
+
+        /// <summary>
+        /// The Auto-Reconnect time remaining
+        /// </summary>
+        public int AutoReconnectTimeRemaining
+        {
+            get { return _autoReconnectTimeRemaining; }
+            set
+            {
+                _autoReconnectTimeRemaining = value;
+                NotifyPropertyChanged();
+
+                AutoReconnectText = "";
+            }
         }
     }
 }
