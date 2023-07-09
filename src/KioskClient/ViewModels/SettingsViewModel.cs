@@ -32,8 +32,8 @@ namespace KioskLibrary.ViewModels
         private Orchestration _orchestration;
         private bool _isUriLoading;
         private bool _isFileLoading;
-        private bool _autoReconnect;
-        private int _autoReconnectTimeRemaining;
+        private bool _autoReconnect = true;
+        private int _autoReconnectTimeRemaining = 60;
 
         /// <summary>
         /// Constructor

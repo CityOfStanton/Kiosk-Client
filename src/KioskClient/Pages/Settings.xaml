@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   Copyright 2021
   City of Stanton
   Stanton, Kentucky
@@ -115,7 +115,7 @@
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
                                 <SymbolIcon Symbol="{x:Bind Path=State.AutoReconnectIcon, Mode=OneWay}"/>
-                                <TextBlock Text="{x:Bind Path=State.AutoReconnectText, Mode=OneWay}"/>
+                                <TextBlock Text="{x:Bind Path=State.AutoReconnectText, Mode=OneWay}" ToolTipService.ToolTip="When active, the orchestration will attempt to restart automatically when the timer expires."/>
                             </StackPanel>
                         </Button.Content>
                     </Button>

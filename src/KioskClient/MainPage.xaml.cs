@@ -22,6 +22,7 @@ using KioskLibrary.Orchestrations;
 using System.Threading.Tasks;
 using KioskLibrary.Actions;
 using KioskLibrary.Pages.Actions;
+using Microsoft.AppCenter.Utils.Synchronization;
 
 namespace KioskLibrary
 {

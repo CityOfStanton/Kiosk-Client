@@ -21,7 +21,7 @@ namespace KioskLibrary.Spec.Orchestrations
             var currentOrchestrationPath = $"http://{CreateRandomString()}";
             var testOrchestration = CreateRandomOrchestration();
             var testOrchestrationAsString = SerializationHelper.JSONSerialize(testOrchestration);
-            var mockApplicationStorage = new Mock<IApplicationSettings>();
+            var mockApplicationStorage = new Mock<IApplicationStorage>();
             var mockhttphelper = new Mock<IHttpHelper>();
 
             var responseMessage = new HttpResponseMessage(HttpStatusCode.Ok)
@@ -52,7 +52,7 @@ namespace KioskLibrary.Spec.Orchestrations
         [TestMethod]
         public async Task GetNextOrchestrationFailsTest()
         {
-            var mockApplicationStorage = new Mock<IApplicationSettings>();
+            var mockApplicationStorage = new Mock<IApplicationStorage>();
             var mockhttphelper = new Mock<IHttpHelper>();
             var mockTimeHelper = new Mock<ITimeHelper>();
 
@@ -68,7 +68,7 @@ namespace KioskLibrary.Spec.Orchestrations
         [TestMethod]
         public async Task StartOrchestrationWithNoValidOrchestrationStoredTest()
         {
-            var mockApplicationStorage = new Mock<IApplicationSettings>();
+            var mockApplicationStorage = new Mock<IApplicationStorage>();
             var mockhttphelper = new Mock<IHttpHelper>();
             var mockTimeHelper = new Mock<ITimeHelper>();
 
@@ -87,7 +87,7 @@ namespace KioskLibrary.Spec.Orchestrations
         [DataRow(OrchestrationSource.URL)]
         public async Task StartOrchestrationTest(OrchestrationSource orchestrationSource)
         {
-            var mockApplicationStorage = new Mock<IApplicationSettings>();
+            var mockApplicationStorage = new Mock<IApplicationStorage>();
             var mockhttphelper = new Mock<IHttpHelper>();
             var mockTimeHelper = new Mock<ITimeHelper>();
 

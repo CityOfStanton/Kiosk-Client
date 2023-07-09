@@ -19,6 +19,7 @@ using KioskLibrary.Orchestrations;
 using Windows.ApplicationModel.Core;
 using KioskLibrary.Helpers;
 using Serilog;
+using System.Threading;
 
 namespace KioskLibrary.Orchestrations
 {
@@ -224,10 +225,7 @@ namespace KioskLibrary.Orchestrations
                     }
                 }
                 else
-                {
-                    OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
-                    return;
-                }
+                    StopOrchestration(Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
             }
             else
                 StopOrchestration(Constants.Orchestrator.StatusMessages.NoValidOrchestration);

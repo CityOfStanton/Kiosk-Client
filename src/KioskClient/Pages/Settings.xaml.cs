@@ -40,7 +40,7 @@ namespace KioskLibrary.Pages
 
         private SettingsPageArguments _currentPageArguments;
         private readonly IHttpHelper _httpHelper;
-        private readonly IApplicationSettings _applicationStorage;
+        private readonly IApplicationStorage _applicationStorage;
         private Queue<TeachingTip> _walkThrough;
         private bool Walkthrough_StartingIsLocalState;
         private int Walkthrough_StartingPivotItem;
@@ -56,7 +56,7 @@ namespace KioskLibrary.Pages
             {
                 _httpHelper ??= new HttpHelper();
 
-                _applicationStorage ??= new ApplicationSettings();
+                _applicationStorage ??= new ApplicationStorage();
             }
             catch { }
 
@@ -79,7 +79,7 @@ namespace KioskLibrary.Pages
         /// </summary>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
         /// <param name="applicationStorage">The <see cref="IApplicationSettings"/> to use for interacting with local application storage</param>
-        public Settings(IHttpHelper httpHelper, IApplicationSettings applicationStorage)
+        public Settings(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
             : this()
         {
             _httpHelper = httpHelper;
