@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -26,8 +26,6 @@ using Serilog;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using System.Linq;
-using Microsoft.AppCenter.Utils.Synchronization;
-using Windows.ApplicationModel.UserDataTasks;
 
 namespace KioskLibrary.Pages
 {
