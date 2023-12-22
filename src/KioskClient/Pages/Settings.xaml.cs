@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -12,9 +12,8 @@ using System.Collections.Generic;
 using System.IO;
 using Windows.Storage.Pickers;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Navigation;
 using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using KioskLibrary.Common;
@@ -26,6 +25,8 @@ using Serilog;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using System.Linq;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace KioskLibrary.Pages
 {
@@ -64,7 +65,8 @@ namespace KioskLibrary.Pages
             };
             _autoReconnectTimer.Tick += AutoReconnectTimer_Tick;
 
-            ApplicationView.GetForCurrentView().ExitFullScreenMode();
+            // TODO Windows.UI.ViewManagement.ApplicationView is no longer supported. Use Microsoft.UI.Windowing.AppWindow instead. For more details see https://docs.microsoft.com/en-us/windows/apps/windows-app-sdk/migrate-to-windows-app-sdk/guides/windowing
+            Microsoft.UI.Windowing.AppWindow.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
 
             State = new SettingsViewModel();
@@ -100,6 +102,10 @@ namespace KioskLibrary.Pages
             State.UriPath = stateFromStorage?.UriPath ?? default;
             State.IsFileLoading = false;
             State.IsUriLoading = false;
+            State.OrchestrationURIs = stateFromStorage.OrchestrationURIs ?? new ObservableCollection<string>();
+
+            if(State.OrchestrationURIs.Any())
+                ComboBox_URLPath.SelectedIndex = 0;
 
             StartAutoReconnectTimer();
 
@@ -191,11 +197,15 @@ namespace KioskLibrary.Pages
 
         private async void Button_FileLoad_Click(object _, RoutedEventArgs e)
         {
-            var openPicker = new FileOpenPicker
+/*
+    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND)
+    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
+*/
+            var openPicker = InitializeWithWindow(new FileOpenPicker
             {
                 ViewMode = PickerViewMode.Thumbnail,
                 SuggestedStartLocation = PickerLocationId.PicturesLibrary
-            };
+            },App.WindowHandle);
 
             openPicker.FileTypeFilter.Add(".json");
             openPicker.FileTypeFilter.Add(".xml");
@@ -227,6 +237,12 @@ namespace KioskLibrary.Pages
 
                 State.IsFileLoading = false;
             }
+        }
+
+        private static FileOpenPicker InitializeWithWindow(FileOpenPicker obj, IntPtr windowHandle)
+        {
+            WinRT.Interop.InitializeWithWindow.Initialize(obj, windowHandle);
+            return obj;
         }
 
         private void TeachingTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
@@ -274,10 +290,14 @@ namespace KioskLibrary.Pages
         }
         private async void ListBox_Log_Save_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new FileSavePicker
+/*
+    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND)
+    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
+*/
+            var savePicker = InitializeWithWindow(new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
+            },App.WindowHandle);
             savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
             savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now:yyyyMMddHHmmss}";
 
@@ -292,6 +312,12 @@ namespace KioskLibrary.Pages
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
+        }
+
+        private static FileSavePicker InitializeWithWindow(FileSavePicker obj, IntPtr windowHandle)
+        {
+            WinRT.Interop.InitializeWithWindow.Initialize(obj, windowHandle);
+            return obj;
         }
 
         private async void NavigationView_Menu_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
@@ -418,9 +444,11 @@ namespace KioskLibrary.Pages
         {
             StopAutoReconnectTimer();
 
+            StoreURLs();
+
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.
-            var rootFrame = Window.Current.Content as Frame;
+            var rootFrame = App.Window.Content as Frame;
             rootFrame.Navigate(typeof(MainPage), true);
         }
 
@@ -473,6 +501,22 @@ namespace KioskLibrary.Pages
                 Run();
             else
                 State.AutoReconnectTimeRemaining--;
+        }
+
+        private void StoreURLs()
+        {
+            if (!State.IsLocalFile && State.IsUriPathVerified.HasValue && State.IsUriPathVerified.Value)
+            {
+                if (!string.IsNullOrWhiteSpace(State.UriPath) && !State.OrchestrationURIs.Contains(State.UriPath))
+                { // We need to store the Uri
+
+                    if (State.OrchestrationURIs.Count >= 5) // We have too many in the cache, so we need to remove the oldest
+                        for(int i = State.OrchestrationURIs.Count - 1; i > 3; i--) // Start at the end, leaving 4 items in the list
+                            State.OrchestrationURIs.RemoveAt(i);
+
+                    State.OrchestrationURIs.Insert(0, State.UriPath);
+                }
+            }
         }
 
         #endregion

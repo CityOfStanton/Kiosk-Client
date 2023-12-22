@@ -16,7 +16,7 @@ using Windows.Web.Http;
 using System.Threading.Tasks;
 using KioskLibrary.Helpers;
 using System.Linq;
-using Windows.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media;
 using KioskLibrary.Common;
 
 namespace KioskLibrary.Spec.Actions

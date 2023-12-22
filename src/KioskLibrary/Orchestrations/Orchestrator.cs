@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
 using KioskLibrary.Orchestrations;
@@ -104,11 +104,9 @@ namespace KioskLibrary.Orchestrations
         /// </summary>
         public Orchestrator(ITimeHelper timeHelper = null)
         {
-            if (_httpHelper == null)
-                _httpHelper = new HttpHelper();
+            _httpHelper ??= new HttpHelper();
 
-            if (_applicationStorage == null)
-                _applicationStorage = new ApplicationStorage();
+            _applicationStorage ??= new ApplicationStorage();
 
             _orchestrationSequence = new List<Action>();
 
@@ -201,11 +199,12 @@ namespace KioskLibrary.Orchestrations
 
                     try
                     {
+                        // TODO Windows.UI.ViewManagement.ApplicationView is no longer supported. Use Microsoft.UI.Windowing.AppWindow instead. For more details see https://docs.microsoft.com/en-us/windows/apps/windows-app-sdk/migrate-to-windows-app-sdk/guides/windowing
                         ApplicationView.GetForCurrentView()?.TryEnterFullScreenMode();
                     }
                     catch (Exception ex) { Log.Error(ex, ex.Message); }
 
-                    if (_orchestration.Actions.Any())
+                    if (_orchestration.Actions.Count != 0)
                     {
                         OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.SettingActionSequence);
 
@@ -238,8 +237,7 @@ namespace KioskLibrary.Orchestrations
         {
             Log.Information("StopOrchestration - Stopping orchestration");
 
-            if (_durationtimer != null)
-                _durationtimer.Stop();
+            _durationtimer?.Stop();
 
             OrchestrationCancelled?.Invoke(message);
         }
@@ -267,7 +265,7 @@ namespace KioskLibrary.Orchestrations
 
         private void PopulateRandomSequenceOfActions(List<Action> remainingActions)
         {
-            if (remainingActions.Any())
+            if (remainingActions.Count != 0)
                 if (remainingActions.Count == 1)
                 {
                     var action = remainingActions.First();
@@ -296,7 +294,7 @@ namespace KioskLibrary.Orchestrations
                 return;
             }
 
-            if (_orchestrationSequence.Any()) // We have actions to execute
+            if (_orchestrationSequence.Count != 0) // We have actions to execute
             {
                 if (_currentAction == null)
                     _currentAction = _orchestrationSequence[0];

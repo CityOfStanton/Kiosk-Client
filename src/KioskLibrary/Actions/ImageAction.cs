@@ -8,10 +8,9 @@
 
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using Microsoft.UI.Xaml.Media;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Media;
 using Windows.Web.Http;
 
 namespace KioskLibrary.Actions
@@ -29,7 +28,7 @@ namespace KioskLibrary.Actions
         /// <summary>
         /// The type of <see cref="Stretch"/> to apply to the image
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Stretch Stretch { get; set; }
 
         private readonly IHttpHelper _httpHelper;

@@ -34,6 +34,7 @@ namespace KioskLibrary.ViewModels
         private bool _isFileLoading;
         private bool _autoReconnect = true;
         private int _autoReconnectTimeRemaining = 60;
+        private ObservableCollection<string> _orchestrationURIs;
 
         /// <summary>
         /// Constructor
@@ -69,6 +70,15 @@ namespace KioskLibrary.ViewModels
         {
             get { return _uriPath; }
             set { _uriPath = value; NotifyPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// The Uri Path
+        /// </summary>
+        public ObservableCollection<string> OrchestrationURIs
+        {
+            get { return _orchestrationURIs; }
+            set { _orchestrationURIs = value; NotifyPropertyChanged(); }
         }
 
         /// <summary>

@@ -13,9 +13,9 @@ using KioskLibrary.Orchestrations;
 using System;
 using System.Collections.Generic;
 using Windows.Storage.Pickers;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -60,10 +60,14 @@ namespace KioskClient.Dialogs
 
         private async void ButtonJSON_Click(object _, RoutedEventArgs e)
         {
-            var savePicker = new FileSavePicker
+/*
+    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND) 
+    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
+*/
+            var savePicker = InitializeWithWindow(new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
+            },App.WindowHandle);
             savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
             savePicker.SuggestedFileName = "Settings.json";
 
@@ -80,12 +84,22 @@ namespace KioskClient.Dialogs
             }
         }
 
+        private static FileSavePicker InitializeWithWindow(FileSavePicker obj, IntPtr windowHandle)
+        {
+            WinRT.Interop.InitializeWithWindow.Initialize(obj, windowHandle);
+            return obj;
+        }
+
         private async void ButtonXML_Click(object _, RoutedEventArgs e)
         {
-            var savePicker = new FileSavePicker
+/*
+    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND) 
+    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
+*/
+            var savePicker = InitializeWithWindow(new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
+            },App.WindowHandle);
             savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
             savePicker.SuggestedFileName = "Settings.xml";
 
@@ -100,6 +114,12 @@ namespace KioskClient.Dialogs
 
                 Logs.Add($"Saved \"{orchestration.Name}\" to the following location: {file.Path}");
             }
+        }
+
+        private static FileSavePicker InitializeWithWindow(FileSavePicker obj, IntPtr windowHandle)
+        {
+            WinRT.Interop.InitializeWithWindow.Initialize(obj, windowHandle);
+            return obj;
         }
 
         private void ContentDialog_Examples_KeyUp(object sender, KeyRoutedEventArgs e)

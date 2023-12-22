@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   Copyright 2021
   City of Stanton
   Stanton, Kentucky
@@ -82,7 +82,18 @@
                                 <RowDefinition Height="auto" />
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <TextBox x:Name="TextBox_URLPath" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
+                            <ComboBox 
+                                x:Name="ComboBox_URLPath" 
+                                IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" 
+                                Grid.Row="0" 
+                                Grid.Column="0" 
+                                PlaceholderText="URL Path" 
+                                HorizontalAlignment="Stretch" 
+                                VerticalAlignment="Center" 
+                                IsEditable="True" 
+                                ItemsSource="{x:Bind State.OrchestrationURIs, Mode=OneWay}"
+                                Text="{x:Bind State.UriPath, Mode=TwoWay}"
+                                />
                             <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" >
                                 <Button.Content>
                                     <StackPanel Orientation="Horizontal">
@@ -321,7 +332,7 @@
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_SaveFileToTheWeb"
-	        Target="{x:Bind TextBox_URLPath}"
+	        Target="{x:Bind ComboBox_URLPath}"
             IsLightDismissEnabled="true"
 	        Title="Save your Orchestration File to the web"
 	        Subtitle="Once you are satisfied, you can save the file to a publicly available location on the web, such as GitHub, Azure Storage, or Amazon S3."
