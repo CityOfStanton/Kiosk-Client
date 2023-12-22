@@ -34,6 +34,7 @@ pr:
       - '**/*.ai'
       - 'logo/*.png'
       - 'azure-pipelines.yml'
+      - '.vscode/*'
 
 pool:
   vmImage: 'windows-latest'
