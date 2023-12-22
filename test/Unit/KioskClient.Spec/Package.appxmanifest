@@ -7,7 +7,7 @@
 
   <Identity Name="dfffadb6-91dd-47b9-b2a8-a90382b93b13"
             Publisher="CN=chadb"
-            Version="1.0.0.0" />
+            Version="1.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="dfffadb6-91dd-47b9-b2a8-a90382b93b13" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

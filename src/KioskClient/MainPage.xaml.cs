@@ -7,15 +7,12 @@
  */
 
 using KioskLibrary.Pages;
-using KioskLibrary.Pages.Actions;
-using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
-using KioskClient.Dialogs;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using KioskClient.Pages.PageArguments;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -23,6 +20,9 @@ using Windows.Storage;
 using KioskLibrary.Common;
 using KioskLibrary.Orchestrations;
 using System.Threading.Tasks;
+using KioskLibrary.Actions;
+using KioskLibrary.Pages.Actions;
+using Microsoft.AppCenter.Utils.Synchronization;
 
 namespace KioskLibrary
 {
@@ -59,8 +59,8 @@ namespace KioskLibrary
                     .MinimumLevel.Verbose()
                     .CreateLogger();
 
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
+            App.Window.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
+            App.Window.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
 
             _initializationDelayTimer = new DispatcherTimer
             {
@@ -85,9 +85,10 @@ namespace KioskLibrary
             _orchestrator.NextAction += NextAction;
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
             _orchestrator.OrchestrationStatusUpdate += OrchestrationStatusUpdate;
-            _orchestrator.OrchestrationLoaded += _orchestrator_OrchestrationLoaded;
+            _orchestrator.OrchestrationLoaded += OrchestrationLoaded;
             OrchestrationStatusUpdate(Constants.Application.Main.AttemptingToLoadDefaultOrchestration);
 
+            // TODO Windows.UI.ViewManagement.ApplicationView is no longer supported. Use Microsoft.UI.Windowing.AppWindow instead. For more details see https://docs.microsoft.com/en-us/windows/apps/windows-app-sdk/migrate-to-windows-app-sdk/guides/windowing
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
 
             Log.Information("Kiosk Client started");
@@ -100,8 +101,8 @@ namespace KioskLibrary
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            var startImmediatley = e.Parameter as bool?;
-            if (startImmediatley.HasValue && startImmediatley.Value)
+            var startImmediately = e.Parameter as bool?;
+            if (startImmediately.HasValue && startImmediately.Value)
                 await StartOrchestration();
             else
                 StartTimers();
@@ -110,7 +111,7 @@ namespace KioskLibrary
         /// <summary>
         /// Remove the KeyDown binding when we leave
         /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => App.Window.CoreWindow.KeyDown -= CoreWindow_KeyDown;
 
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
@@ -148,7 +149,7 @@ namespace KioskLibrary
             TextBlock_Status.Text = status;
         }
 
-        private void _orchestrator_OrchestrationLoaded(Orchestration orchestration)
+        private void OrchestrationLoaded(Orchestration orchestration)
         {
             _orchestration = orchestration;
         }

@@ -1,13 +1,13 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30804.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskClient", "src\KioskClient\KioskClient.csproj", "{2540C748-1EA4-41BB-9C6D-CEC6585B99EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KioskClient", "src\KioskClient\KioskClient.csproj", "{2540C748-1EA4-41BB-9C6D-CEC6585B99EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskLibrary", "src\KioskLibrary\KioskLibrary.csproj", "{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KioskLibrary", "src\KioskLibrary\KioskLibrary.csproj", "{3A33DD7F-A863-43D1-A2C0-8EE46CFAE78F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrchestrationPollingManager", "src\OrchestrationPollingManager\OrchestrationPollingManager.csproj", "{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrchestrationPollingManager", "src\OrchestrationPollingManager\OrchestrationPollingManager.csproj", "{10E836FF-0D71-4C2D-93F0-BBFE0E466E79}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F76266A8-840E-464B-92AB-4C4D354EF3BE}"
 EndProject
@@ -17,13 +17,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit", "Unit", "{068B76D3-3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{F2EC30AC-EEC8-47F9-A7D7-59E6A401A98B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTestLibrary", "test\Common\CommonTestLibrary\CommonTestLibrary.csproj", "{1CB1401D-14A9-4F15-9A3F-81349FAD32D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonTestLibrary", "test\Common\CommonTestLibrary\CommonTestLibrary.csproj", "{1CB1401D-14A9-4F15-9A3F-81349FAD32D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskClient.Spec", "test\Unit\KioskClient.Spec\KioskClient.Spec.csproj", "{0D8035A2-404B-42D8-B66C-36EC014F5F26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KioskClient.Spec", "test\Unit\KioskClient.Spec\KioskClient.Spec.csproj", "{0D8035A2-404B-42D8-B66C-36EC014F5F26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskLibrary.Spec", "test\Unit\KioskLibrary.Spec\KioskLibrary.Spec.csproj", "{0DBA46F0-A6C9-49EA-B462-63964B1057AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KioskLibrary.Spec", "test\Unit\KioskLibrary.Spec\KioskLibrary.Spec.csproj", "{0DBA46F0-A6C9-49EA-B462-63964B1057AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrchestrationPollingManager.Spec", "test\Unit\OrchestrationPollingManager.Spec\OrchestrationPollingManager.Spec.csproj", "{9164D7B6-39E2-4782-ADCB-6230F275A234}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrchestrationPollingManager.Spec", "test\Unit\OrchestrationPollingManager.Spec\OrchestrationPollingManager.Spec.csproj", "{9164D7B6-39E2-4782-ADCB-6230F275A234}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

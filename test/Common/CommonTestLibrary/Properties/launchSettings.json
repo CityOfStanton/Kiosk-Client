@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CommonTestLibrary (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "CommonTestLibrary (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

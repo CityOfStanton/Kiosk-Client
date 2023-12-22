@@ -6,10 +6,9 @@
  * github.com/CityOfStanton
  */
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Xml.Serialization;
 
 namespace KioskLibrary.Helpers
@@ -19,17 +18,14 @@ namespace KioskLibrary.Helpers
     /// </summary>
     public class SerializationHelper
     {
-        private static JsonSerializerSettings DefaultJsonOptions
+        private static JsonSerializerOptions DefaultJsonOptions
         {
             get
             {
-                return new JsonSerializerSettings()
+                return new JsonSerializerOptions()
                 {
-                    Formatting = Formatting.Indented,
-                    ContractResolver = new DefaultContractResolver
-                    {
-                        NamingStrategy = new CamelCaseNamingStrategy()
-                    }
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
             }
         }
@@ -40,14 +36,14 @@ namespace KioskLibrary.Helpers
         /// <param name="toDeserialize">The string to deserialize</param>
         /// <typeparam name="T">The expected type of the object</typeparam>
         /// <returns>The deserialized object</returns>
-        public static T JSONDeserialize<T>(string toDeserialize) => JsonConvert.DeserializeObject<T>(toDeserialize, DefaultJsonOptions);
+        public static T JSONDeserialize<T>(string toDeserialize) => JsonSerializer.Deserialize<T>(toDeserialize, DefaultJsonOptions);
 
         /// <summary>
         /// Serializes <paramref name="toSerialize" /> as a JSON <see cref="string" />
         /// </summary>
         /// <param name="toSerialize">The object to serialize</param>
         /// <returns>A <see cref="string" /> representation of the object</returns>
-        public static string JSONSerialize(object toSerialize) => JsonConvert.SerializeObject(toSerialize, DefaultJsonOptions);
+        public static string JSONSerialize(object toSerialize) => JsonSerializer.Serialize(toSerialize, DefaultJsonOptions);
 
         /// <summary>
         /// Deserializes the XML <see cref="Stream"/> and returns it as <typeparamref name="T" />

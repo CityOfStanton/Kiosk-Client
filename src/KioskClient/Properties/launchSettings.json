@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "KioskClient (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "KioskClient (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

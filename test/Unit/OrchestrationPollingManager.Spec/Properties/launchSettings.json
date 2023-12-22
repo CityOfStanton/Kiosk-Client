@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OrchestrationPollingManager.Spec (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "OrchestrationPollingManager.Spec (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

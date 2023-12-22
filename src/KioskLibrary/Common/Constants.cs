@@ -143,6 +143,11 @@ namespace KioskLibrary.Common
                 /// Whether or not to show the Tutorial prompt on startup
                 /// </summary>
                 public static string DoNotShowTutorialOnStartup = "#DoNotShowTutorialOnStartup";
+
+                /// <summary>
+                /// A list of orchestration URIs
+                /// </summary>
+                public static string OrchestrationURIs = "#OrchestrationURIs";
             }
 
             /// <summary>

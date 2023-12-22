@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OrchestrationPollingManager (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "OrchestrationPollingManager (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

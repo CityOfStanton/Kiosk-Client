@@ -8,8 +8,8 @@
 
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
-using Newtonsoft.Json;
 using System;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 

@@ -8,13 +8,13 @@
 
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Windows.Web.Http;
@@ -45,13 +45,13 @@ namespace KioskLibrary.Orchestrations
         /// <summary>
         /// The lifecycle behavior of an <see cref="Orchestration" />
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public LifecycleBehavior Lifecycle { get; set; } = LifecycleBehavior.SingleRun;
 
         /// <summary>
         /// The order to iterate through the set of <see cref="Orchestration.Actions" />
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Ordering Order { get; set; } = Ordering.Sequential;
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace KioskLibrary.Orchestrations
         /// <summary>
         /// A list of <see cref="Action" />s to process
         /// </summary>
-        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.Auto)]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public List<Action> Actions { get; set; }
 
         /// <summary>

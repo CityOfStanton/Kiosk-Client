@@ -13,9 +13,9 @@ using KioskLibrary.Helpers;
 using KioskLibrary.ViewModels;
 using Serilog;
 using System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace KioskLibrary.Pages.Actions
 {
@@ -41,8 +41,7 @@ namespace KioskLibrary.Pages.Actions
             _settingsButtonTimer = new DispatcherTimer();
             Webview_Display.LoadCompleted += Webview_Display_LoadCompleted;
 
-            if (State == null)
-                State = new ActionViewModel();
+            State ??= new ActionViewModel();
         }
 
         private async void Webview_Display_LoadCompleted(object sender, NavigationEventArgs e)
@@ -78,8 +77,8 @@ namespace KioskLibrary.Pages.Actions
                 _action = apa.Action as WebsiteAction;
                 _cancelOrchestration = apa.CancelOrchestration;
 
-                Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
-                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
+                App.Window.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
+                App.Window.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
 
                 Log.Information("WebsitePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(_action));
 
@@ -118,7 +117,7 @@ namespace KioskLibrary.Pages.Actions
         {
             _scrollingTimer.Stop();
             _settingsButtonTimer.Stop();
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            App.Window.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
         private void SettingsTimer_Tick(object sender, object e)

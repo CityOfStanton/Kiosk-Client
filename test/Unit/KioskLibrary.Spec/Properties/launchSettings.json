@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "KioskLibrary.Spec (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "KioskLibrary.Spec (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
