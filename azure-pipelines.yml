@@ -20,6 +20,7 @@ trigger:
       - '**/*.ai'
       - 'logo/*.png'
       - 'azure-pipelines.yml'
+      - '.vscode/*'
 
 pr:
   branches:
@@ -33,6 +34,7 @@ pr:
       - '**/*.ai'
       - 'logo/*.png'
       - 'azure-pipelines.yml'
+      - '.vscode/*'
 
 pool:
   vmImage: 'windows-latest'
