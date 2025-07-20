@@ -1,7 +1,7 @@
 
 <!-- omit in toc -->
 <p align="center">
-  <img src="https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/develop/logo/Kiosk-Client_App%20Logo%20%40%20200.png">
+  <img src="https://raw.githubusercontent.com/CityOfStanton/Kiosk-Client/main/logo/Kiosk-Client_App%20Logo.png">
 </p>
 
 <!-- omit in toc -->
