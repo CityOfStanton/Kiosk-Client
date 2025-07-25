@@ -8,8 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\KioskLibrary\KioskLibrary.csproj" />
-    <PackageReference Include="Moq" Version="4.16.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
+    <PackageReference Include="Moq" Version="4.20.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.0.0" />
     <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
     <PackageReference Include="System.Xml.XPath.XDocument" Version="4.3.0" />
   </ItemGroup>
