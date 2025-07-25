@@ -18,28 +18,28 @@ namespace KioskLibrary.Helpers
     /// </summary>
     public class HttpHelper : IHttpHelper
     {
-        private readonly HttpClient _httpClient;
+        private readonly Windows.Web.Http.HttpClient _httpClient;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public HttpHelper()
         {
-            _httpClient = new HttpClient();
+            _httpClient = new Windows.Web.Http.HttpClient();
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="httpClient">The <see cref="HttpClient"/> to use for HTTP requests</param>
-        public HttpHelper(HttpClient httpClient)
+        public HttpHelper(Windows.Web.Http.HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
         /// <inheritDoc />
-        public virtual async Task<HttpResponseMessage> GetAsync(Uri uri) => await _httpClient.GetAsync(uri);
-                
+        public virtual async Task<Windows.Web.Http.HttpResponseMessage> GetAsync(Uri uri) => await _httpClient.GetAsync(uri);
+
         /// <inheritDoc />
         public virtual async Task<ValidationResult> ValidateURI(string settingsUri, HttpStatusCode expectedResult, string propertyName = null)
         {
@@ -49,8 +49,8 @@ namespace KioskLibrary.Helpers
                 var result = await GetAsync(uri);
 
                 return (new ValidationResult(
-                    propertyName, 
-                    result.StatusCode == expectedResult, 
+                    propertyName,
+                    result.StatusCode == expectedResult,
                     result.StatusCode == expectedResult ? Constants.Validation.Actions.Valid : Constants.Validation.Actions.PathInvalid,
                     Constants.Validation.Orchestration.PathGuidance));
             }

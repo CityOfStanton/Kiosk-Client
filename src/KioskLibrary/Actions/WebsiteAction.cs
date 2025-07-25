@@ -65,7 +65,7 @@ namespace KioskLibrary.Actions
         /// <param name="scrollingResetDelay">The delay before resetting the scroll to the top</param>
         /// <param name="settingsDisplayTime">The number of seconds to display the Settings button on the Website Action</param>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollingTime, int? scrollingResetDelay, int settingsDisplayTime, IHttpHelper httpHelper = null)
+        public WebsiteAction(string name, int? duration, string path, bool autoScroll, int? scrollingTime, int? scrollingResetDelay, int settingsDisplayTime, IHttpHelper httpHelper = null!)
             : base(name, duration)
         {
             Path = path;
@@ -77,7 +77,7 @@ namespace KioskLibrary.Actions
         }
 
         /// <inheritdoc/>
-        public async override Task<ValidationResult> ValidateAsync(IHttpHelper httpHelper = null)
+        public async override Task<ValidationResult> ValidateAsync(IHttpHelper httpHelper = null!)
         {
             var result = await base.ValidateAsync(httpHelper);
 

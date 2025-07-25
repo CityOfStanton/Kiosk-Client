@@ -13,9 +13,9 @@ using KioskLibrary.Orchestrations;
 using System;
 using System.Collections.Generic;
 using Windows.Storage.Pickers;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -44,7 +44,7 @@ namespace KioskClient.Dialogs
                 Constants.Application.OrchestrationFileExample.ImageActionExample.Name,
                 5,
                 Constants.Application.OrchestrationFileExample.ImageActionExample.Path,
-                Windows.UI.Xaml.Media.Stretch.Uniform));
+                Microsoft.UI.Xaml.Media.Stretch.Uniform));
 
             orchestration.Actions.Add(new WebsiteAction(
                 Constants.Application.OrchestrationFileExample.WebsiteExample.Name,

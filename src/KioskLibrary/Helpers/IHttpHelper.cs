@@ -20,7 +20,7 @@ namespace KioskLibrary.Helpers
         /// </summary>
         /// <param name="uri">The uri to target for this request</param>
         /// <returns>A <see cref="HttpResponseMessage"/></returns>
-        Task<HttpResponseMessage> GetAsync(Uri uri);
+        Task<Windows.Web.Http.HttpResponseMessage> GetAsync(Uri uri);
 
         /// <summary>
         /// Validates that <paramref name="settingsUri" /> returns <paramref name="expectedResult" />
@@ -29,6 +29,6 @@ namespace KioskLibrary.Helpers
         /// <param name="expectedResult">The expected result</param>
         /// <param name="propertyName">The name of the property being validated</param>
         /// <returns>A boolean indicating whether or nor the validation succeeded as well as a corresponding message</returns>
-        Task<ValidationResult> ValidateURI(string settingsUri, HttpStatusCode expectedResult, string propertyName = null);
+        Task<ValidationResult> ValidateURI(string settingsUri, HttpStatusCode expectedResult, string propertyName = null!);
     }
 }

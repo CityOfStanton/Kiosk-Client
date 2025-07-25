@@ -11,8 +11,9 @@ using KioskLibrary.Common;
 using KioskLibrary.Pages;
 using KioskLibrary.Storage;
 using System.Collections.Generic;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace KioskClient.Support.Pages
 {
@@ -26,18 +27,7 @@ namespace KioskClient.Support.Pages
         /// </summary>
         /// <param name="sender">The sender</param>
         /// <param name="args">The arguments</param>
-        public static void CommonKeyUp(object _, Windows.UI.Core.KeyEventArgs args)
-        {
-            if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
-                GoToSettings();
-        }
-
-        /// <summary>
-        /// Common function to call when the KeyUp event has been fired.
-        /// </summary>
-        /// <param name="sender">The sender</param>
-        /// <param name="args">The arguments</param>
-        public static void CommonKeyUp(object _, Windows.UI.Xaml.Input.KeyRoutedEventArgs args)
+        public static void CommonKeyUp(object _, KeyRoutedEventArgs args)
         {
             if (args.Key == Windows.System.VirtualKey.Home || args.Key == Windows.System.VirtualKey.Escape)
                 GoToSettings();
@@ -49,7 +39,7 @@ namespace KioskClient.Support.Pages
         public static void GoToSettings(IApplicationStorage applicationStorage = null)
         {
             (applicationStorage ?? new ApplicationStorage()).SaveToStorage(Constants.ApplicationStorage.EndOrchestration, true);
-            var rootFrame = Window.Current.Content as Frame;
+            var rootFrame = (Application.Current as App)?.Window.Content as Frame;
             rootFrame.Navigate(typeof(Settings), new SettingsPageArguments(new List<string>() { Constants.Application.PageHelper.OrchestrationCancelled }));
         }
     }

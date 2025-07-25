@@ -7,9 +7,10 @@
  */
 
 using System;
-using Windows.ApplicationModel;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Windows.Storage;
-using Windows.UI.Xaml.Controls;
 
 namespace KioskClient.Dialogs
 {
@@ -33,18 +34,18 @@ namespace KioskClient.Dialogs
             return string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
         }
 
-        private void ContentDialog_About_KeyUp(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+        private void ContentDialog_About_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == Windows.System.VirtualKey.Escape)
                 Hide();
         }
 
-        private void Button_Close_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private void Button_Close_Click(object sender, RoutedEventArgs e)
         {
             Hide();
         }
 
-        private async void Button_Logs_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void Button_Logs_Click(object sender, RoutedEventArgs e)
         {
             StorageFolder localCacheFolder = ApplicationData.Current.LocalCacheFolder;
             await Windows.System.Launcher.LaunchFolderAsync(localCacheFolder);

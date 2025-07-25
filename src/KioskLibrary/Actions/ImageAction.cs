@@ -8,10 +8,10 @@
 
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
+using Microsoft.UI.Xaml.Media;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Media;
 using Windows.Web.Http;
 
 namespace KioskLibrary.Actions

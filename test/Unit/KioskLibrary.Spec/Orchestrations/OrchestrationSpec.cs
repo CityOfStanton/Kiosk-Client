@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using KioskLibrary.Helpers;
 using Moq;
 using Windows.Web.Http;
-using Windows.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media;
 using System.Linq;
 
 namespace KioskLibrary.Spec.Orchestrations
@@ -134,7 +134,7 @@ namespace KioskLibrary.Spec.Orchestrations
                 orchestrationWithInvalidPollingInterval,
                 false,
                 6,
-                new List<string>() { 
+                new List<string>() {
                     $"PollingIntervalMinutes: {Constants.Validation.Orchestration.InvalidPollingInterval}",
                     $"Duration: {Constants.Validation.Actions.Valid}",
                     $"ScrollingTime: {Constants.Validation.Actions.Valid}",

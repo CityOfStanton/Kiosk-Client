@@ -11,10 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Windows.Storage.Pickers;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using KioskLibrary.Common;
@@ -58,7 +57,6 @@ namespace KioskLibrary.Pages
             }
             catch { }
 
-            ApplicationView.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
 
             State = new SettingsViewModel();
@@ -116,7 +114,6 @@ namespace KioskLibrary.Pages
         {
             Log.Information("Settings OnNavigatedTo");
 
-            //Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
             _currentPageArguments = e.Parameter as SettingsPageArguments;
 
             if (_currentPageArguments != null)
@@ -375,8 +372,8 @@ namespace KioskLibrary.Pages
         {
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.
-            var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(MainPage), true);
+            var rootFrame = (Application.Current as App)?.MainWindow.Content as Frame;
+            rootFrame?.Navigate(typeof(MainPage), true);
         }
 
         private void Reset()
