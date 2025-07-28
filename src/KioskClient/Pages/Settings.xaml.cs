@@ -12,9 +12,8 @@ using System.Collections.Generic;
 using System.IO;
 using Windows.Storage.Pickers;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Navigation;
 using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using KioskLibrary.Common;
@@ -26,6 +25,8 @@ using Serilog;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using System.Linq;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace KioskLibrary.Pages
 {
@@ -42,6 +43,8 @@ namespace KioskLibrary.Pages
         private Queue<TeachingTip> _walkThrough;
         private bool Walkthrough_StartingIsLocalState;
         private int Walkthrough_StartingPivotItem;
+        private readonly DispatcherTimer _autoReconnectTimer;
+        private readonly int _autoReconnectInterval = 60;
 
         /// <summary>
         /// Constructor
@@ -50,15 +53,20 @@ namespace KioskLibrary.Pages
         {
             try
             {
-                if (_httpHelper == null)
-                    _httpHelper = new HttpHelper();
+                _httpHelper ??= new HttpHelper();
 
-                if (_applicationStorage == null)
-                    _applicationStorage = new ApplicationStorage();
+                _applicationStorage ??= new ApplicationStorage();
             }
             catch { }
 
-            ApplicationView.GetForCurrentView().ExitFullScreenMode();
+            _autoReconnectTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _autoReconnectTimer.Tick += AutoReconnectTimer_Tick;
+
+            // TODO Windows.UI.ViewManagement.ApplicationView is no longer supported. Use Microsoft.UI.Windowing.AppWindow instead. For more details see https://docs.microsoft.com/en-us/windows/apps/windows-app-sdk/migrate-to-windows-app-sdk/guides/windowing
+            Microsoft.UI.Windowing.AppWindow.GetForCurrentView().ExitFullScreenMode();
             InitializeComponent();
 
             State = new SettingsViewModel();
@@ -70,7 +78,7 @@ namespace KioskLibrary.Pages
         /// Constructor
         /// </summary>
         /// <param name="httpHelper">The <see cref="IHttpHelper"/> to use for HTTP requests</param>
-        /// <param name="applicationStorage">The <see cref="IApplicationStorage"/> to use for interacting with local application storage</param>
+        /// <param name="applicationStorage">The <see cref="IApplicationSettings"/> to use for interacting with local application storage</param>
         public Settings(IHttpHelper httpHelper, IApplicationStorage applicationStorage)
             : this()
         {
@@ -94,8 +102,34 @@ namespace KioskLibrary.Pages
             State.UriPath = stateFromStorage?.UriPath ?? default;
             State.IsFileLoading = false;
             State.IsUriLoading = false;
+            State.OrchestrationURIs = stateFromStorage.OrchestrationURIs ?? new ObservableCollection<string>();
+
+            if(State.OrchestrationURIs.Any())
+                ComboBox_URLPath.SelectedIndex = 0;
+
+            StartAutoReconnectTimer();
 
             Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
+        }
+
+        /// <summary>
+        /// Starts the auto-reconnect timer
+        /// </summary>
+        private void StartAutoReconnectTimer()
+        {
+            State.AutoReconnectTimeRemaining = _autoReconnectInterval;
+            State.AutoReconnect = true;
+            _autoReconnectTimer.Start();
+        }
+
+        /// <summary>
+        /// Stops the auto-reconnect timer
+        /// </summary>
+        private void StopAutoReconnectTimer()
+        {
+            _autoReconnectTimer.Stop();
+            State.AutoReconnect = false;
+            State.AutoReconnectTimeRemaining = 0;
         }
 
         /// <summary>
@@ -106,7 +140,7 @@ namespace KioskLibrary.Pages
         private void State_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "PathValidationMessage")
-                LogToListbox(State.PathValidationMessage);
+                LogToListBox(State.PathValidationMessage);
         }
 
         /// <summary>
@@ -122,7 +156,7 @@ namespace KioskLibrary.Pages
             if (_currentPageArguments != null)
                 if (_currentPageArguments.Log != null)
                     foreach (var error in _currentPageArguments.Log)
-                        LogToListbox(error);
+                        LogToListBox(error);
 
             await ValidateOrchestration(_currentPageArguments.Orchestration);
 
@@ -140,7 +174,7 @@ namespace KioskLibrary.Pages
             }
         }
 
-        private void LogToListbox(string message)
+        private void LogToListBox(string message)
         {
             var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
             ListBox_Log.Items.Add($"{currentTime} - {message}");
@@ -163,11 +197,15 @@ namespace KioskLibrary.Pages
 
         private async void Button_FileLoad_Click(object _, RoutedEventArgs e)
         {
-            var openPicker = new FileOpenPicker
+/*
+    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND)
+    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
+*/
+            var openPicker = InitializeWithWindow(new FileOpenPicker
             {
                 ViewMode = PickerViewMode.Thumbnail,
                 SuggestedStartLocation = PickerLocationId.PicturesLibrary
-            };
+            },App.WindowHandle);
 
             openPicker.FileTypeFilter.Add(".json");
             openPicker.FileTypeFilter.Add(".xml");
@@ -186,12 +224,25 @@ namespace KioskLibrary.Pages
                 fileStream.Close();
 
                 var orchestration = Orchestration.ConvertStringToOrchestration(content);
-                orchestration.OrchestrationSource = OrchestrationSource.File;
-                State.Orchestration = orchestration;
 
-                await ValidateOrchestration(orchestration);
+                if (orchestration != null)
+                {
+                    orchestration.OrchestrationSource = OrchestrationSource.File;
+                    State.Orchestration = orchestration;
+
+                    await ValidateOrchestration(orchestration);
+                }
+                else
+                    LogToListBox("Unable to load Orchestration! The file may be empty or corrupt.");
+
                 State.IsFileLoading = false;
             }
+        }
+
+        private static FileOpenPicker InitializeWithWindow(FileOpenPicker obj, IntPtr windowHandle)
+        {
+            WinRT.Interop.InitializeWithWindow.Initialize(obj, windowHandle);
+            return obj;
         }
 
         private void TeachingTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
@@ -239,10 +290,14 @@ namespace KioskLibrary.Pages
         }
         private async void ListBox_Log_Save_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new FileSavePicker
+/*
+    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND)
+    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
+*/
+            var savePicker = InitializeWithWindow(new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
+            },App.WindowHandle);
             savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
             savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now:yyyyMMddHHmmss}";
 
@@ -257,6 +312,12 @@ namespace KioskLibrary.Pages
                 await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
                 await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
             }
+        }
+
+        private static FileSavePicker InitializeWithWindow(FileSavePicker obj, IntPtr windowHandle)
+        {
+            WinRT.Interop.InitializeWithWindow.Initialize(obj, windowHandle);
+            return obj;
         }
 
         private async void NavigationView_Menu_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
@@ -299,16 +360,24 @@ namespace KioskLibrary.Pages
             Pivot_Orchestration.SelectedItem = PivotItem_Validation;
         }
 
+        private void Button_AutoReconnect_Click(object sender, RoutedEventArgs e)
+        {
+            if (State.AutoReconnect)
+                StopAutoReconnectTimer();
+            else
+                StartAutoReconnectTimer();
+        }
+
         #endregion
 
         #region Private Methods
 
         private async Task ValidateOrchestration(Orchestration orchestration)
         {
-            LogToListbox("Validating orchestration...");
+            LogToListBox("Validating orchestration...");
 
             if (orchestration == null)
-                LogToListbox("Orchestration has no content or is corrupt");
+                LogToListBox("Orchestration has no content or is corrupt");
             else
             {
                 await orchestration.ValidateAsync();
@@ -316,13 +385,13 @@ namespace KioskLibrary.Pages
 
                 if (orchestration.ValidationResult.FirstOrDefault()?.IsValid ?? false)
                 {
-                    LogToListbox($"Orchestration: \"{orchestration.Name ?? "[No Name]"}\"");
+                    LogToListBox($"Orchestration: \"{orchestration.Name ?? "[No Name]"}\"");
 
                     if (orchestration.Actions != null)
                         foreach (var action in orchestration.Actions)
-                            LogToListbox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
+                            LogToListBox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
 
-                    LogToListbox($"Orchestration valid: \"{orchestration.Name ?? "[No Name]"}\"");
+                    LogToListBox($"Orchestration valid: \"{orchestration.Name ?? "[No Name]"}\"");
 
                     if (orchestration.OrchestrationSource == OrchestrationSource.File)
                         State.IsLocalPathVerified = true;
@@ -338,7 +407,7 @@ namespace KioskLibrary.Pages
 
                     Pivot_Orchestration.SelectedItem = PivotItem_Validation;
 
-                    LogToListbox("Orchestration failed validation");
+                    LogToListBox("Orchestration failed validation");
                 }
             }
         }
@@ -349,7 +418,7 @@ namespace KioskLibrary.Pages
             await examples.ShowAsync();
 
             foreach (var log in examples.Logs)
-                LogToListbox(log);
+                LogToListBox(log);
         }
 
         private static async Task LaunchAboutDialog()
@@ -368,14 +437,18 @@ namespace KioskLibrary.Pages
             _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationURI, State.UriPath);
             _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DefaultOrchestrationSource, State.IsLocalFile ? OrchestrationSource.File : OrchestrationSource.URL);
 
-            LogToListbox("Orchestration saved as startup Orchestration");
+            LogToListBox("Orchestration saved as startup Orchestration");
         }
 
         private void Run()
         {
+            StopAutoReconnectTimer();
+
+            StoreURLs();
+
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.
-            var rootFrame = Window.Current.Content as Frame;
+            var rootFrame = App.Window.Content as Frame;
             rootFrame.Navigate(typeof(MainPage), true);
         }
 
@@ -389,7 +462,7 @@ namespace KioskLibrary.Pages
 
             State.Reset();
 
-            LogToListbox("Startup Orchestration has been removed");
+            LogToListBox("Startup Orchestration has been removed");
         }
 
         private void StartTutorial()
@@ -421,6 +494,31 @@ namespace KioskLibrary.Pages
         {
             await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/CityOfStanton/Kiosk-Client/wiki"));
         }
+
+        private void AutoReconnectTimer_Tick(object sender, object e)
+        {
+            if (State.AutoReconnectTimeRemaining <= 0)
+                Run();
+            else
+                State.AutoReconnectTimeRemaining--;
+        }
+
+        private void StoreURLs()
+        {
+            if (!State.IsLocalFile && State.IsUriPathVerified.HasValue && State.IsUriPathVerified.Value)
+            {
+                if (!string.IsNullOrWhiteSpace(State.UriPath) && !State.OrchestrationURIs.Contains(State.UriPath))
+                { // We need to store the Uri
+
+                    if (State.OrchestrationURIs.Count >= 5) // We have too many in the cache, so we need to remove the oldest
+                        for(int i = State.OrchestrationURIs.Count - 1; i > 3; i--) // Start at the end, leaving 4 items in the list
+                            State.OrchestrationURIs.RemoveAt(i);
+
+                    State.OrchestrationURIs.Insert(0, State.UriPath);
+                }
+            }
+        }
+
         #endregion
     }
 }

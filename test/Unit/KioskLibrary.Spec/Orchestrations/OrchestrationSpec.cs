@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using KioskLibrary.Helpers;
 using Moq;
 using Windows.Web.Http;
-using Windows.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media;
 using System.Linq;
 
 namespace KioskLibrary.Spec.Orchestrations
