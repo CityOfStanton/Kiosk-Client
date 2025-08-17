@@ -5,26 +5,27 @@
     xmlns:local="using:KioskLibrary.Actions"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid x:Name="Grid_Main" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{x:Bind Path=State.ShowLoadingMessage, Converter={StaticResource BooleanToVisibility}}" >
-            <TextBlock x:Name="TextBlock_Loading" Style="{StaticResource HeaderTextBlockStyle}" Text="Loading..." HorizontalAlignment="Center" />
-            <ProgressRing x:Name="ProgressRing_Loading" IsActive="True" HorizontalAlignment="Center" Foreground="{x:Bind TextBlock_Loading.Foreground}" />
+  <Grid x:Name="Grid_Main" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{x:Bind Path=State.ShowLoadingMessage, Converter={StaticResource BooleanToVisibility}}" >
+      <TextBlock x:Name="TextBlock_Loading" Style="{StaticResource HeaderTextBlockStyle}" Text="Loading..." HorizontalAlignment="Center" />
+      <ProgressRing x:Name="ProgressRing_Loading" IsActive="True" HorizontalAlignment="Center" Foreground="{x:Bind TextBlock_Loading.Foreground}" />
+    </StackPanel>
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{x:Bind Path=State.ShowFailedToLoadContentMessage, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}" >
+      <TextBlock x:Name="TextBlock_ConnectionError" Style="{StaticResource HeaderTextBlockStyle}" Text="Unable to reach the website..." HorizontalAlignment="Center" />
+      <TextBlock x:Name="TextBlock_ConnectionErrorMessage" Style="{StaticResource SubheaderTextBlockStyle}" Text="{x:Bind Path=State.FailedToLoadContentMessageDetail}" HorizontalAlignment="Center" />
+    </StackPanel>
+    <controls:WebView2 x:Name="Webview_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.ZIndex="0" Visibility="{x:Bind Path=State.ShowContentControl, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}"/>
+    <Button x:Name="Button_Settings" Background="Black" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,20" Canvas.ZIndex="1" Click="Button_Settings_Click" Opacity=".5">
+      <Button.Content>
+        <StackPanel Orientation="Horizontal">
+          <SymbolIcon Symbol="Setting"/>
+          <TextBlock Text=" Settings"/>
         </StackPanel>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{x:Bind Path=State.ShowFailedToLoadContentMessage, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}" >
-            <TextBlock x:Name="TextBlock_ConnectionError" Style="{StaticResource HeaderTextBlockStyle}" Text="Unable to reach the website..." HorizontalAlignment="Center" />
-            <TextBlock x:Name="TextBlock_ConnectionErrorMessage" Style="{StaticResource SubheaderTextBlockStyle}" Text="{x:Bind Path=State.FailedToLoadContentMessageDetail}" HorizontalAlignment="Center" />
-        </StackPanel>
-        <WebView x:Name="Webview_Display" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.ZIndex="0" Visibility="{x:Bind Path=State.ShowContentControl, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}"/>
-        <Button x:Name="Button_Settings" Background="Black" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,20" Canvas.ZIndex="1" Click="Button_Settings_Click" Opacity=".5">
-            <Button.Content>
-                <StackPanel Orientation="Horizontal">
-                    <SymbolIcon Symbol="Setting"/>
-                    <TextBlock Text=" Settings"/>
-                </StackPanel>
-            </Button.Content>
-        </Button>
-    </Grid>
+      </Button.Content>
+    </Button>
+  </Grid>
 </Page>

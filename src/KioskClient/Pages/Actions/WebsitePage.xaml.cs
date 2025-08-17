@@ -13,6 +13,7 @@ using KioskLibrary.Helpers;
 using KioskLibrary.ViewModels;
 using Serilog;
 using System;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -39,17 +40,16 @@ namespace KioskLibrary.Pages.Actions
             InitializeComponent();
             _scrollingTimer = new DispatcherTimer();
             _settingsButtonTimer = new DispatcherTimer();
-            Webview_Display.LoadCompleted += Webview_Display_LoadCompleted;
+            Webview_Display.NavigationCompleted += Webview_Display_NavigationCompleted;
 
-            if (State == null)
-                State = new ActionViewModel();
+            State ??= new ActionViewModel();
         }
 
-        private async void Webview_Display_LoadCompleted(object sender, NavigationEventArgs e)
+        private async void Webview_Display_NavigationCompleted(Microsoft.UI.Xaml.Controls.WebView2 sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs args)
         {
             try
             {
-                var documentBodyScrollHeight = await Webview_Display.InvokeScriptAsync("eval", new[] { "document.body.scrollHeight.toString()" });
+                var documentBodyScrollHeight = await Webview_Display.ExecuteScriptAsync("document.body.scrollHeight");
 
                 if (!string.IsNullOrEmpty(documentBodyScrollHeight))
                     if (double.TryParse(documentBodyScrollHeight, out var height))
@@ -79,7 +79,7 @@ namespace KioskLibrary.Pages.Actions
                 _cancelOrchestration = apa.CancelOrchestration;
 
                 Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
-                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
+                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; // Add a single Common.CommonKeyUp handler
 
                 Log.Information("WebsitePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(_action));
 
@@ -132,16 +132,16 @@ namespace KioskLibrary.Pages.Actions
             if (++_currentTick > _totalTicks)
             {
                 if (_action.ScrollingResetDelay.HasValue)
-                    System.Threading.Thread.Sleep(_action.ScrollingResetDelay.Value * 1000);
+                    await Task.Delay(_action.ScrollingResetDelay.Value * 1000);
 
                 // Reset _currentTick
                 _currentTick = 0;
 
                 // Scroll to top
-                await Webview_Display.InvokeScriptAsync("eval", new string[] { _scrollToTopString });
+                await Webview_Display.ExecuteScriptAsync(_scrollToTopString);
             }
             else if (_webviewContentHeight > 0) // Scroll a bit
-                await Webview_Display.InvokeScriptAsync("eval", new string[] { $"window.scrollTo(0,{(_currentTick / _totalTicks) * _webviewContentHeight});" });
+                await Webview_Display.ExecuteScriptAsync($"window.scrollTo(0,{(_currentTick / _totalTicks) * _webviewContentHeight});");
         }
 
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
