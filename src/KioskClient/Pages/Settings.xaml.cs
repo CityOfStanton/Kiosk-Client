@@ -26,6 +26,7 @@ using Serilog;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using System.Linq;
+using Windows.Storage;
 
 namespace KioskLibrary.Pages
 {
@@ -43,6 +44,9 @@ namespace KioskLibrary.Pages
         private bool Walkthrough_StartingIsLocalState;
         private int Walkthrough_StartingPivotItem;
 
+        private const string UrlHistoryKey = "UrlHistory";
+        private const int MaxUrlHistory = 10;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -50,11 +54,9 @@ namespace KioskLibrary.Pages
         {
             try
             {
-                if (_httpHelper == null)
-                    _httpHelper = new HttpHelper();
+                _httpHelper ??= new HttpHelper();
 
-                if (_applicationStorage == null)
-                    _applicationStorage = new ApplicationStorage();
+                _applicationStorage ??= new ApplicationStorage();
             }
             catch { }
 
@@ -96,6 +98,20 @@ namespace KioskLibrary.Pages
             State.IsUriLoading = false;
 
             Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
+
+            // Load URL history from settings
+            var localSettings = ApplicationData.Current.LocalSettings;
+            if (localSettings.Values.ContainsKey(UrlHistoryKey))
+            {
+                var historyString = localSettings.Values[UrlHistoryKey] as string;
+                if (!string.IsNullOrEmpty(historyString))
+                {
+                    var urls = historyString.Split(new[] {'|'}, StringSplitOptions.RemoveEmptyEntries);
+                    State.UrlHistory.Clear();
+                    foreach (var url in urls)
+                        State.UrlHistory.Add(url);
+                }
+            }
         }
 
         /// <summary>
@@ -159,6 +175,22 @@ namespace KioskLibrary.Pages
             await ValidateOrchestration(orchestration);
 
             State.IsUriLoading = false;
+
+            // Update URL history if load was successful
+            if (!string.IsNullOrWhiteSpace(ComboBox_URLPath.Text))
+            {
+                var urlPath = ComboBox_URLPath.Text.Trim();
+                if (State.UrlHistory.Contains(urlPath))
+                    State.UrlHistory.Remove(urlPath);
+                State.UrlHistory.Insert(0, urlPath);
+                while (State.UrlHistory.Count > MaxUrlHistory)
+                    State.UrlHistory.RemoveAt(State.UrlHistory.Count - 1);
+                State.UriPath = urlPath;
+
+                // Persist history
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values[UrlHistoryKey] = string.Join("|", State.UrlHistory);
+            }
         }
 
         private async void Button_FileLoad_Click(object _, RoutedEventArgs e)
@@ -422,5 +454,16 @@ namespace KioskLibrary.Pages
             await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/CityOfStanton/Kiosk-Client/wiki"));
         }
         #endregion
+
+        private void DeleteUrlHistoryItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string url)
+            {
+                State.UrlHistory.Remove(url);
+                // Persist history
+                var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+                localSettings.Values[UrlHistoryKey] = string.Join("|", State.UrlHistory);
+            }
+        }
     }
 }

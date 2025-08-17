@@ -32,18 +32,18 @@ namespace KioskLibrary.ViewModels
         private Orchestration _orchestration;
         private bool _isUriLoading;
         private bool _isFileLoading;
-        private ObservableCollection<ValidationResult> _orchestrationValidation;
+        private ObservableCollection<string> _urlHistory;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public SettingsViewModel()
-            : base(new List<string>() { 
-                nameof(OrchestrationValidationResult), 
-                nameof(IsOrchestrationLoaded), 
-                nameof(IsOrchestrationValid), 
-                nameof(CanStart), 
-                nameof(CanLoadFile), 
+            : base(new List<string>() {
+                nameof(OrchestrationValidationResult),
+                nameof(IsOrchestrationLoaded),
+                nameof(IsOrchestrationValid),
+                nameof(CanStart),
+                nameof(CanLoadFile),
                 nameof(CanLoadUri),
                 nameof(OrchestrationSummaryActionCount),
                 nameof(OrchestrationSummaryIsValid),
@@ -60,7 +60,7 @@ namespace KioskLibrary.ViewModels
                 nameof(OrchestrationSummaryIsValidDisplay)
             })
         {
-            _orchestrationValidation = new ObservableCollection<ValidationResult>();
+            _urlHistory = new ObservableCollection<string>();
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace KioskLibrary.ViewModels
         /// </summary>
         public string OrchestrationSummaryRuntime
         {
-            get { return new TimeSpan(0,0, Orchestration?.Actions?.Sum(x => x.Duration) ?? 0).Humanize(); }
+            get { return new TimeSpan(0, 0, Orchestration?.Actions?.Sum(x => x.Duration) ?? 0).Humanize(); }
         }
 
         /// <summary>
@@ -300,6 +300,15 @@ namespace KioskLibrary.ViewModels
             foreach (var p in properties)
                 if (p.CanRead && p.CanWrite)
                     p.SetValue(this, null, null);
+        }
+
+        /// <summary>
+        /// The URL history
+        /// </summary>
+        public ObservableCollection<string> UrlHistory
+        {
+            get { return _urlHistory; }
+            set { _urlHistory = value; NotifyPropertyChanged(); }
         }
     }
 }

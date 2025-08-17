@@ -82,7 +82,36 @@
                                 <RowDefinition Height="auto" />
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <TextBox x:Name="TextBox_URLPath" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="0" PlaceholderText="URL Path" TextWrapping="Wrap" VerticalAlignment="Center" Text="{x:Bind Path=State.UriPath, Mode=TwoWay}" />
+                            <ComboBox x:Name="ComboBox_URLPath"
+                                      IsEditable="True"
+                                      ItemsSource="{x:Bind State.UrlHistory, Mode=OneWay}"
+                                      IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}"
+                                      PlaceholderText="URL Path"
+                                      HorizontalAlignment="Stretch"
+                                      Grid.Row="0" 
+                                      Grid.Column="0">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding}" VerticalAlignment="Center" ToolTipService.ToolTip="{Binding}" />
+                                            <Button Grid.Column="1"
+                                                    Click="DeleteUrlHistoryItem_Click"
+                                                    Tag="{Binding}"
+                                                    Style="{StaticResource ButtonRevealStyle}"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Background="Transparent"
+                                                    ToolTipService.ToolTip="Delete this URL">
+                                                <SymbolIcon Symbol="Clear" Height="16" Width="16" />
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                             <Button x:Name="Button_UrlLoad" IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}" Grid.Row="0" Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" Click="Button_UrlLoad_Click" Style="{ThemeResource ButtonRevealStyle}" >
                                 <Button.Content>
                                     <StackPanel Orientation="Horizontal">
@@ -153,10 +182,10 @@
                                             <TextBlock Text="{x:Bind State.OrchestrationSummaryPollingInerval, Mode=OneWay}" Margin="10,0,0,0" Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold"/>
                                         </StackPanel>
                                         <Grid Margin="0,10">
-                                                <Grid.ColumnDefinitions>
+                                            <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
+                                            </Grid.ColumnDefinitions>
                                             <TextBlock Text="Validation Status:" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
                                             <HyperlinkButton Grid.Column="1" Content="{x:Bind State.OrchestrationSummaryIsValidDisplay, Mode=OneWay}" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="Bold" FontSize="24" Foreground="{x:Bind State.OrchestrationSummaryIsValid, Converter={StaticResource BooleanToColor}, Mode=OneWay}" Click="HyperlinkButton_Click"/>
                                         </Grid>
@@ -313,7 +342,7 @@
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_SaveFileToTheWeb"
-	        Target="{x:Bind TextBox_URLPath}"
+	        Target="{x:Bind ComboBox_URLPath}"
             IsLightDismissEnabled="true"
 	        Title="Save your Orchestration File to the web"
 	        Subtitle="Once you are satisfied, you can save the file to a publicly available location on the web, such as GitHub, Azure Storage, or Amazon S3."
