@@ -6,7 +6,6 @@
  * github.com/CityOfStanton
  */
 
-using Humanizer;
 using KioskLibrary.Common;
 using System;
 using Windows.UI.Xaml;

@@ -33,6 +33,17 @@ namespace KioskLibrary.ViewModels
         private bool _isUriLoading;
         private bool _isFileLoading;
         private ObservableCollection<string> _urlHistory;
+        private bool _isAutoRetryEnabled = true;
+        private int _autoRetrySeconds = 10;
+        private int _currentAutoRetryCountdown;
+        private bool _isAutoRetryActive = true;
+        private bool _shouldAutoRetryStart = true;
+
+        public delegate void AutoRetryActivationStateChangedEventHandler(bool isActive);
+        public event AutoRetryActivationStateChangedEventHandler AutoRetryActivationStateChanged;
+
+        public delegate void SettingsChangedEventHandler();
+        public event SettingsChangedEventHandler SettingsChanged;
 
         /// <summary>
         /// Constructor
@@ -61,6 +72,7 @@ namespace KioskLibrary.ViewModels
             })
         {
             _urlHistory = new ObservableCollection<string>();
+            CurrentAutoRetryCountdown = AutoRetrySeconds;
         }
 
         /// <summary>
@@ -69,7 +81,14 @@ namespace KioskLibrary.ViewModels
         public string UriPath
         {
             get { return _uriPath; }
-            set { _uriPath = value; NotifyPropertyChanged(); }
+            set
+            {
+                if (_uriPath != value)
+                {
+                    _uriPath = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
 
         /// <summary>
@@ -308,7 +327,107 @@ namespace KioskLibrary.ViewModels
         public ObservableCollection<string> UrlHistory
         {
             get { return _urlHistory; }
-            set { _urlHistory = value; NotifyPropertyChanged(); }
+            set { _urlHistory = value; NotifyPropertyChanged(); NotifyPropertyChanged(nameof(UriPath)); }
+        }
+
+        /// <summary>
+        /// Enable or disable auto-retry
+        /// </summary>
+        public bool IsAutoRetryEnabled
+        {
+            get => _isAutoRetryEnabled;
+            set
+            {
+                if (!_isAutoRetryEnabled)
+                    ShouldAutoRetryStart = IsAutoRetryActive = _isAutoRetryEnabled;
+
+                _isAutoRetryEnabled = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(AutoRetryCountdownDisplay));
+
+                SettingsChanged?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Number of seconds before auto-retry
+        /// </summary>
+        public int AutoRetrySeconds
+        {
+            get => _autoRetrySeconds;
+            set
+            {
+                _autoRetrySeconds = value;
+                NotifyPropertyChanged(); 
+
+                SettingsChanged?.Invoke();
+
+                CurrentAutoRetryCountdown = _autoRetrySeconds;
+            }
+        }
+
+        /// <summary>
+        /// Display string for countdown
+        /// </summary>
+        [JsonIgnore]
+        public string AutoRetryCountdownDisplay
+        {
+            get => IsAutoRetryEnabled ? IsAutoRetryActive ? $"Retrying in {CurrentAutoRetryCountdown} seconds..." : $"Auto-retry stopped with {CurrentAutoRetryCountdown} seconds remainging..." : "Auto-retry disabled";
+        }
+
+        /// <summary>
+        /// Indicates if auto-retry should be started
+        /// </summary>
+        [JsonIgnore]
+        public bool ShouldAutoRetryStart
+        {
+            get => _shouldAutoRetryStart;
+            set
+            {
+                _shouldAutoRetryStart = value;
+                NotifyPropertyChanged();
+
+                if (IsAutoRetryEnabled)
+                    IsAutoRetryActive = _shouldAutoRetryStart;
+            }
+        }
+
+        /// <summary>
+        /// Indicates if auto-retry is currently active (false if disabled)
+        /// </summary>
+        /// <remarks>To start, set IsAutoRetryEnabled and ShouldAutoRetryStart to true</remarks>
+        [JsonIgnore]
+        public bool IsAutoRetryActive
+        {
+            get => _isAutoRetryActive;
+            private set
+            {
+                if (_isAutoRetryActive != value)
+                {
+                    _isAutoRetryActive = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(AutoRetryCountdownDisplay));
+                    AutoRetryActivationStateChanged?.Invoke(_isAutoRetryActive);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Current countdown value for auto-retry, resets to AutoRetryCountdown if set below 0
+        /// </summary>
+        [JsonIgnore]
+        public int CurrentAutoRetryCountdown
+        {
+            get => _currentAutoRetryCountdown;
+            set
+            {
+                if (value < 0)
+                    _currentAutoRetryCountdown = AutoRetrySeconds;
+                else
+                    _currentAutoRetryCountdown = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(AutoRetryCountdownDisplay));
+            }
         }
     }
 }

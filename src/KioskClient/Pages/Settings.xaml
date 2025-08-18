@@ -12,9 +12,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:KioskLibrary.Common"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:viewmodels="using:KioskLibrary.ViewModels"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     Loaded="Page_Loaded">
@@ -60,8 +61,27 @@
             <ContentControl x:Name="ContentControl_Logo" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Template="{StaticResource MainLogo}"/>
 
             <Grid Grid.Column="1"  Grid.Row="0" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Orchestration:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                <StackPanel Orientation="Vertical" Name="OrchestrationStackPanel">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Orchestration:" TextWrapping="WrapWholeWords" VerticalAlignment="Center" TextTrimming="WordEllipsis" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <StackPanel
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            Visibility="{x:Bind State.IsAutoRetryEnabled, Mode=OneWay}"
+                            ToolTipService.ToolTip="Auto-Retry is active when Auto-Retry is enabled and an Orchestration has been successfully loaded.">
+                            <TextBlock x:Name="TextBlock_AutoRetryCountdown" Text="{x:Bind State.AutoRetryCountdownDisplay, Mode=OneWay}" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                            <Button x:Name="Button_ToggleCountdownState" Click="Button_ToggleCountdownState_Click" Margin="20,0,0,0" VerticalAlignment="Center" IsEnabled="{x:Bind State.IsAutoRetryEnabled, Mode=OneWay}">
+                                <SymbolIcon Symbol="{x:Bind Path=State.IsAutoRetryActive, Converter={StaticResource AutoRetryActiveToSymbol}, Mode=OneWay}" />
+                            </Button>
+                            <Button x:Name="Button_ResetCountdownState" Click="ButtonResetCountdownState_Click" Margin="10,0,0,0" VerticalAlignment="Center" IsEnabled="{x:Bind State.IsAutoRetryEnabled, Mode=OneWay}">
+                                <SymbolIcon Symbol="Refresh" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
                     <Grid Grid.Column="1"  Grid.Row="1" Margin="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" />
@@ -83,13 +103,14 @@
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
                             <ComboBox x:Name="ComboBox_URLPath"
-                                      IsEditable="True"
-                                      ItemsSource="{x:Bind State.UrlHistory, Mode=OneWay}"
-                                      IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}"
-                                      PlaceholderText="URL Path"
-                                      HorizontalAlignment="Stretch"
-                                      Grid.Row="0" 
-                                      Grid.Column="0">
+                                IsEditable="True"
+                                ItemsSource="{x:Bind State.UrlHistory, Mode=OneWay}"
+                                SelectedItem="{x:Bind State.UriPath, Mode=TwoWay}"
+                                IsEnabled="{x:Bind ToggleSwitch_InputMode.IsOn, Mode=OneWay, Converter={StaticResource InvertBoolean}}"
+                                PlaceholderText="URL Path"
+                                HorizontalAlignment="Stretch"
+                                Grid.Row="0"
+                                Grid.Column="0">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid>
@@ -99,13 +120,13 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding}" VerticalAlignment="Center" ToolTipService.ToolTip="{Binding}" />
                                             <Button Grid.Column="1"
-                                                    Click="DeleteUrlHistoryItem_Click"
-                                                    Tag="{Binding}"
-                                                    Style="{StaticResource ButtonRevealStyle}"
-                                                    Margin="8,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    Background="Transparent"
-                                                    ToolTipService.ToolTip="Delete this URL">
+                                              Click="DeleteUrlHistoryItem_Click"
+                                              Tag="{Binding}"
+                                              Style="{StaticResource ButtonRevealStyle}"
+                                              Margin="8,0,0,0"
+                                              VerticalAlignment="Center"
+                                              Background="Transparent"
+                                              ToolTipService.ToolTip="Delete this URL">         
                                                 <SymbolIcon Symbol="Clear" Height="16" Width="16" />
                                             </Button>
                                         </Grid>
@@ -144,11 +165,11 @@
             </Grid>
 
             <Pivot x:Name="Pivot_Orchestration" Grid.ColumnSpan="2" Margin="20" Grid.Column="0" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                <PivotItem x:Name="PivotItem_Summary" Header="Summary">
+                <PivotItem x:Name="PivotItem_Summary" Header="Orchestration">
                     <ScrollViewer VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                         <Grid>
-                            <TextBlock x:Name="TextBox_Summary_NoOrchestration" Text="No Orchestration Loaded" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" Visibility="{x:Bind Path=State.IsOrchestrationLoaded, Converter={StaticResource BooleanToInvertedVisibility}, Mode=OneWay}"/>
-                            <StackPanel Visibility="{x:Bind Path=State.IsOrchestrationLoaded, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}" Margin="20">
+                            <TextBlock x:Name="TextBox_Summary_NoOrchestration" Text="No Orchestration Loaded" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" Visibility="{x:Bind Path=State.IsOrchestrationLoaded, Converter={StaticResource BooleanToInvertedVisibility}, Mode=OneWay}" Grid.Column="1" />
+                            <StackPanel Visibility="{x:Bind Path=State.IsOrchestrationLoaded, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}" Margin="20,20,20,20" Grid.ColumnSpan="2">
                                 <StackPanel Orientation="Horizontal" Margin="0,10" HorizontalAlignment="Left">
                                     <TextBlock Text="Name:" Style="{StaticResource TitleTextBlockStyle}"/>
                                     <TextBlock Text="{x:Bind State.OrchestrationSummaryName, Mode=OneWay}" Margin="10,0,0,0" Style="{StaticResource TitleTextBlockStyle}" FontWeight="Bold"/>
@@ -221,9 +242,9 @@
                                                 <StackPanel Orientation="Horizontal">
                                                     <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind IsValid, Converter={StaticResource BooleanToSymbol}}" Foreground="{x:Bind IsValid, Converter={StaticResource BooleanToColor}}" />
                                                     <TextBlock Text="{x:Bind ValidationMessage}" Margin="5, 0, 0, 0">
-                                                <ToolTipService.ToolTip>
-                                                    <ToolTip Content="{x:Bind Guidance}" Visibility="{x:Bind Guidance, Converter={StaticResource NullToVisibility}}" />
-                                                </ToolTipService.ToolTip>
+                            <ToolTipService.ToolTip>
+                              <ToolTip Content="{x:Bind Guidance}" Visibility="{x:Bind Guidance, Converter={StaticResource NullToVisibility}}" />
+                            </ToolTipService.ToolTip>
                                                     </TextBlock>
                                                 </StackPanel>
                                             </muxc:TreeViewItem>
@@ -262,168 +283,188 @@
                     </ListBox>
 
                 </PivotItem>
+                <PivotItem x:Name="PivotItem_Settings" Header="Settings">
+                    <Grid VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                        <toolkit:SettingsExpander Header="Auto-Retry Settings" IsExpanded="True" Description="When enabled, the Orchestration will automatically be reloaded and started once the timeout expires. This is beneficial in situations where internet connectivity may be inconsistent.">
+                            <toolkit:SettingsExpander.Items>
+                                <toolkit:SettingsCard Header="Enable Auto-Retry">
+                                    <ToggleSwitch x:Name="ToggleSwitch_AutoRetry" IsOn="{x:Bind State.IsAutoRetryEnabled, Mode=TwoWay}"/>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Retry After (seconds)">
+                                    <muxc:NumberBox x:Name="NumberBox_AutoRetrySeconds"
+                                    Minimum="1"
+                                    Maximum="3600"
+                                    Height="30"
+                                    Value="{x:Bind State.AutoRetrySeconds, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    IsEnabled="{x:Bind State.IsAutoRetryEnabled, Mode=OneWay}"/>
+                                </toolkit:SettingsCard>
+                            </toolkit:SettingsExpander.Items>
+                        </toolkit:SettingsExpander>
+                    </Grid>
+                </PivotItem>
             </Pivot>
 
             <muxc:TeachingTip x:Name="TeachingTip_Welcome"
-	        Target="{x:Bind NavigationViewItem_Examples}"
-            IsLightDismissEnabled="true"
-	        Title="Welcome to Kiosk Client."
-	        Subtitle="To get started, generate an Example Orchestration File by selecting either the JSON or XML button." 
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind NavigationViewItem_Examples}"
+      IsLightDismissEnabled="true"
+    Title="Welcome to Kiosk Client."
+    Subtitle="To get started, generate an Example Orchestration File by selecting either the JSON or XML button."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Download" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Wiki"
-	        Target="{x:Bind NavigationViewItem_Help}"
-            IsLightDismissEnabled="true"
-	        Title="Edit your Orchestration File"
-	        Subtitle="Once generated, you can edit the file to customize your specific scenario. More information can be found in the Orchestration File section of the Kiosk Client Wiki." 
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind NavigationViewItem_Help}"
+      IsLightDismissEnabled="true"
+    Title="Edit your Orchestration File"
+    Subtitle="Once generated, you can edit the file to customize your specific scenario. More information can be found in the Orchestration File section of the Kiosk Client Wiki."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Edit" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_FileInputMode"
-	        Target="{x:Bind ToggleSwitch_InputMode}"
-            IsLightDismissEnabled="true"
-	        Title="Load Orchestrations from multiple sources"
-	        Subtitle="You can load an orchestration from you local file system or from a website or other static file hosting service." 
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind ToggleSwitch_InputMode}"
+      IsLightDismissEnabled="true"
+    Title="Load Orchestrations from multiple sources"
+    Subtitle="You can load an orchestration from you local file system or from a website or other static file hosting service."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Switch" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_LoadFile"
-	        Target="{x:Bind Button_FileLoad}"
-            IsLightDismissEnabled="true"
-	        Title="Test your Orchestration File"
-	        Subtitle="You can test your file by loading it using the Load File button."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind Button_FileLoad}"
+      IsLightDismissEnabled="true"
+    Title="Test your Orchestration File"
+    Subtitle="You can test your file by loading it using the Load File button."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Edit" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Log"
-	        Target="{x:Bind ListBox_Log}"
-            IsLightDismissEnabled="true"
-	        Title="Check the log of what's going on"
-	        Subtitle="Any actions that happen behind the scenes gets reported to the Log."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind ListBox_Log}"
+      IsLightDismissEnabled="true"
+    Title="Check the log of what's going on"
+    Subtitle="Any actions that happen behind the scenes gets reported to the Log."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="AllApps" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Validation"
-	        PreferredPlacement="Left"
-            IsLightDismissEnabled="true"
-	        Title="See if your Orchestration is valid"
-	        Subtitle="Check all of your Orchestration properties for validation errors."
-            Closed="TeachingTip_Closed">
+    PreferredPlacement="Left"
+      IsLightDismissEnabled="true"
+    Title="See if your Orchestration is valid"
+    Subtitle="Check all of your Orchestration properties for validation errors."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Bullets" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Summary"
-	        PreferredPlacement="Left"
-            IsLightDismissEnabled="true"
-	        Title="See a summary of your Orchestration"
-	        Subtitle="Review the summary of your orchestration to make sure everything is what you expect."
-            Closed="TeachingTip_Closed">
+    PreferredPlacement="Left"
+      IsLightDismissEnabled="true"
+    Title="See a summary of your Orchestration"
+    Subtitle="Review the summary of your orchestration to make sure everything is what you expect."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Preview" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_SaveFileToTheWeb"
-	        Target="{x:Bind ComboBox_URLPath}"
-            IsLightDismissEnabled="true"
-	        Title="Save your Orchestration File to the web"
-	        Subtitle="Once you are satisfied, you can save the file to a publicly available location on the web, such as GitHub, Azure Storage, or Amazon S3."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind ComboBox_URLPath}"
+      IsLightDismissEnabled="true"
+    Title="Save your Orchestration File to the web"
+    Subtitle="Once you are satisfied, you can save the file to a publicly available location on the web, such as GitHub, Azure Storage, or Amazon S3."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Save" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_SaveLocally"
-	        Target="{x:Bind NavigationViewItem_Save}"
-            IsLightDismissEnabled="true"
-	        Title="Save your Orchestration Locally"
-	        Subtitle="Click to save your current Orchestration as the startup Orchestration. It will begin the next time you app is launched."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind NavigationViewItem_Save}"
+      IsLightDismissEnabled="true"
+    Title="Save your Orchestration Locally"
+    Subtitle="Click to save your current Orchestration as the startup Orchestration. It will begin the next time you app is launched."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="SaveLocal" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Reset"
-	        Target="{x:Bind NavigationViewItem_Reset}"
-            IsLightDismissEnabled="true"
-	        Title="Reset the UI and default Orchestration"
-	        Subtitle="Reset the UI to the original settings and remove the default Orchestration from loading on startup."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind NavigationViewItem_Reset}"
+      IsLightDismissEnabled="true"
+    Title="Reset the UI and default Orchestration"
+    Subtitle="Reset the UI to the original settings and remove the default Orchestration from loading on startup."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Clear" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Start"
-	        Target="{x:Bind NavigationViewItem_Start}"
-            IsLightDismissEnabled="true"
-	        Title="Run your Orchestration!"
-	        Subtitle="You can click the Run button to run immediately. This also saves your Orchestration as the startup Orchestration."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind NavigationViewItem_Start}"
+      IsLightDismissEnabled="true"
+    Title="Run your Orchestration!"
+    Subtitle="You can click the Run button to run immediately. This also saves your Orchestration as the startup Orchestration."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Play" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Update"
-	        Target="{x:Bind Button_UrlLoad}"
-            IsLightDismissEnabled="true"
-	        Title="Updating your Orchestration"
-	        Subtitle="Note that when using an Orchestration URL, the app will check for updates based on the PollingIntervalMinutes field in the Orchestration File."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind Button_UrlLoad}"
+      IsLightDismissEnabled="true"
+    Title="Updating your Orchestration"
+    Subtitle="Note that when using an Orchestration URL, the app will check for updates based on the PollingIntervalMinutes field in the Orchestration File."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Globe" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_FileLoad"
-	        Target="{x:Bind Button_FileLoad}"
-            IsLightDismissEnabled="true"
-	        Title="Local Orchestration limitations"
-	        Subtitle="If you are running an Orchestration from a local file, then the file will not be updated until you manually load a new Orchestration File."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind Button_FileLoad}"
+      IsLightDismissEnabled="true"
+    Title="Local Orchestration limitations"
+    Subtitle="If you are running an Orchestration from a local file, then the file will not be updated until you manually load a new Orchestration File."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Save" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_About"
-	        Target="{x:Bind NavigationViewItem_About}"
-            IsLightDismissEnabled="true"
-	        Title="Reach out to us"
-	        Subtitle="If you still have questions, find any issues, or have an idea on how we can improve Kiosk Client, feel free to reach out to us."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind NavigationViewItem_About}"
+      IsLightDismissEnabled="true"
+    Title="Reach out to us"
+    Subtitle="If you still have questions, find any issues, or have an idea on how we can improve Kiosk Client, feel free to reach out to us."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Help" />
                 </muxc:TeachingTip.IconSource>
             </muxc:TeachingTip>
 
             <muxc:TeachingTip x:Name="TeachingTip_Enjoy"
-	        Target="{x:Bind ContentControl_Logo}"
-            IsLightDismissEnabled="true"
-	        Title="Enjoy Kiosk Client!"
-	        Subtitle="We hope you enjoy Kiosk Client! If you have any questions, or find any issues, please log an issue on our GitHub page. If you like our app, please leave a review on the Windows Store."
-            Closed="TeachingTip_Closed">
+    Target="{x:Bind ContentControl_Logo}"
+      IsLightDismissEnabled="true"
+    Title="Enjoy Kiosk Client!"
+    Subtitle="We hope you enjoy Kiosk Client! If you have any questions, or find any issues, please log an issue on our GitHub page. If you like our app, please leave a review on the Windows Store."
+      Closed="TeachingTip_Closed">
                 <muxc:TeachingTip.IconSource>
                     <muxc:SymbolIconSource Symbol="Like" />
                 </muxc:TeachingTip.IconSource>

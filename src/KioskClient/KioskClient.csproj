@@ -129,6 +129,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Converters\AutoRetryActiveToSymbolConverter.cs" />
     <Compile Include="Converters\BooleanToInvertedVisibilityConverter.cs" />
     <Compile Include="Converters\HideFileOrchestrationSourceConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
@@ -291,6 +292,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
+      <Version>8.2.250402</Version>
+    </PackageReference>
     <PackageReference Include="Humanizer.Core">
       <Version>2.14.1</Version>
     </PackageReference>

@@ -6,27 +6,28 @@
  * github.com/CityOfStanton
  */
 
+using KioskClient.Dialogs;
+using KioskClient.Pages.PageArguments;
+using KioskLibrary.Common;
+using KioskLibrary.Helpers;
+using KioskLibrary.Orchestrations;
+using KioskLibrary.Storage;
 using KioskLibrary.ViewModels;
+using Microsoft.UI.Xaml.Controls;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using KioskLibrary.Orchestrations;
-using KioskLibrary.Storage;
-using KioskLibrary.Common;
-using KioskClient.Dialogs;
-using KioskLibrary.Helpers;
-using System.Threading.Tasks;
-using KioskClient.Pages.PageArguments;
-using Serilog;
-using Microsoft.UI.Xaml.Controls;
-using Windows.ApplicationModel.DataTransfer;
-using System.Linq;
-using Windows.Storage;
 
 namespace KioskLibrary.Pages
 {
@@ -36,6 +37,7 @@ namespace KioskLibrary.Pages
     public sealed partial class Settings : Page
     {
         public SettingsViewModel State { get; set; }
+        private readonly ITimeHelper _autoRetryTimer;
 
         private SettingsPageArguments _currentPageArguments;
         private readonly IHttpHelper _httpHelper;
@@ -64,8 +66,11 @@ namespace KioskLibrary.Pages
             InitializeComponent();
 
             State = new SettingsViewModel();
-
             State.PropertyChanged += State_PropertyChanged;
+            State.AutoRetryActivationStateChanged += AutoRetryActivationStateChanged;
+            State.SettingsChanged += State_SettingsStateChanged;
+            _autoRetryTimer = new TimerHelper();
+            _autoRetryTimer.Tick += AutoRetryTimer_Tick;
         }
 
         /// <summary>
@@ -96,22 +101,14 @@ namespace KioskLibrary.Pages
             State.UriPath = stateFromStorage?.UriPath ?? default;
             State.IsFileLoading = false;
             State.IsUriLoading = false;
+            State.IsAutoRetryEnabled = stateFromStorage?.IsAutoRetryEnabled ?? true;
+            State.AutoRetrySeconds = stateFromStorage?.AutoRetrySeconds ?? 10;
+
+            LoadURLHistory();
 
             Log.Information("Settings State: {state}", SerializationHelper.JSONSerialize(State));
 
-            // Load URL history from settings
-            var localSettings = ApplicationData.Current.LocalSettings;
-            if (localSettings.Values.ContainsKey(UrlHistoryKey))
-            {
-                var historyString = localSettings.Values[UrlHistoryKey] as string;
-                if (!string.IsNullOrEmpty(historyString))
-                {
-                    var urls = historyString.Split(new[] {'|'}, StringSplitOptions.RemoveEmptyEntries);
-                    State.UrlHistory.Clear();
-                    foreach (var url in urls)
-                        State.UrlHistory.Add(url);
-                }
-            }
+            AutoRetryActivationStateChanged(State.IsAutoRetryActive);
         }
 
         /// <summary>
@@ -131,8 +128,7 @@ namespace KioskLibrary.Pages
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             Log.Information("Settings OnNavigatedTo");
-
-            //Window.Current.CoreWindow.KeyDown -= PagesHelper.CommonKeyUp;
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             _currentPageArguments = e.Parameter as SettingsPageArguments;
 
             if (_currentPageArguments != null)
@@ -156,6 +152,18 @@ namespace KioskLibrary.Pages
             }
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            base.OnNavigatedFrom(e);
+        }
+
+        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+        {
+            if (args.VirtualKey == Windows.System.VirtualKey.Escape)
+                State.ShouldAutoRetryStart = false;
+        }
+
         private void LogToListbox(string message)
         {
             var currentTime = DateTime.Now.ToString("HH:mm:ss").PadRight(8);
@@ -165,32 +173,7 @@ namespace KioskLibrary.Pages
 
         private async void Button_UrlLoad_Click(object sender, RoutedEventArgs e)
         {
-            State.IsUriLoading = true;
-            Orchestration orchestration;
-
-            Log.Information("Button_UrlLoad_Click UriPath: {UriPath}", State.UriPath);
-
-            orchestration = await Orchestration.GetOrchestration(new Uri(State.UriPath), _httpHelper);
-            orchestration.OrchestrationSource = OrchestrationSource.URL;
-            await ValidateOrchestration(orchestration);
-
-            State.IsUriLoading = false;
-
-            // Update URL history if load was successful
-            if (!string.IsNullOrWhiteSpace(ComboBox_URLPath.Text))
-            {
-                var urlPath = ComboBox_URLPath.Text.Trim();
-                if (State.UrlHistory.Contains(urlPath))
-                    State.UrlHistory.Remove(urlPath);
-                State.UrlHistory.Insert(0, urlPath);
-                while (State.UrlHistory.Count > MaxUrlHistory)
-                    State.UrlHistory.RemoveAt(State.UrlHistory.Count - 1);
-                State.UriPath = urlPath;
-
-                // Persist history
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[UrlHistoryKey] = string.Join("|", State.UrlHistory);
-            }
+            await LoadOrchestration();
         }
 
         private async void Button_FileLoad_Click(object _, RoutedEventArgs e)
@@ -407,6 +390,7 @@ namespace KioskLibrary.Pages
         {
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.
+            StopAutoRetryTimer();
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(MainPage), true);
         }
@@ -453,7 +437,54 @@ namespace KioskLibrary.Pages
         {
             await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/CityOfStanton/Kiosk-Client/wiki"));
         }
-        #endregion
+
+        private void LoadURLHistory()
+        {
+            // Load URL history from settings
+            var localSettings = ApplicationData.Current.LocalSettings;
+            if (localSettings.Values.ContainsKey(UrlHistoryKey))
+            {
+                var historyString = localSettings.Values[UrlHistoryKey] as string;
+                if (!string.IsNullOrEmpty(historyString))
+                {
+                    var urls = historyString.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                    State.UrlHistory.Clear();
+                    if (!string.IsNullOrWhiteSpace(State.UriPath))
+                        State.UrlHistory.Add(State.UriPath); // Ensure current URL is always in history
+                    foreach (var url in urls.Where(x => !string.IsNullOrWhiteSpace(x)))
+                        if (!State.UrlHistory.Contains(url))
+                            State.UrlHistory.Add(url);
+                    State.UriPath = State.UrlHistory.FirstOrDefault() ?? string.Empty;
+                }
+            }
+        }
+
+        private void SaveURLHistory()
+        {
+            // Update URL history if load was successful
+            var urlPath = ComboBox_URLPath.Text.Trim();
+            if (!string.IsNullOrWhiteSpace(urlPath))
+            {
+                if (State.UrlHistory.Contains(urlPath))
+                    State.UrlHistory.Remove(urlPath);
+                State.UrlHistory.Insert(0, urlPath);
+
+                if (State.UrlHistory.Count > 0)
+                    for (int i = State.UrlHistory.Count - 1; i >= 0; i--)
+                        if (string.IsNullOrWhiteSpace(State.UrlHistory[i]))
+                            State.UrlHistory.RemoveAt(i);
+
+                while (State.UrlHistory.Count > MaxUrlHistory)
+                    State.UrlHistory.RemoveAt(State.UrlHistory.Count - 1);
+
+                if (State.UrlHistory.Count > 0)
+                    State.UriPath = State.UrlHistory.FirstOrDefault() ?? string.Empty;
+
+                // Persist history
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values[UrlHistoryKey] = string.Join("|", State.UrlHistory);
+            }
+        }
 
         private void DeleteUrlHistoryItem_Click(object sender, RoutedEventArgs e)
         {
@@ -465,5 +496,99 @@ namespace KioskLibrary.Pages
                 localSettings.Values[UrlHistoryKey] = string.Join("|", State.UrlHistory);
             }
         }
+
+        private async Task SaveSettings()
+        {
+            try
+            {
+                await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.SettingsViewModel, State);
+            }
+            catch (Exception ex)
+            {
+                LogToListbox($"Error saving settings: {ex.Message}");
+            }
+        }
+
+        private async Task LoadOrchestration()
+        {
+            if (string.IsNullOrWhiteSpace(State.UriPath))
+            {
+                LogToListbox("Please enter a valid URL.");
+                return;
+            }
+
+            State.IsUriLoading = true;
+            Orchestration orchestration;
+
+            Log.Information("Button_UrlLoad_Click UriPath: {UriPath}", State.UriPath);
+
+            orchestration = await Orchestration.GetOrchestration(new Uri(State.UriPath), _httpHelper);
+            orchestration.OrchestrationSource = OrchestrationSource.URL;
+            await ValidateOrchestration(orchestration);
+
+            State.IsUriLoading = false;
+
+            SaveURLHistory();
+        }
+
+        private async void AutoRetryTimer_Tick(object sender, object e)
+        {
+            if (!State.IsAutoRetryEnabled || !State.ShouldAutoRetryStart)
+            {
+                _autoRetryTimer.Stop();
+                return;
+            }
+
+            if (State.CurrentAutoRetryCountdown > 0)
+                State.CurrentAutoRetryCountdown--;
+            else
+            {
+                await LoadOrchestration();
+                Run();
+                State.CurrentAutoRetryCountdown = State.AutoRetrySeconds;
+            }
+        }
+
+        private void StartAutoRetryTimer()
+        {
+            _autoRetryTimer.Interval = TimeSpan.FromSeconds(1);
+            _autoRetryTimer.Start();
+        }
+
+        private void StopAutoRetryTimer()
+        {
+            _autoRetryTimer.Stop();
+        }
+
+        private void Button_ToggleCountdownState_Click(object sender, RoutedEventArgs e)
+        {
+            State.ShouldAutoRetryStart = !State.ShouldAutoRetryStart;
+        }
+
+        private void ButtonResetCountdownState_Click(object sender, RoutedEventArgs e)
+        {
+            State.CurrentAutoRetryCountdown = State.AutoRetrySeconds;
+        }
+
+        private void AutoRetryActivationStateChanged(bool isActive)
+        {
+            if (isActive)
+            {
+                LogToListbox("Auto-retry activated");
+                StartAutoRetryTimer();
+            }
+            else
+            {
+                LogToListbox("Auto-retry deactivated");
+                StopAutoRetryTimer();
+            }
+        }
+
+        private async void State_SettingsStateChanged()
+        {
+            await SaveSettings();
+        }
+
+        #endregion
     }
 }

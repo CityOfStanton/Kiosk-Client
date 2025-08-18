@@ -69,7 +69,7 @@ namespace KioskLibrary.Storage
             var localCacheFolder = ApplicationData.Current.LocalCacheFolder;
             var file = await localCacheFolder.CreateFileAsync(key, CreationCollisionOption.ReplaceExisting);
             var serializedContent = SerializationHelper.JSONSerialize(toSave);
-            await FileIO.WriteTextAsync(file, serializedContent);
+            await FileIO.WriteTextAsync(file, serializedContent);            
         }
 
         /// <inheritdoc />

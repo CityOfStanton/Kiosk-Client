@@ -22,6 +22,7 @@
             <converters:BooleanToColorConverter x:Key="BooleanToColor" />
             <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
             <converters:HideFileOrchestrationSourceConverter x:Key="HideFileOrchestrationSource" />
+            <converters:AutoRetryActiveToSymbolConverter x:Key="AutoRetryActiveToSymbol" />
             <FontFamily x:Key="KioskClientFonts">/Resources/KioskClient.ttf#KioskClient</FontFamily>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />

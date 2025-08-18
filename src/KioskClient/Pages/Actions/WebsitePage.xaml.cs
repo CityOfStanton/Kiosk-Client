@@ -6,7 +6,6 @@
  * github.com/CityOfStanton
  */
 
-using KioskClient.Dialogs;
 using KioskClient.Pages.PageArguments;
 using KioskLibrary.Actions;
 using KioskLibrary.Helpers;

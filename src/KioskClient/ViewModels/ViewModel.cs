@@ -37,7 +37,7 @@ namespace KioskLibrary.ViewModels
         /// Method that generally handles firing the <see cref="PropertyChanged" />
         /// </summary>
         /// <param name="propertyName"></param>
-        protected virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
             if (propertyName != null)
             {

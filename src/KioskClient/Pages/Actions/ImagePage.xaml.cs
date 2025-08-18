@@ -34,8 +34,7 @@ namespace KioskLibrary.Pages.Actions
         {
             InitializeComponent();
 
-            if (State == null)
-                State = new ActionViewModel();
+            State ??= new ActionViewModel();
         }
 
         /// <summary>
