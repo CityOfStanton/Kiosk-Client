@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30804.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36327.8 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskClient", "src\KioskClient\KioskClient.csproj", "{2540C748-1EA4-41BB-9C6D-CEC6585B99EC}"
 EndProject
@@ -12,6 +12,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F76266A8-840E-464B-92AB-4C4D354EF3BE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A7EC642A-227D-4CD6-AF54-F24280C7F8B7}"
+	ProjectSection(SolutionItems) = preProject
+		test\Tests.sln = test\Tests.sln
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit", "Unit", "{068B76D3-3321-4B01-9234-E32B4D4D0A67}"
 EndProject
