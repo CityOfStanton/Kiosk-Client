@@ -1,4 +1,5 @@
-name: Build and Test
+
+name: Build and Test UWP
 
 on:
   push:
@@ -13,16 +14,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+      - name: Install Visual Studio Build Tools with UWP workload
+        run: |
+          choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.UWPBuildTools --includeRecommended --includeOptional --passive --norestart" --yes
+          choco install vswhere --yes
 
-      - name: Restore dependencies
-        run: dotnet restore KioskClient.sln
+      - name: Find MSBuild
+        id: msbuild
+        run: |
+          msbuild_path=$(vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe)
+          echo "MSBUILD_PATH=$msbuild_path" | Out-File -FilePath $env:GITHUB_ENV -Append
+        shell: pwsh
 
-      - name: Build
-        run: dotnet build KioskClient.sln --configuration Release --no-restore
+      - name: Build Solution (UWP)
+        run: |
+          & "$env:MSBUILD_PATH" KioskClient.sln /t:Restore /p:Configuration=Release
+          & "$env:MSBUILD_PATH" KioskClient.sln /p:Configuration=Release
+        shell: pwsh
 
-      - name: Test
-        run: dotnet test KioskClient.sln --configuration Release --no-build --verbosity normal
+      - name: Run Tests
+        run: |
+          choco install nuget.commandline --yes
+          $testDlls = Get-ChildItem -Path test -Recurse -Filter *.dll | Where-Object { $_.Name -notmatch 'TestAdapter' }
+          foreach ($dll in $testDlls) {
+            Write-Host "Running tests in $($dll.FullName)"
+            dotnet vstest $dll.FullName
+          }
+        shell: pwsh
