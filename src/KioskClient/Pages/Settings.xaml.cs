@@ -95,9 +95,12 @@ namespace KioskLibrary.Pages
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             var stateFromStorage = await _applicationStorage.GetFileFromStorageAsync<SettingsViewModel>(Constants.ApplicationStorage.Files.SettingsViewModel);
+            var defaultOrchestration = await _applicationStorage.GetFileFromStorageAsync<Orchestration>(Constants.ApplicationStorage.Files.DefaultOrchestration);
+
+            State.HasStateBeenLoaded = true;
             State.IsLocalFile = stateFromStorage?.IsLocalFile ?? default;
             State.LocalPath = stateFromStorage?.LocalPath ?? default;
-            State.Orchestration = stateFromStorage?.Orchestration ?? default;
+            State.Orchestration = defaultOrchestration ?? default; // The SettingsViewModel does not save the Orchestration, so it has to be loaded separately.
             State.UriPath = stateFromStorage?.UriPath ?? default;
             State.IsFileLoading = false;
             State.IsUriLoading = false;
@@ -275,16 +278,16 @@ namespace KioskLibrary.Pages
             savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
             savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now:yyyyMMddHHmmss}";
 
-            Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+            StorageFile file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
                 var fileText = "";
                 foreach (var item in ListBox_Log.Items)
                     fileText += $"{item}{Environment.NewLine}";
 
-                Windows.Storage.CachedFileManager.DeferUpdates(file);
-                await Windows.Storage.FileIO.WriteTextAsync(file, fileText);
-                await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+                CachedFileManager.DeferUpdates(file);
+                await FileIO.WriteTextAsync(file, fileText);
+                await CachedFileManager.CompleteUpdatesAsync(file);
             }
         }
 
@@ -350,13 +353,15 @@ namespace KioskLibrary.Pages
                     if (orchestration.Actions != null)
                         foreach (var action in orchestration.Actions)
                             LogToListbox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
-
+                    
                     LogToListbox($"Orchestration valid: \"{orchestration.Name ?? "[No Name]"}\"");
 
                     if (orchestration.OrchestrationSource == OrchestrationSource.File)
                         State.IsLocalPathVerified = true;
                     else
                         State.IsUriPathVerified = true;
+
+                    await Save();
                 }
                 else
                 {
@@ -390,6 +395,12 @@ namespace KioskLibrary.Pages
         private async Task Save()
         {
             Log.Information("Saving Orchestration to Application Storage");
+
+            if(State.HasStateBeenLoaded == false)
+            {
+                LogToListbox("Settings have not finished loading. Please wait a moment and try again.");
+                return;
+            }
 
             await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.SettingsViewModel, State);
             await _applicationStorage.SaveFileToStorageAsync(Constants.ApplicationStorage.Files.DefaultOrchestration, State.Orchestration);

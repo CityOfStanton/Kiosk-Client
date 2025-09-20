@@ -76,6 +76,12 @@ namespace KioskLibrary.ViewModels
         }
 
         /// <summary>
+        /// Has the state been loaded from storage
+        /// </summary>
+        [JsonIgnore]
+        public bool HasStateBeenLoaded { get; set; }
+
+        /// <summary>
         /// The Uri Path
         /// </summary>
         public string UriPath
@@ -167,7 +173,13 @@ namespace KioskLibrary.ViewModels
         public Orchestration Orchestration
         {
             get { return _orchestration; }
-            set { _orchestration = value; NotifyPropertyChanged(); }
+            set
+            {
+                _orchestration = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(IsOrchestrationLoaded));
+                NotifyPropertyChanged(nameof(IsOrchestrationValidationResultsLoaded));
+            }
         }
 
         /// <summary>
@@ -358,7 +370,7 @@ namespace KioskLibrary.ViewModels
             set
             {
                 _autoRetrySeconds = value;
-                NotifyPropertyChanged(); 
+                NotifyPropertyChanged();
 
                 SettingsChanged?.Invoke();
 
