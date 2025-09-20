@@ -138,6 +138,20 @@ namespace KioskLibrary.Pages
 
             await ValidateOrchestration(_currentPageArguments.Orchestration);
 
+            if (_currentPageArguments.SelectedSettingPageTabs != null)
+            {
+                Pivot_Orchestration.SelectedItem = _currentPageArguments.SelectedSettingPageTabs switch
+                {
+                    SettingPageTabs.Orchestration => PivotItem_Orchestration,
+                    SettingPageTabs.Validation => PivotItem_Validation,
+                    SettingPageTabs.Log => PivotItem_Log,
+                    SettingPageTabs.Settings => PivotItem_Settings,
+                    _ => null
+                };
+
+                _currentPageArguments.SelectedSettingPageTabs = null;
+            }
+
             var doNotShowTutorialOnStartup = _applicationStorage.GetSettingFromStorage<bool>(Constants.ApplicationStorage.Settings.DoNotShowTutorialOnStartup);
 
             if (!doNotShowTutorialOnStartup)
@@ -224,7 +238,7 @@ namespace KioskLibrary.Pages
                 else if (tip == TeachingTip_Validation)
                     Pivot_Orchestration.SelectedItem = PivotItem_Validation;
                 else if (tip == TeachingTip_Summary)
-                    Pivot_Orchestration.SelectedItem = PivotItem_Summary;
+                    Pivot_Orchestration.SelectedItem = PivotItem_Orchestration;
 
                 tip.IsOpen = true;
             }
@@ -523,6 +537,14 @@ namespace KioskLibrary.Pages
             Log.Information("Button_UrlLoad_Click UriPath: {UriPath}", State.UriPath);
 
             orchestration = await Orchestration.GetOrchestration(new Uri(State.UriPath), _httpHelper);
+
+            if (orchestration == null)
+            {
+                LogToListbox("Failed to load orchestration from URL.");
+                State.IsUriLoading = false;
+                return;
+            }
+
             orchestration.OrchestrationSource = OrchestrationSource.URL;
             await ValidateOrchestration(orchestration);
 

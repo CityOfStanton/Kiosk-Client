@@ -17,10 +17,13 @@ namespace KioskClient.Pages.PageArguments
 
         public Orchestration Orchestration { get; set; }
 
-        public SettingsPageArguments(List<string> log, Orchestration orchestration = null)
+        public SettingPageTabs? SelectedSettingPageTabs { get; set; } = null;
+
+        public SettingsPageArguments(List<string> log, Orchestration orchestration = null, SettingPageTabs? selectedSettingPageTabs = null)
         {
             Log = log;
             Orchestration = orchestration;
+            SelectedSettingPageTabs = selectedSettingPageTabs;
         }
     }
 }

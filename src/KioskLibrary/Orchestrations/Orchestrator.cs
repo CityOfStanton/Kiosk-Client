@@ -77,6 +77,17 @@ namespace KioskLibrary.Orchestrations
         public event OrchestrationCancelledDelegate OrchestrationCancelled;
 
         /// <summary>
+        /// The delegate for receiving <see cref="OrchestrationFailed" /> events
+        /// </summary>
+        /// <param name="reasons">The reasons for the failure</param>
+        public delegate void OrchestrationFailedDelegate(List<string> reasons);
+
+        /// <summary>
+        /// Event that's fired when an orchestration has been cancelled
+        /// </summary>
+        public event OrchestrationFailedDelegate OrchestrationFailed;
+
+        /// <summary>
         /// The delegate for receiving <see cref="OrchestrationStatusUpdate" /> events
         /// </summary>
         /// <param name="status">The status of the Orchestration</param>
@@ -103,11 +114,9 @@ namespace KioskLibrary.Orchestrations
         /// </summary>
         public Orchestrator(ITimeHelper timeHelper = null)
         {
-            if (_httpHelper == null)
-                _httpHelper = new HttpHelper();
+            _httpHelper ??= new HttpHelper();
 
-            if (_applicationStorage == null)
-                _applicationStorage = new ApplicationStorage();
+            _applicationStorage ??= new ApplicationStorage();
 
             _orchestrationSequence = new List<Action>();
 
@@ -225,7 +234,13 @@ namespace KioskLibrary.Orchestrations
                 }
                 else
                 {
-                    OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
+                    var validationResults = new List<ValidationResult>();
+                    foreach (var validationResult in _orchestration.ValidationResult)
+                        _orchestration.GetValidationResults(validationResult, false, ref validationResults);
+                    var toReturn = validationResults.Select(x => x.ValidationMessage).ToList();
+                    toReturn.Insert(0, Constants.Orchestrator.StatusMessages.OrchestrationInvalid);
+                    FailOrchestration(toReturn);
+
                     return;
                 }
             }
@@ -240,10 +255,21 @@ namespace KioskLibrary.Orchestrations
         {
             Log.Information("StopOrchestration - Stopping orchestration");
 
-            if (_durationtimer != null)
-                _durationtimer.Stop();
+            _durationtimer?.Stop();
 
             OrchestrationCancelled?.Invoke(message);
+        }
+
+        /// <summary>
+        /// Stop processing the current <see cref="Orchestration" />
+        /// </summary>
+        public void FailOrchestration(List<string> messages)
+        {
+            messages.ForEach(x => Log.Information(x));
+
+            _durationtimer?.Stop();
+
+            OrchestrationFailed?.Invoke(messages);
         }
 
         private static async Task<Orchestration> LoadOrchestration(OrchestrationSource orchestrationSource, IHttpHelper httpHelper, IApplicationStorage applicationStorage)

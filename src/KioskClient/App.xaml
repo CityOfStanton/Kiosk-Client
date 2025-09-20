@@ -20,6 +20,7 @@
             <converters:BooleanToInvertedVisibilityConverter x:Key="BooleanToInvertedVisibility" />
             <converters:BooleanToSymbolConverter x:Key="BooleanToSymbol" />
             <converters:BooleanToColorConverter x:Key="BooleanToColor" />
+            <converters:CountToColorConverter x:Key="CountToColor" />
             <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
             <converters:HideFileOrchestrationSourceConverter x:Key="HideFileOrchestrationSource" />
             <converters:AutoRetryActiveToSymbolConverter x:Key="AutoRetryActiveToSymbol" />

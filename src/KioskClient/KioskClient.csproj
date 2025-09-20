@@ -132,6 +132,7 @@
     <Compile Include="Converters\AutoRetryActiveToSymbolConverter.cs" />
     <Compile Include="Converters\BooleanToInvertedVisibilityConverter.cs" />
     <Compile Include="Converters\HideFileOrchestrationSourceConverter.cs" />
+    <Compile Include="Converters\CountToColorConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\BooleanToSymbolConverter.cs" />
@@ -160,6 +161,7 @@
       <DependentUpon>Examples.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageArguments\ActionPageArguments.cs" />
+    <Compile Include="Pages\PageArguments\SettingPageTabs.cs" />
     <Compile Include="Pages\PageArguments\SettingsPageArguments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Pages\Settings.xaml.cs">

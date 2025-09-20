@@ -165,7 +165,7 @@
             </Grid>
 
             <Pivot x:Name="Pivot_Orchestration" Grid.ColumnSpan="2" Margin="20" Grid.Column="0" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                <PivotItem x:Name="PivotItem_Summary" Header="Orchestration">
+                <PivotItem x:Name="PivotItem_Orchestration" Header="Orchestration">
                     <ScrollViewer VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                         <Grid>
                             <TextBlock x:Name="TextBox_Summary_NoOrchestration" Text="No Orchestration Loaded" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" Visibility="{x:Bind Path=State.IsOrchestrationLoaded, Converter={StaticResource BooleanToInvertedVisibility}, Mode=OneWay}" Grid.Column="1" />
@@ -230,9 +230,16 @@
                             <TextBlock x:Name="TextBox_Validation_NoOrchestration" Text="No Validation Loaded" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" Visibility="{x:Bind Path=State.IsOrchestrationValidationResultsLoaded, Converter={StaticResource BooleanToInvertedVisibility}, Mode=OneWay}"/>
                             <StackPanel Visibility="{x:Bind Path=State.IsOrchestrationValidationResultsLoaded, Converter={StaticResource BooleanToVisibility}, Mode=OneWay}">
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                    <TextBlock x:Name="HyperlinkButton_Passed" Text="Passed:" Foreground="#267B30" FontWeight="Bold" />
+                                    <TextBlock x:Name="HyperlinkButton_Passed"
+                                        Text="Passed:"
+                                        FontWeight="Bold"
+                                        Foreground="{x:Bind State.Orchestration.ValidationPassedCount, Converter={StaticResource CountToColor}, ConverterParameter=#267B30, Mode=OneWay}" />
                                     <TextBlock Text="{x:Bind State.Orchestration.ValidationPassedCount, Mode=OneWay}" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="HyperlinkButton_Failed" Text="Failed:" Foreground="Red" Margin="20,0,0,0" FontWeight="Bold" />
+                                    <TextBlock x:Name="HyperlinkButton_Failed"
+                                        Text="Failed:"
+                                        Margin="20,0,0,0"
+                                        FontWeight="Bold"
+                                        Foreground="{x:Bind State.Orchestration.ValidationFailedCount, Converter={StaticResource CountToColor}, ConverterParameter=Red, Mode=OneWay}" />
                                     <TextBlock Text="{x:Bind State.Orchestration.ValidationFailedCount, Mode=OneWay}" Margin="5,0,0,0"  VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <muxc:TreeView x:Name="TreeView_Orchestration" ItemsSource="{x:Bind State.OrchestrationValidationResult, Mode=OneWay}" >
@@ -242,9 +249,9 @@
                                                 <StackPanel Orientation="Horizontal">
                                                     <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind IsValid, Converter={StaticResource BooleanToSymbol}}" Foreground="{x:Bind IsValid, Converter={StaticResource BooleanToColor}}" />
                                                     <TextBlock Text="{x:Bind ValidationMessage}" Margin="5, 0, 0, 0">
-                            <ToolTipService.ToolTip>
-                              <ToolTip Content="{x:Bind Guidance}" Visibility="{x:Bind Guidance, Converter={StaticResource NullToVisibility}}" />
-                            </ToolTipService.ToolTip>
+                                                        <ToolTipService.ToolTip>
+                                                        <ToolTip Content="{x:Bind Guidance}" Visibility="{x:Bind Guidance, Converter={StaticResource NullToVisibility}}" />
+                                                        </ToolTipService.ToolTip>
                                                     </TextBlock>
                                                 </StackPanel>
                                             </muxc:TreeViewItem>

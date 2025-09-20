@@ -220,19 +220,19 @@ namespace KioskLibrary.Orchestrations
         }
 
         /// <summary>
-        /// Gets the <see cref="ValidationResult"/>s that match the <paramref name="targetResult"/>
+        /// Gets the <see cref="ValidationResult"/>s that match the <paramref name="targetIsValidResult"/>
         /// </summary>
         /// <param name="validationResult">The <see cref="ValidationResult"/> to interrogate</param>
-        /// <param name="targetResult">The target result</param>
-        /// <param name="matchingResults">A list of <see cref="ValidationResult"/>s that match the <paramref name="targetResult"/></param>
-        public void GetValidationResults(ValidationResult validationResult, bool targetResult, ref List<ValidationResult> matchingResults)
+        /// <param name="targetIsValidResult">The target result</param>
+        /// <param name="matchingResults">A list of <see cref="ValidationResult"/>s that match the <paramref name="targetIsValidResult"/></param>
+        public void GetValidationResults(ValidationResult validationResult, bool targetIsValidResult, ref List<ValidationResult> matchingResults)
         {
             if (validationResult != null)
                 if (validationResult.Children.Any()) // Non-leaf node
                     foreach (var child in validationResult.Children)
-                        GetValidationResults(child, targetResult, ref matchingResults);
+                        GetValidationResults(child, targetIsValidResult, ref matchingResults);
                 else // Leaf node
-                    if (validationResult.IsValid == targetResult)
+                    if (validationResult.IsValid == targetIsValidResult)
                     matchingResults.Add(validationResult);
         }
 

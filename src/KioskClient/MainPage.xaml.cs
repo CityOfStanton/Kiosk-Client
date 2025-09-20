@@ -84,8 +84,9 @@ namespace KioskLibrary
             _orchestrator.OrchestrationStarted += OrchestrationStarted;
             _orchestrator.NextAction += NextAction;
             _orchestrator.OrchestrationCancelled += OrchestrationCancelled;
+            _orchestrator.OrchestrationFailed += OrchestrationFailed;
             _orchestrator.OrchestrationStatusUpdate += OrchestrationStatusUpdate;
-            _orchestrator.OrchestrationLoaded += _orchestrator_OrchestrationLoaded;
+            _orchestrator.OrchestrationLoaded += Orchestrator_OrchestrationLoaded;
             OrchestrationStatusUpdate(Constants.Application.Main.AttemptingToLoadDefaultOrchestration);
 
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
@@ -148,7 +149,7 @@ namespace KioskLibrary
             TextBlock_Status.Text = status;
         }
 
-        private void _orchestrator_OrchestrationLoaded(Orchestration orchestration)
+        private void Orchestrator_OrchestrationLoaded(Orchestration orchestration)
         {
             _orchestration = orchestration;
         }
@@ -159,10 +160,16 @@ namespace KioskLibrary
             GoToSettings();
         }
 
-        private void GoToSettings()
+        private void OrchestrationFailed(List<string> reasons)
+        {
+            _statusLog.AddRange(reasons);
+            GoToSettings(SettingPageTabs.Log);
+        }
+
+        private void GoToSettings(SettingPageTabs? SelectedSettingPageTabs = null)
         {
             StopTimers();
-            Frame.Navigate(typeof(Settings), new SettingsPageArguments(_statusLog, _orchestration));
+            Frame.Navigate(typeof(Settings), new SettingsPageArguments(_statusLog, _orchestration, SelectedSettingPageTabs));
         }
 
         private void NextAction(Actions.Action action)
