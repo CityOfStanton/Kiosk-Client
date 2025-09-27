@@ -353,7 +353,7 @@ namespace KioskLibrary.Pages
                     if (orchestration.Actions != null)
                         foreach (var action in orchestration.Actions)
                             LogToListbox($"{action.GetType().Name}: \"{action.Name ?? "[No Name]"}\"");
-                    
+
                     LogToListbox($"Orchestration valid: \"{orchestration.Name ?? "[No Name]"}\"");
 
                     if (orchestration.OrchestrationSource == OrchestrationSource.File)
@@ -396,7 +396,7 @@ namespace KioskLibrary.Pages
         {
             Log.Information("Saving Orchestration to Application Storage");
 
-            if(State.HasStateBeenLoaded == false)
+            if (State.HasStateBeenLoaded == false)
             {
                 LogToListbox("Settings have not finished loading. Please wait a moment and try again.");
                 return;
