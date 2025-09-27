@@ -68,7 +68,7 @@ jobs:
 
         # Install Windows SDK 10.0.18362
       - name: Install Windows SDK 10.0.18362
-        uses: GuillaumeFalourd/setup-windows-sdk@v1
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v2.4
         with:
           sdk-version: 18362
 
