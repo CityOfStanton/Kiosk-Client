@@ -43,7 +43,7 @@ namespace KioskLibrary.Spec.Actions
             };
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DynamicData(nameof(GetConstructorTestData), DynamicDataSourceType.Method)]
         public void ConstructorTest(string name, int? duration, string path, Stretch stretch)
         {
@@ -55,7 +55,7 @@ namespace KioskLibrary.Spec.Actions
             Assert.AreEqual(stretch, action.Stretch);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(true, "Valid")]
         [DataRow(false, "ERROR, ERROR, ERROR")]
         public async Task ValidateFailedAsyncTest(bool expectedIsValid, string validationResultMessage)

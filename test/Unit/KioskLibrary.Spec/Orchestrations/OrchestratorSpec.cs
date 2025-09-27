@@ -82,7 +82,7 @@ namespace KioskLibrary.Spec.Orchestrations
             mockApplicationStorage.VerifyAll();
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(OrchestrationSource.File)]
         [DataRow(OrchestrationSource.URL)]
         public async Task StartOrchestrationTest(OrchestrationSource orchestrationSource)

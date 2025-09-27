@@ -67,12 +67,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
@@ -83,9 +77,15 @@ jobs:
       env:
         Configuration: ${{ matrix.configuration }}
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
+    # Build the application
     - name: Build the solution
       run: msbuild $env:Solution_Name /t:rebuild /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    # Test the application
+    - name: Test the solution
+      run: msbuild $env:Solution_Name /t:test /p:Configuration=$env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
 

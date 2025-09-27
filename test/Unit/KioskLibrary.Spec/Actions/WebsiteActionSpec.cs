@@ -45,7 +45,7 @@ namespace KioskLibrary.Spec.Actions
             };
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DynamicData(nameof(GetConstructorTestData), DynamicDataSourceType.Method)]
         public void ConstructorTest(string name, int? duration, string path, bool autoScroll, int? scrollingTime, int? scrollingResetDelay, int settingsDisplayTime)
         {

@@ -176,7 +176,7 @@ namespace KioskLibrary.Spec.Orchestrations
             };
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DynamicData(nameof(ConstructorTestData), DynamicDataSourceType.Method)]
         public void ConstructorTest(string name, List<Action> actions, int pollingInterval, OrchestrationSource orchestrationSource, LifecycleBehavior lifecycle, Ordering order)
         {
@@ -232,7 +232,7 @@ namespace KioskLibrary.Spec.Orchestrations
             Assert.IsNull(result);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DynamicData(nameof(ConvertStringToOrchestrationTestData), DynamicDataSourceType.Method)]
         public void ConvertStringToOrchestrationTest(Orchestration expectedOrchestration, string serializedOrchestration)
         {
@@ -240,7 +240,7 @@ namespace KioskLibrary.Spec.Orchestrations
             TestPropertiesForEquality(expectedOrchestration, result);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DynamicData(nameof(ValidateAsyncTestData), DynamicDataSourceType.Method)]
         public async Task ValidateAsyncTest(Orchestration orchestration, bool isValid, int validationMessageCount, List<string> validationMessages)
         {
