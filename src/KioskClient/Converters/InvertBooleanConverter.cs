@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -7,7 +7,7 @@
  */
 
 using System;
-using Windows.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Data;
 
 namespace KioskLibrary.Converters
 {
@@ -38,3 +38,4 @@ namespace KioskLibrary.Converters
         }
     }
 }
+

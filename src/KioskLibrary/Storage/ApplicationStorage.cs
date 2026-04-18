@@ -7,11 +7,12 @@
  */
 
 using Windows.Foundation;
-using Windows.Storage;
 using KioskLibrary.Helpers;
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 
 namespace KioskLibrary.Storage
 {
@@ -20,28 +21,53 @@ namespace KioskLibrary.Storage
     /// </summary>
     public class ApplicationStorage : IApplicationStorage
     {
+        private static readonly string _basePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "KioskClient");
+
+        private static readonly string _settingsFilePath = Path.Combine(_basePath, "settings.json");
+        private static readonly string _cacheFolderPath = Path.Combine(_basePath, "LocalCache");
+
+        private readonly object _settingsLock = new();
+
+       /// <summary>
+       /// Constructor
+       /// </summary>
+       public ApplicationStorage()
+        {
+            Directory.CreateDirectory(_basePath);
+            Directory.CreateDirectory(_cacheFolderPath);
+        }
+
         /// <inheritdoc />
         public virtual T GetSettingFromStorage<T>(string key)
         {
-            var localSettings = ApplicationData.Current.LocalSettings;
-            if (localSettings.Values[key] != null)
-                if (typeof(T).IsPrimitive)
-                    return (T)localSettings.Values[key];
-                else
-                    return SerializationHelper.JSONDeserialize<T>(localSettings.Values[key].ToString());
-            return default;
+            lock (_settingsLock)
+            {
+                var settings = ReadSettings;
+                if (settings.TryGetValue(key, out var value) && value != null)
+                    if (typeof(T).IsPrimitive)
+                        return (T)Convert.ChangeType(value, typeof(T));
+                    else
+                        return SerializationHelper.JSONDeserialize<T>(value.ToString());
+                return default;
+            }
         }
 
         /// <inheritdoc />
         public virtual void SaveSettingToStorage(string key, object toSave)
         {
-            var localSettings = ApplicationData.Current.LocalSettings;
-            if (toSave == null)
-                localSettings.Values.Remove(key);
-            else if (toSave.GetType().IsPrimitive)
-                localSettings.Values[key] = toSave;
-            else
-                localSettings.Values[key] = SerializationHelper.JSONSerialize(toSave);
+            lock (_settingsLock)
+            {
+                var settings = ReadSettings;
+                if (toSave == null)
+                    settings.Remove(key);
+                else if (toSave.GetType().IsPrimitive)
+                    settings[key] = toSave;
+                else
+                    settings[key] = SerializationHelper.JSONSerialize(toSave);
+                WriteSettings(settings);
+            }
         }
 
         /// <inheritdoc />
@@ -52,9 +78,8 @@ namespace KioskLibrary.Storage
         {
             try
             {
-                var localCacheFolder = ApplicationData.Current.LocalCacheFolder;
-                var file = await localCacheFolder.GetFileAsync(key);
-                var result = await FileIO.ReadTextAsync(file);
+                var filePath = Path.Combine(_cacheFolderPath, key);
+                var result = await File.ReadAllTextAsync(filePath);
                 return SerializationHelper.JSONDeserialize<T>(result);
             }
             catch (FileNotFoundException)
@@ -66,10 +91,9 @@ namespace KioskLibrary.Storage
         /// <inheritdoc />
         public async virtual Task SaveFileToStorageAsync(string key, object toSave)
         {
-            var localCacheFolder = ApplicationData.Current.LocalCacheFolder;
-            var file = await localCacheFolder.CreateFileAsync(key, CreationCollisionOption.ReplaceExisting);
+            var filePath = Path.Combine(_cacheFolderPath, key);
             var serializedContent = SerializationHelper.JSONSerialize(toSave);
-            await FileIO.WriteTextAsync(file, serializedContent);            
+            await File.WriteAllTextAsync(filePath, serializedContent);
         }
 
         /// <inheritdoc />
@@ -77,14 +101,45 @@ namespace KioskLibrary.Storage
         {
             try
             {
-                var localCacheFolder = ApplicationData.Current.LocalCacheFolder;
-                var file = await localCacheFolder.GetFileAsync(key);
-                await file.DeleteAsync();
+                var filePath = Path.Combine(_cacheFolderPath, key);
+                await Task.Run(() => File.Delete(filePath));
             }
             catch (FileNotFoundException) { }
         }
 
         /// <inheritdoc />
-        public virtual IAsyncAction ClearStorage() => ApplicationData.Current.ClearAsync();
+        public virtual Task ClearStorageAsync()
+        {
+            return Task.Run(() =>
+            {
+                if (Directory.Exists(_basePath))
+                {
+                    Directory.Delete(_basePath, true);
+                    Directory.CreateDirectory(_basePath);
+                    Directory.CreateDirectory(_cacheFolderPath);
+                }
+            });
+        }
+
+        private static Dictionary<string, object> ReadSettings
+        {
+            get
+            {
+                if (!File.Exists(_settingsFilePath))
+                    return [];
+
+                var json = File.ReadAllText(_settingsFilePath);
+                return string.IsNullOrWhiteSpace(json)
+                    ? []
+                    : SerializationHelper.JSONDeserialize<Dictionary<string, object>>(json)
+                      ?? [];
+            }
+        }
+
+        private static void WriteSettings(Dictionary<string, object> settings)
+        {
+            var json = SerializationHelper.JSONSerialize(settings);
+            File.WriteAllText(_settingsFilePath, json);
+        }
     }
 }

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36327.8 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskClient", "src\KioskClient\KioskClient.csproj", "{2540C748-1EA4-41BB-9C6D-CEC6585B99EC}"
 EndProject
@@ -27,6 +27,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KioskLibrary.Spec", "test\Unit\KioskLibrary.Spec\KioskLibrary.Spec.csproj", "{0DBA46F0-A6C9-49EA-B462-63964B1057AB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrchestrationPollingManager.Spec", "test\Unit\OrchestrationPollingManager.Spec\OrchestrationPollingManager.Spec.csproj", "{9164D7B6-39E2-4782-ADCB-6230F275A234}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{04210DAD-EB74-408E-A643-A09A0E81B52C}"
+	ProjectSection(SolutionItems) = preProject
+		MIGRATION_PROGRESS.md = MIGRATION_PROGRESS.md
+		UWP_to_WindowsAppSDK_Migration_Assessment.md = UWP_to_WindowsAppSDK_Migration_Assessment.md
+		UWP_to_WindowsAppSDK_Migration_Plan.md = UWP_to_WindowsAppSDK_Migration_Plan.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

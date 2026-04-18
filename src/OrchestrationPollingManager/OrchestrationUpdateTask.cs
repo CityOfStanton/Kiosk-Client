@@ -6,54 +6,48 @@
  * github.com/CityOfStanton
  */
 
-using KioskLibrary;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using Serilog;
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Background;
-using Windows.Foundation;
 
 namespace OrchestrationPollingManager
 {
     /// <summary>
-    /// Background update task that polls the orchestration URL in order to keep it up-to-date
+    /// Background update task that polls the orchestration URL in order to keep it up-to-date.
+    /// Uses an in-app timer instead of UWP IBackgroundTask (not available in Windows App SDK).
     /// </summary>
-    public sealed class OrchestrationUpdateTask : IBackgroundTask
+    public sealed class OrchestrationUpdateTask : IDisposable
     {
-        private static readonly string _taskName = "OrchestrationUpdateTask";
+        private static Timer _pollingTimer;
+        private static readonly object _lock = new object();
+        private static bool _isDisposed;
 
         /// <summary>
-        /// The method called by the background worker framework
+        /// Registers the Orchestration updater using an in-app timer
         /// </summary>
-        /// <param name="taskInstance">The background task instance</param>
-        public async void Run(IBackgroundTaskInstance taskInstance)
+        public static Task<bool> RegisterOrchestrationUpdater()
         {
-            var deferral = taskInstance.GetDeferral();
-
-            Log.Information("OrchestrationUpdateTask Run invoked");
-
-            await Orchestrator.GetNextOrchestration(new HttpHelper(), new ApplicationStorage());
-
-            deferral.Complete();
+            return RegisterOrchestrationUpdaterHelper();
         }
 
         /// <summary>
-        /// Registers the Orchestration updater
+        /// Unregisters the Orchestration updater
         /// </summary>
-        public static IAsyncOperation<bool> RegisterOrchestrationUpdater()
+        public static void UnregisterOrchestrationUpdater()
         {
-            foreach (var task in BackgroundTaskRegistration.AllTasks.Where(x => x.Value.Name.Contains(_taskName)))
-                task.Value.Unregister(true);
-
-            return RegisterOrchestrationUpdaterHelper().AsAsyncOperation();
+            lock (_lock)
+            {
+                _pollingTimer?.Dispose();
+                _pollingTimer = null;
+            }
         }
 
-        private async static Task<bool> RegisterOrchestrationUpdaterHelper()
+        private static Task<bool> RegisterOrchestrationUpdaterHelper()
         {
             Log.Information("RegisterOrchestrationUpdaterHelper invoked");
 
@@ -61,19 +55,46 @@ namespace OrchestrationPollingManager
 
             if (pollingInterval > 0)
             {
-                await BackgroundExecutionManager.RequestAccessAsync();
-                var btb = new BackgroundTaskBuilder
+                lock (_lock)
                 {
-                    Name = _taskName,
-                    TaskEntryPoint = typeof(OrchestrationUpdateTask).FullName
-                };
-                var tt = new TimeTrigger(Convert.ToUInt32(pollingInterval), false);
-                btb.SetTrigger(tt);
-                btb.Register();
-                return true;
+                    _pollingTimer?.Dispose();
+                    _pollingTimer = new Timer(
+                        _ => _ = PollOrchestrationAsync(),
+                        null,
+                        TimeSpan.FromMinutes(pollingInterval),
+                        TimeSpan.FromMinutes(pollingInterval)
+                    );
+                }
+
+                Log.Information("OrchestrationUpdateTask registered with interval {PollingInterval} minutes", pollingInterval);
+                return Task.FromResult(true);
             }
 
-            return false;
+            Log.Warning("OrchestrationUpdateTask not registered - polling interval is 0 or not set");
+            return Task.FromResult(false);
+        }
+
+        private static async Task PollOrchestrationAsync()
+        {
+            try
+            {
+                Log.Information("OrchestrationUpdateTask polling for orchestration updates");
+                await Orchestrator.GetNextOrchestration(new HttpHelper(), new ApplicationStorage());
+                Log.Information("OrchestrationUpdateTask poll completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "OrchestrationUpdateTask poll failed");
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                UnregisterOrchestrationUpdater();
+                _isDisposed = true;
+            }
         }
     }
 }

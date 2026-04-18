@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -12,10 +12,10 @@ using KioskLibrary.Helpers;
 using KioskLibrary.ViewModels;
 using Serilog;
 using System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace KioskLibrary.Pages.Actions
 {
@@ -49,8 +49,8 @@ namespace KioskLibrary.Pages.Actions
                 var action = apa.Action as ImageAction;
                 _cancelOrchestration = apa.CancelOrchestration;
 
-                Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
-                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
+                this.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
+                this.KeyDown += CoreWindow_KeyDown; // Add a single Common.CommonKeyUp handler
 
                 Log.Information("ImagePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(action));
 
@@ -78,12 +78,13 @@ namespace KioskLibrary.Pages.Actions
         /// <summary>
         /// Remove the KeyDown binding when we leave
         /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => this.KeyDown -= CoreWindow_KeyDown;
 
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private void CoreWindow_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs args)
         {
-            if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
+            if (args.Key == Windows.System.VirtualKey.Home || args.Key == Windows.System.VirtualKey.Escape)
                 _cancelOrchestration();
         }
     }
 }
+

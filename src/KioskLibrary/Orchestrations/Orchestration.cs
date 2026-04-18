@@ -17,7 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Windows.Web.Http;
+using System.Net;
 using Action = KioskLibrary.Actions.Action;
 
 namespace KioskLibrary.Orchestrations
@@ -156,7 +156,7 @@ namespace KioskLibrary.Orchestrations
             try
             {
                 var result = await httpHelper.GetAsync(uri);
-                if (result.StatusCode == HttpStatusCode.Ok)
+                if (result.StatusCode == HttpStatusCode.OK)
                     return ConvertStringToOrchestration(await result.Content.ReadAsStringAsync());
             }
             catch { }

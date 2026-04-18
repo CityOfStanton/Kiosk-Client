@@ -9,7 +9,7 @@
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
 using System.Threading.Tasks;
-using Windows.Web.Http;
+using System.Net;
 
 namespace KioskLibrary.Actions
 {
@@ -81,7 +81,7 @@ namespace KioskLibrary.Actions
         {
             var result = await base.ValidateAsync(httpHelper);
 
-            var pathResult = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok, nameof(Path));
+            var pathResult = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.OK, nameof(Path));
 
             result.Children.Add(pathResult);
 

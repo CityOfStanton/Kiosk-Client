@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -6,6 +6,7 @@
  * github.com/CityOfStanton
  */
 
+using KioskLibrary;
 using KioskLibrary.Actions;
 using KioskLibrary.Common;
 using KioskLibrary.Helpers;
@@ -13,9 +14,10 @@ using KioskLibrary.Orchestrations;
 using System;
 using System.Collections.Generic;
 using Windows.Storage.Pickers;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using WinRT.Interop;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -44,7 +46,7 @@ namespace KioskClient.Dialogs
                 Constants.Application.OrchestrationFileExample.ImageActionExample.Name,
                 5,
                 Constants.Application.OrchestrationFileExample.ImageActionExample.Path,
-                Windows.UI.Xaml.Media.Stretch.Uniform));
+                Microsoft.UI.Xaml.Media.Stretch.Uniform));
 
             orchestration.Actions.Add(new WebsiteAction(
                 Constants.Application.OrchestrationFileExample.WebsiteExample.Name,
@@ -64,6 +66,10 @@ namespace KioskClient.Dialogs
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
+
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
+            InitializeWithWindow.Initialize(savePicker, hwnd);
+
             savePicker.FileTypeChoices.Add("JSON Files", new List<string>() { ".json" });
             savePicker.SuggestedFileName = "Settings.json";
 
@@ -86,6 +92,10 @@ namespace KioskClient.Dialogs
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
+
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
+            InitializeWithWindow.Initialize(savePicker, hwnd);
+
             savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
             savePicker.SuggestedFileName = "Settings.xml";
 
@@ -114,3 +124,4 @@ namespace KioskClient.Dialogs
         }
     }
 }
+

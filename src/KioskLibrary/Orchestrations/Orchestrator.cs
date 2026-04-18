@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Action = KioskLibrary.Actions.Action;
 using KioskLibrary.Storage;
 using KioskLibrary.Orchestrations;
@@ -118,7 +118,7 @@ namespace KioskLibrary.Orchestrations
 
             _applicationStorage ??= new ApplicationStorage();
 
-            _orchestrationSequence = new List<Action>();
+            _orchestrationSequence = [];
 
             _orchestration = null;
             _currentAction = null;
@@ -213,7 +213,7 @@ namespace KioskLibrary.Orchestrations
                     }
                     catch (Exception ex) { Log.Error(ex, ex.Message); }
 
-                    if (_orchestration.Actions.Any())
+                    if (_orchestration.Actions.Count != 0)
                     {
                         OrchestrationStatusUpdate?.Invoke(Constants.Orchestrator.StatusMessages.SettingActionSequence);
 
@@ -295,7 +295,7 @@ namespace KioskLibrary.Orchestrations
 
         private void PopulateRandomSequenceOfActions(List<Action> remainingActions)
         {
-            if (remainingActions.Any())
+            if (remainingActions.Count != 0)
                 if (remainingActions.Count == 1)
                 {
                     var action = remainingActions.First();
@@ -324,7 +324,7 @@ namespace KioskLibrary.Orchestrations
                 return;
             }
 
-            if (_orchestrationSequence.Any()) // We have actions to execute
+            if (_orchestrationSequence.Count != 0) // We have actions to execute
             {
                 if (_currentAction == null)
                     _currentAction = _orchestrationSequence[0];
@@ -368,3 +368,4 @@ namespace KioskLibrary.Orchestrations
         private async void Durationtime_Tick(object sender, object e) => await EvaluateNextAction();
     }
 }
+

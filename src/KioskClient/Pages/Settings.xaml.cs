@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -13,7 +13,6 @@ using KioskLibrary.Helpers;
 using KioskLibrary.Orchestrations;
 using KioskLibrary.Storage;
 using KioskLibrary.ViewModels;
-using Microsoft.UI.Xaml.Controls;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -23,11 +22,11 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.UI.Core;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using WinRT.Interop;
 
 namespace KioskLibrary.Pages
 {
@@ -62,7 +61,7 @@ namespace KioskLibrary.Pages
             }
             catch { }
 
-            ApplicationView.GetForCurrentView().ExitFullScreenMode();
+            App.MainWindow.AppWindow.SetPresenter(AppWindowPresenterKind.Default);
             InitializeComponent();
 
             State = new SettingsViewModel();
@@ -131,7 +130,7 @@ namespace KioskLibrary.Pages
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             Log.Information("Settings OnNavigatedTo");
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            this.KeyDown += CoreWindow_KeyDown;
             _currentPageArguments = e.Parameter as SettingsPageArguments;
 
             if (_currentPageArguments != null)
@@ -160,6 +159,7 @@ namespace KioskLibrary.Pages
             if (!doNotShowTutorialOnStartup)
             {
                 var tutorialDialog = new RunTutorial();
+                tutorialDialog.XamlRoot = this.XamlRoot;
                 await tutorialDialog.ShowAsync();
 
                 _applicationStorage.SaveSettingToStorage(Constants.ApplicationStorage.Settings.DoNotShowTutorialOnStartup, tutorialDialog.DoNotShowThisAgain);
@@ -171,13 +171,13 @@ namespace KioskLibrary.Pages
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            this.KeyDown -= CoreWindow_KeyDown;
             base.OnNavigatedFrom(e);
         }
 
-        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+        private void CoreWindow_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs args)
         {
-            if (args.VirtualKey == Windows.System.VirtualKey.Escape)
+            if (args.Key == Windows.System.VirtualKey.Escape)
                 State.ShouldAutoRetryStart = false;
         }
 
@@ -200,6 +200,9 @@ namespace KioskLibrary.Pages
                 ViewMode = PickerViewMode.Thumbnail,
                 SuggestedStartLocation = PickerLocationId.PicturesLibrary
             };
+
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
+            InitializeWithWindow.Initialize(openPicker, hwnd);
 
             openPicker.FileTypeFilter.Add(".json");
             openPicker.FileTypeFilter.Add(".xml");
@@ -275,6 +278,10 @@ namespace KioskLibrary.Pages
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
+
+            var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
+            InitializeWithWindow.Initialize(savePicker, hwnd);
+
             savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
             savePicker.SuggestedFileName = $"Kiosk_Client_Log-{DateTime.Now:yyyyMMddHHmmss}";
 
@@ -380,15 +387,17 @@ namespace KioskLibrary.Pages
         private async Task Examples()
         {
             var examples = new Examples();
+            examples.XamlRoot = this.XamlRoot;
             await examples.ShowAsync();
 
             foreach (var log in examples.Logs)
                 LogToListbox(log);
         }
 
-        private static async Task LaunchAboutDialog()
+        private async Task LaunchAboutDialog()
         {
             var about = new About();
+            about.XamlRoot = this.XamlRoot;
             await about.ShowAsync();
         }
 
@@ -416,7 +425,7 @@ namespace KioskLibrary.Pages
             // Navigate to the mainpage.
             // This should trigger the application startup workflow that automatically starts the orchestration.
             StopAutoRetryTimer();
-            var rootFrame = Window.Current.Content as Frame;
+            var rootFrame = App.MainWindow.Content as Frame;
             rootFrame.Navigate(typeof(MainPage), true);
         }
 
@@ -625,3 +634,4 @@ namespace KioskLibrary.Pages
         #endregion
     }
 }
+

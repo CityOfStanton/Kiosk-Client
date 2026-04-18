@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -7,8 +7,8 @@
  */
 
 using System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Data;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Data;
 
 namespace KioskLibrary.Converters
 {
@@ -32,3 +32,4 @@ namespace KioskLibrary.Converters
         public object ConvertBack(object value, Type targetType, object parameter, string language) => throw new NotImplementedException();
     }
 }
+

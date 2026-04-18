@@ -60,6 +60,6 @@ namespace KioskLibrary.Storage
         /// <summary>
         /// Clears all values from application storage
         /// </summary>
-        IAsyncAction ClearStorage();
+        Task ClearStorageAsync();
     }
 }

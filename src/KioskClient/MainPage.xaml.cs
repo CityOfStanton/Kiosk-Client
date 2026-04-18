@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2021
  * City of Stanton
  * Stanton, Kentucky
@@ -11,17 +11,17 @@ using KioskLibrary.Pages.Actions;
 using KioskLibrary.Actions;
 using System;
 using System.Collections.Generic;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using KioskClient.Dialogs;
 using KioskClient.Pages.PageArguments;
 using Serilog;
 using Serilog.Formatting.Json;
-using Windows.Storage;
 using KioskLibrary.Common;
 using KioskLibrary.Orchestrations;
+using OrchestrationPollingManager;
 using System.Threading.Tasks;
 
 namespace KioskLibrary
@@ -50,17 +50,18 @@ namespace KioskLibrary
             _statusLog = new List<string>();
 
             var fileSizeLimit = 50 * 1024 * 1024; // 50 MB
+            var logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "log.json");
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File(
                     new JsonFormatter(renderMessage: true),
-                    ApplicationData.Current.LocalCacheFolder.Path + "\\log.json",
+                    logPath,
                     fileSizeLimitBytes: fileSizeLimit,
                     rollingInterval: RollingInterval.Day)
                     .MinimumLevel.Verbose()
                     .CreateLogger();
 
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
+            this.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
+            this.KeyDown += CoreWindow_KeyDown; // Add a single Common.CommonKeyUp handler
 
             _initializationDelayTimer = new DispatcherTimer
             {
@@ -89,7 +90,7 @@ namespace KioskLibrary
             _orchestrator.OrchestrationLoaded += Orchestrator_OrchestrationLoaded;
             OrchestrationStatusUpdate(Constants.Application.Main.AttemptingToLoadDefaultOrchestration);
 
-            ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
+            App.MainWindow.AppWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
 
             Log.Information("Kiosk Client started");
         }
@@ -111,11 +112,11 @@ namespace KioskLibrary
         /// <summary>
         /// Remove the KeyDown binding when we leave
         /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        protected override void OnNavigatedFrom(NavigationEventArgs e) => this.KeyDown -= CoreWindow_KeyDown;
 
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private void CoreWindow_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs args)
         {
-            if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
+            if (args.Key == Windows.System.VirtualKey.Home || args.Key == Windows.System.VirtualKey.Escape)
                 CancelOrchestrationFromActionPage();
         }
 
@@ -208,3 +209,4 @@ namespace KioskLibrary
         }
     }
 }
+

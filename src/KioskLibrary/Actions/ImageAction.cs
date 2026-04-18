@@ -11,8 +11,8 @@ using KioskLibrary.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Media;
-using Windows.Web.Http;
+using Microsoft.UI.Xaml.Media;
+using System.Net;
 
 namespace KioskLibrary.Actions
 {
@@ -60,7 +60,7 @@ namespace KioskLibrary.Actions
         {
             var result = await base.ValidateAsync(httpHelper);
 
-            var pathResult = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.Ok, nameof(Path));
+            var pathResult = await (httpHelper ?? _httpHelper).ValidateURI(Path, HttpStatusCode.OK, nameof(Path));
 
             result.Children.Add(pathResult);
 
