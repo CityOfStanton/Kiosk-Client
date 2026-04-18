@@ -221,13 +221,13 @@ namespace KioskLibrary.Orchestrations
                         Log.Information("Action order set to {order}", _orchestration.Order);
                         if (_orchestration.Order == Ordering.Sequential)
                         {
-                            _orchestrationSequence = new List<Action>(_orchestration.Actions);
+                            _orchestrationSequence = [.. _orchestration.Actions];
 
                             foreach (var action in _orchestration.Actions)
                                 Log.Information("Adding action: {action}", action);
                         }
                         else
-                            PopulateRandomSequenceOfActions(new List<Action>(_orchestration.Actions));
+                            PopulateRandomSequenceOfActions([.. _orchestration.Actions]);
 
                         await EvaluateNextAction();
                     }
