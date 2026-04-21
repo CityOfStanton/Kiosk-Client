@@ -1,89 +1,90 @@
-﻿/*
- * Copyright 2021
- * City of Stanton
- * Stanton, Kentucky
- * www.stantonky.gov
- * github.com/CityOfStanton
- */
+using KioskClient.Core.Models;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Xaml.Navigation;
 
-using KioskClient.Pages.PageArguments;
-using KioskLibrary.Actions;
-using KioskLibrary.Helpers;
-using KioskLibrary.ViewModels;
-using Serilog;
-using System;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
+namespace KioskClient.Pages.Actions;
 
-namespace KioskLibrary.Pages.Actions
+/// <summary>
+/// Displays an image from a URL or file path as part of an orchestration action.
+/// Shows loading/error states and a settings button overlay.
+/// </summary>
+public sealed partial class ImagePage : Page
 {
-    /// <summary>
-    /// A page for displaying an image
-    /// </summary>
-    public sealed partial class ImagePage : Page
+    private ImageAction? _action;
+
+    public ImagePage()
     {
-        private ActionViewModel State { get; set; } // Variable name is not in _ format because it is being referenced in associated partial class
-        private System.Action _cancelOrchestration;
+        this.InitializeComponent();
+    }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public ImagePage()
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+
+        if (e.Parameter is not ImageAction action) return;
+        _action = action;
+
+        await LoadImageAsync();
+    }
+
+    private async Task LoadImageAsync()
+    {
+        if (_action is null) return;
+
+        try
         {
-            InitializeComponent();
+            LoadingPanel.Visibility = Visibility.Visible;
+            ErrorPanel.Visibility = Visibility.Collapsed;
+            ImageDisplay.Visibility = Visibility.Collapsed;
 
-            State ??= new ActionViewModel();
-        }
+            var bitmap = new BitmapImage();
 
-        /// <summary>
-        /// Class that's called when this page has been navigated to.
-        /// </summary>
-        /// <param name="e">Navigation event args</param>
-        protected async override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            try
+            if (Uri.TryCreate(_action.Path, UriKind.Absolute, out var uri))
             {
-                var apa = e.Parameter as ActionPageArguments;
-                var action = apa.Action as ImageAction;
-                _cancelOrchestration = apa.CancelOrchestration;
-
-                Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown; // Remove any pre-existing Common.CommonKeyUp handlers
-                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown; ; // Add a single Common.CommonKeyUp handler
-
-                Log.Information("ImagePage OnNavigatedTo: {data}", SerializationHelper.JSONSerialize(action));
-
-                var validationResult = await action.ValidateAsync();
-
-                State.IsContentSourceValid = validationResult.IsValid;
-                State.FailedToLoadContentMessageDetail = validationResult.GetValidationSummaryOfChildren();
-
-                if (State.IsContentSourceValid.Value)
-                {
-                    Image_Display.Source = new BitmapImage(new Uri(action.Path));
-                    Image_Display.Stretch = action.Stretch;
-                }
-                else
-                    Log.Error("Failed to validate {action} due to the following errors: {errors}", action, validationResult);
+                bitmap.UriSource = uri;
             }
-            catch (Exception ex)
+            else
             {
-                State.IsContentSourceValid = false;
-                State.FailedToLoadContentMessageDetail = ex.Message;
-                Log.Error(ex, ex.Message);
+                // Try local file
+                var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(_action.Path);
+                using var stream = await file.OpenReadAsync();
+                await bitmap.SetSourceAsync(stream);
             }
+
+            ImageDisplay.Source = bitmap;
+            ImageDisplay.Stretch = ConvertStretch(_action.Stretch);
+
+            LoadingPanel.Visibility = Visibility.Collapsed;
+            ImageDisplay.Visibility = Visibility.Visible;
         }
-
-        /// <summary>
-        /// Remove the KeyDown binding when we leave
-        /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e) => Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        catch (Exception ex)
         {
-            if (args.VirtualKey == Windows.System.VirtualKey.Home || args.VirtualKey == Windows.System.VirtualKey.Escape)
-                _cancelOrchestration();
+            LoadingPanel.Visibility = Visibility.Collapsed;
+            ErrorPanel.Visibility = Visibility.Visible;
+            ErrorDetail.Text = ex.Message;
+        }
+    }
+
+    private static Microsoft.UI.Xaml.Media.Stretch ConvertStretch(ImageStretch stretch)
+    {
+        return stretch switch
+        {
+            ImageStretch.None => Microsoft.UI.Xaml.Media.Stretch.None,
+            ImageStretch.Fill => Microsoft.UI.Xaml.Media.Stretch.Fill,
+            ImageStretch.UniformToFill => Microsoft.UI.Xaml.Media.Stretch.UniformToFill,
+            _ => Microsoft.UI.Xaml.Media.Stretch.Uniform
+        };
+    }
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Navigate back to cancel orchestration
+        if (this.Frame.Parent is Frame parentFrame &&
+            parentFrame.Parent is Pages.OrchestrationPage orchestrationPage)
+        {
+            orchestrationPage.CancelAndReturn();
         }
     }
 }

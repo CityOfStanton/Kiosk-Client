@@ -1,445 +1,283 @@
-﻿/*
- * Copyright 2021
- * City of Stanton
- * Stanton, Kentucky
- * www.stantonky.gov
- * github.com/CityOfStanton
- */
-
-using Humanizer;
-using KioskLibrary.Common;
-using KioskLibrary.Orchestrations;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reflection;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using KioskClient.Core.Models;
+using KioskClient.Core.Services;
+using KioskClient.Services;
 
-namespace KioskLibrary.ViewModels
+namespace KioskClient.ViewModels;
+
+/// <summary>
+/// ViewModel for the Settings page. Manages orchestration loading, validation,
+/// URL history, auto-retry, and all settings-related state.
+/// </summary>
+public partial class SettingsViewModel : ObservableObject
 {
-    /// <summary>
-    /// View model for the Settings page
-    /// </summary>
-    public class SettingsViewModel : ViewModel
+    private readonly ISettingsService _settings;
+    private readonly IOrchestrationLoader _loader;
+    private readonly IHttpService _httpService;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLoadUri))]
+    [NotifyPropertyChangedFor(nameof(IsFileMode))]
+    private bool _isLocalFile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLoadUri))]
+    private string _uriPath = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLoadFile))]
+    private string _localPath = string.Empty;
+
+    [ObservableProperty]
+    private bool? _isUriPathVerified;
+
+    [ObservableProperty]
+    private bool? _isLocalPathVerified;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOrchestrationLoaded))]
+    [NotifyPropertyChangedFor(nameof(IsOrchestrationValid))]
+    [NotifyPropertyChangedFor(nameof(CanStart))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryName))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryVersion))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummarySource))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryLifecycle))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryOrder))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryActionCount))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryRuntime))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryPollingInterval))]
+    private Orchestration? _orchestration;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanStart))]
+    private ValidationResult? _orchestrationValidationResult;
+
+    [ObservableProperty]
+    private bool _isUriLoading;
+
+    [ObservableProperty]
+    private bool _isFileLoading;
+
+    [ObservableProperty]
+    private bool _isAutoRetryEnabled;
+
+    [ObservableProperty]
+    private int _autoRetrySeconds;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AutoRetryCountdownDisplay))]
+    private int _currentAutoRetryCountdown;
+
+    [ObservableProperty]
+    private bool _isAutoRetryActive;
+
+    [ObservableProperty]
+    private bool _shouldAutoRetryStart;
+
+    public ObservableCollection<string> UrlHistory { get; } = [];
+    public ObservableCollection<string> LogEntries { get; } = [];
+
+    // Computed properties
+    public bool IsFileMode => IsLocalFile;
+    public bool IsOrchestrationLoaded => Orchestration is not null;
+    public bool IsOrchestrationValid => OrchestrationValidationResult?.IsFullyValid == true;
+    public bool CanStart => IsOrchestrationLoaded && IsOrchestrationValid;
+    public bool CanLoadUri => !IsLocalFile && !string.IsNullOrWhiteSpace(UriPath) && !IsUriLoading;
+    public bool CanLoadFile => IsLocalFile && !string.IsNullOrWhiteSpace(LocalPath) && !IsFileLoading;
+
+    // Summary properties
+    public string OrchestrationSummaryName => Orchestration?.Name ?? "N/A";
+    public string OrchestrationSummaryVersion => Orchestration?.Version ?? "N/A";
+    public string OrchestrationSummarySource => Orchestration?.Source.ToString() ?? "N/A";
+    public string OrchestrationSummaryLifecycle => Orchestration?.Lifecycle.ToString() ?? "N/A";
+    public string OrchestrationSummaryOrder => Orchestration?.Order.ToString() ?? "N/A";
+    public int OrchestrationSummaryActionCount => Orchestration?.Actions.Count ?? 0;
+    public string OrchestrationSummaryRuntime => Orchestration is not null
+        ? FormatTimeSpan(Orchestration.TotalRuntime)
+        : "N/A";
+    public string OrchestrationSummaryPollingInterval => Orchestration is not null
+        ? $"{Orchestration.PollingIntervalMinutes} minutes"
+        : "N/A";
+    public string AutoRetryCountdownDisplay => $"{CurrentAutoRetryCountdown}s";
+
+    public SettingsViewModel(ISettingsService settings, IOrchestrationLoader loader, IHttpService httpService)
     {
-        private string _uriPath;
-        private string _localPath;
-        private bool isLocalFile;
-        private bool? _isUriPathVerified;
-        private bool? _isLocalPathVerified;
-        private string _pathValidationMessage;
-        private Orchestration _orchestration;
-        private bool _isUriLoading;
-        private bool _isFileLoading;
-        private ObservableCollection<string> _urlHistory;
-        private bool _isAutoRetryEnabled = true;
-        private int _autoRetrySeconds = 10;
-        private int _currentAutoRetryCountdown;
-        private bool _isAutoRetryActive = true;
-        private bool _shouldAutoRetryStart = true;
+        _settings = settings;
+        _loader = loader;
+        _httpService = httpService;
+        LoadState();
+    }
 
-        public delegate void AutoRetryActivationStateChangedEventHandler(bool isActive);
-        public event AutoRetryActivationStateChangedEventHandler AutoRetryActivationStateChanged;
+    /// <summary>
+    /// Loads saved state from application storage.
+    /// </summary>
+    private void LoadState()
+    {
+        IsAutoRetryEnabled = _settings.GetSetting(SettingsKeys.AutoRetryEnabled, true);
+        AutoRetrySeconds = _settings.GetSetting(SettingsKeys.RetryTimeoutSeconds, SettingsKeys.DefaultRetryTimeoutSeconds);
 
-        public delegate void SettingsChangedEventHandler();
-        public event SettingsChangedEventHandler SettingsChanged;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public SettingsViewModel()
-            : base(new List<string>() {
-                nameof(OrchestrationValidationResult),
-                nameof(IsOrchestrationLoaded),
-                nameof(IsOrchestrationValid),
-                nameof(CanStart),
-                nameof(CanLoadFile),
-                nameof(CanLoadUri),
-                nameof(OrchestrationSummaryActionCount),
-                nameof(OrchestrationSummaryIsValid),
-                nameof(OrchestrationSummaryLifecycle),
-                nameof(OrchestrationSummaryName),
-                nameof(OrchestrationSummaryOrder),
-                nameof(OrchestrationSummaryPollingInerval),
-                nameof(OrchestrationSummaryRuntime),
-                nameof(OrchestrationSummarySource),
-                nameof(OrchestrationSummarySourceDisplay),
-                nameof(OrchestrationSummaryVersion),
-                nameof(IsOrchestrationValidationResultsLoaded),
-                nameof(OrchestrationSummaryIsValid),
-                nameof(OrchestrationSummaryIsValidDisplay)
-            })
+        var maxHistory = _settings.GetSetting(SettingsKeys.MaxUrlHistory, SettingsKeys.DefaultMaxUrlHistory);
+        var historyList = _settings.GetSetting<List<string>>(SettingsKeys.UrlHistory);
+        if (historyList is not null)
         {
-            _urlHistory = new ObservableCollection<string>();
-            CurrentAutoRetryCountdown = AutoRetrySeconds;
+            foreach (var url in historyList.Take(maxHistory))
+                UrlHistory.Add(url);
         }
 
-        /// <summary>
-        /// Has the state been loaded from storage
-        /// </summary>
-        [JsonIgnore]
-        public bool HasStateBeenLoaded { get; set; }
+        var savedSource = _settings.GetSetting<string>(SettingsKeys.OrchestrationSource);
+        IsLocalFile = savedSource == "File";
 
-        /// <summary>
-        /// The Uri Path
-        /// </summary>
-        public string UriPath
+        UriPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri) ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Saves current state to application storage.
+    /// </summary>
+    public void SaveState()
+    {
+        _settings.SaveSetting(SettingsKeys.AutoRetryEnabled, IsAutoRetryEnabled);
+        _settings.SaveSetting(SettingsKeys.RetryTimeoutSeconds, AutoRetrySeconds);
+        _settings.SaveSetting(SettingsKeys.OrchestrationSource, IsLocalFile ? "File" : "URL");
+        _settings.SaveSetting(SettingsKeys.OrchestrationUri, UriPath);
+        _settings.SaveSetting(SettingsKeys.UrlHistory, UrlHistory.ToList());
+    }
+
+    [RelayCommand]
+    private async Task LoadFromUriAsync()
+    {
+        if (string.IsNullOrWhiteSpace(UriPath)) return;
+
+        IsUriLoading = true;
+        IsUriPathVerified = null;
+        AddLog($"Loading orchestration from: {UriPath}");
+
+        try
         {
-            get { return _uriPath; }
-            set
+            // Validate URI first
+            var validation = await _httpService.ValidateUriAsync(UriPath);
+            if (validation.IsValid != true)
             {
-                if (_uriPath != value)
-                {
-                    _uriPath = value;
-                    NotifyPropertyChanged();
-                }
+                IsUriPathVerified = false;
+                AddLog($"URI validation failed: {validation.Message}");
+                IsUriLoading = false;
+                return;
             }
-        }
 
-        /// <summary>
-        /// The path to the local file
-        /// </summary>
-        public string LocalPath
+            IsUriPathVerified = true;
+
+            // Load the orchestration
+            var orchestration = await _loader.LoadFromUrlAsync(UriPath);
+            SetOrchestration(orchestration);
+
+            // Add to URL history
+            AddToUrlHistory(UriPath);
+            AddLog($"Orchestration loaded: {orchestration.Name}");
+        }
+        catch (Exception ex)
         {
-            get { return _localPath; }
-            set { _localPath = value; NotifyPropertyChanged(); }
+            IsUriPathVerified = false;
+            AddLog($"Error loading orchestration: {ex.Message}");
         }
-
-        /// <summary>
-        /// Whether or not the we're referencing a local file
-        /// </summary>
-        public bool IsLocalFile
+        finally
         {
-            get { return isLocalFile; }
-            set { isLocalFile = value; NotifyPropertyChanged(); }
+            IsUriLoading = false;
         }
+    }
 
-        /// <summary>
-        /// Whether or not the URI path has been verified
-        /// </summary>
-        public bool? IsUriPathVerified
+    [RelayCommand]
+    private async Task LoadFromFileAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+
+        IsFileLoading = true;
+        IsLocalPathVerified = null;
+        LocalPath = filePath;
+        AddLog($"Loading orchestration from file: {filePath}");
+
+        try
         {
-            get { return _isUriPathVerified; }
-            set { _isUriPathVerified = value; NotifyPropertyChanged(); }
+            var orchestration = await _loader.LoadFromFileAsync(filePath);
+            IsLocalPathVerified = true;
+            SetOrchestration(orchestration);
+            AddLog($"Orchestration loaded: {orchestration.Name}");
         }
-
-        /// <summary>
-        /// Whether or not the local path has been verified
-        /// </summary>
-        public bool? IsLocalPathVerified
+        catch (Exception ex)
         {
-            get { return _isLocalPathVerified; }
-            set { _isLocalPathVerified = value; NotifyPropertyChanged(); }
+            IsLocalPathVerified = false;
+            AddLog($"Error loading file: {ex.Message}");
         }
-
-        /// <summary>
-        /// The message from the last path validation attempt
-        /// </summary>
-        public string PathValidationMessage
+        finally
         {
-            get { return _pathValidationMessage; }
-            set { _pathValidationMessage = value; NotifyPropertyChanged(); }
+            IsFileLoading = false;
         }
+    }
 
-        /// <summary>
-        /// Whether or not the Orchestration is valid
-        /// </summary>
-        public bool IsOrchestrationValid
-        {
-            get { return Orchestration?.IsValid ?? false; }
-        }
+    private void SetOrchestration(Orchestration orchestration)
+    {
+        Orchestration = orchestration;
+        var validationResult = orchestration.Validate();
+        OrchestrationValidationResult = validationResult;
 
-        /// <summary>
-        /// Whether or not the Orchestration is loaded
-        /// </summary>
-        public bool IsOrchestrationLoaded
-        {
-            get { return Orchestration != null; }
-        }
+        AddLog($"Validation: {validationResult.PassedCount} passed, {validationResult.FailedCount} failed");
+    }
 
-        /// <summary>
-        /// Whether or not the Orchestration's validation results have been loaded
-        /// </summary>
-        public bool IsOrchestrationValidationResultsLoaded
-        {
-            get { return Orchestration?.ValidationResult != null && Orchestration.ValidationResult.Count > 0; }
-        }
+    private void AddToUrlHistory(string url)
+    {
+        // Remove if already exists (to move it to the top)
+        var existing = UrlHistory.FirstOrDefault(u => u.Equals(url, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+            UrlHistory.Remove(existing);
 
-        /// <summary>
-        /// The currently loaded <see cref="Orchestration" />
-        /// </summary>
-        [JsonIgnore]
-        public Orchestration Orchestration
-        {
-            get { return _orchestration; }
-            set
-            {
-                _orchestration = value;
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(IsOrchestrationLoaded));
-                NotifyPropertyChanged(nameof(IsOrchestrationValidationResultsLoaded));
-            }
-        }
+        // Add to the front
+        UrlHistory.Insert(0, url);
 
-        /// <summary>
-        /// The currently loaded <see cref="Orchestration" />
-        /// </summary>
-        [JsonIgnore]
-        public ObservableCollection<ValidationResult> OrchestrationValidationResult
-        {
-            get { return _orchestration?.ValidationResult; }
-        }
+        // Trim to max
+        var max = _settings.GetSetting(SettingsKeys.MaxUrlHistory, SettingsKeys.DefaultMaxUrlHistory);
+        while (UrlHistory.Count > max)
+            UrlHistory.RemoveAt(UrlHistory.Count - 1);
 
-        /// <summary>
-        /// Indicates that the Uri is in a "loading" state
-        /// </summary>
-        public bool IsUriLoading
-        {
-            get { return _isUriLoading; }
-            set { _isUriLoading = value; NotifyPropertyChanged(); }
-        }
+        SaveState();
+    }
 
-        /// <summary>
-        /// Indicates that the local file is in a "loading" state
-        /// </summary>
-        public bool IsFileLoading
-        {
-            get { return _isFileLoading; }
-            set { _isFileLoading = value; NotifyPropertyChanged(); }
-        }
+    /// <summary>
+    /// Removes a URL from the history.
+    /// </summary>
+    public void RemoveFromUrlHistory(string url)
+    {
+        UrlHistory.Remove(url);
+        SaveState();
+    }
 
-        /// <summary>
-        /// Whether or not all conditions have been satisfied to run the orchestration
-        /// </summary>
-        public bool CanStart
-        {
-            get
-            {
-                return IsOrchestrationValid
-                    &&
-                        ((!IsLocalFile && IsUriPathVerified.HasValue && IsUriPathVerified.Value)
-                        ||
-                        (IsLocalFile && IsLocalPathVerified.HasValue && IsLocalPathVerified.Value));
-            }
-        }
+    public void AddLog(string message)
+    {
+        var entry = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        LogEntries.Insert(0, entry);
+    }
 
-        /// <summary>
-        /// Whether or not all conditions have been satisfied to load a URI
-        /// </summary>
-        public bool CanLoadUri { get { return !IsUriLoading && !IsLocalFile; } }
+    /// <summary>
+    /// Resets the orchestration and related state.
+    /// </summary>
+    [RelayCommand]
+    private void Reset()
+    {
+        Orchestration = null;
+        OrchestrationValidationResult = null;
+        IsUriPathVerified = null;
+        IsLocalPathVerified = null;
+        IsAutoRetryActive = false;
+        ShouldAutoRetryStart = false;
+        CurrentAutoRetryCountdown = 0;
+        AddLog("Settings reset.");
+    }
 
-        /// <summary>
-        /// Whether or not all conditions have been satisfied to load a local file
-        /// </summary>
-        public bool CanLoadFile { get { return !IsFileLoading && IsLocalFile; } }
-
-        /// <summary>
-        /// The OrchestrationSummaryName
-        /// </summary>
-        public string OrchestrationSummaryName
-        {
-            get { return Orchestration?.Name ?? ""; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryOrder
-        /// </summary>
-        public string OrchestrationSummaryOrder
-        {
-            get { return Orchestration?.Order.Humanize().Transform(To.TitleCase) ?? ""; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryLifecycle
-        /// </summary>
-        public string OrchestrationSummaryLifecycle
-        {
-            get { return Orchestration?.Lifecycle.Humanize().Transform(To.TitleCase) ?? ""; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryIsValid
-        /// </summary>
-        public bool OrchestrationSummaryIsValid
-        {
-            get { return Orchestration?.IsValid ?? false; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryIsValidDisplay
-        /// </summary>
-        public string OrchestrationSummaryIsValidDisplay
-        {
-            get { return OrchestrationSummaryIsValid ? "Passed" : "Failed"; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryActionCount
-        /// </summary>
-        public int OrchestrationSummaryActionCount
-        {
-            get { return Orchestration?.Actions?.Count ?? 0; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryRuntime
-        /// </summary>
-        public string OrchestrationSummaryRuntime
-        {
-            get { return new TimeSpan(0, 0, Orchestration?.Actions?.Sum(x => x.Duration) ?? 0).Humanize(); }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryVersion
-        /// </summary>
-        public string OrchestrationSummaryVersion
-        {
-            get { return Orchestration?.Version ?? ""; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummaryPollingInerval
-        /// </summary>
-        public string OrchestrationSummaryPollingInerval
-        {
-            get { return new TimeSpan(0, Orchestration?.PollingIntervalMinutes ?? 0, 0).Humanize(); }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummarySource
-        /// </summary>
-        public OrchestrationSource OrchestrationSummarySource
-        {
-            get { return Orchestration?.OrchestrationSource ?? OrchestrationSource.File; }
-        }
-
-        /// <summary>
-        /// The OrchestrationSummarySourceDisplay
-        /// </summary>
-        public string OrchestrationSummarySourceDisplay
-        {
-            get { return Orchestration?.OrchestrationSource.Humanize() ?? OrchestrationSource.File.Humanize(); }
-        }
-
-        /// <summary>
-        /// Resets an Orchestration
-        /// </summary>
-        public void Reset()
-        {
-            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var p in properties)
-                if (p.CanRead && p.CanWrite)
-                    p.SetValue(this, null, null);
-        }
-
-        /// <summary>
-        /// The URL history
-        /// </summary>
-        public ObservableCollection<string> UrlHistory
-        {
-            get { return _urlHistory; }
-            set { _urlHistory = value; NotifyPropertyChanged(); NotifyPropertyChanged(nameof(UriPath)); }
-        }
-
-        /// <summary>
-        /// Enable or disable auto-retry
-        /// </summary>
-        public bool IsAutoRetryEnabled
-        {
-            get => _isAutoRetryEnabled;
-            set
-            {
-                if (!_isAutoRetryEnabled)
-                    ShouldAutoRetryStart = IsAutoRetryActive = _isAutoRetryEnabled;
-
-                _isAutoRetryEnabled = value;
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(AutoRetryCountdownDisplay));
-
-                SettingsChanged?.Invoke();
-            }
-        }
-
-        /// <summary>
-        /// Number of seconds before auto-retry
-        /// </summary>
-        public int AutoRetrySeconds
-        {
-            get => _autoRetrySeconds;
-            set
-            {
-                _autoRetrySeconds = value;
-                NotifyPropertyChanged();
-
-                SettingsChanged?.Invoke();
-
-                CurrentAutoRetryCountdown = _autoRetrySeconds;
-            }
-        }
-
-        /// <summary>
-        /// Display string for countdown
-        /// </summary>
-        [JsonIgnore]
-        public string AutoRetryCountdownDisplay
-        {
-            get => IsAutoRetryEnabled ? IsAutoRetryActive ? $"Retrying in {CurrentAutoRetryCountdown} seconds..." : $"Auto-retry stopped with {CurrentAutoRetryCountdown} seconds remainging..." : "Auto-retry disabled";
-        }
-
-        /// <summary>
-        /// Indicates if auto-retry should be started
-        /// </summary>
-        [JsonIgnore]
-        public bool ShouldAutoRetryStart
-        {
-            get => _shouldAutoRetryStart;
-            set
-            {
-                _shouldAutoRetryStart = value;
-                NotifyPropertyChanged();
-
-                if (IsAutoRetryEnabled)
-                    IsAutoRetryActive = _shouldAutoRetryStart;
-            }
-        }
-
-        /// <summary>
-        /// Indicates if auto-retry is currently active (false if disabled)
-        /// </summary>
-        /// <remarks>To start, set IsAutoRetryEnabled and ShouldAutoRetryStart to true</remarks>
-        [JsonIgnore]
-        public bool IsAutoRetryActive
-        {
-            get => _isAutoRetryActive;
-            private set
-            {
-                if (_isAutoRetryActive != value)
-                {
-                    _isAutoRetryActive = value;
-                    NotifyPropertyChanged();
-                    NotifyPropertyChanged(nameof(AutoRetryCountdownDisplay));
-                    AutoRetryActivationStateChanged?.Invoke(_isAutoRetryActive);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Current countdown value for auto-retry, resets to AutoRetryCountdown if set below 0
-        /// </summary>
-        [JsonIgnore]
-        public int CurrentAutoRetryCountdown
-        {
-            get => _currentAutoRetryCountdown;
-            set
-            {
-                if (value < 0)
-                    _currentAutoRetryCountdown = AutoRetrySeconds;
-                else
-                    _currentAutoRetryCountdown = value;
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(AutoRetryCountdownDisplay));
-            }
-        }
+    private static string FormatTimeSpan(TimeSpan ts)
+    {
+        if (ts.TotalHours >= 1)
+            return $"{(int)ts.TotalHours}h {ts.Minutes}m {ts.Seconds}s";
+        if (ts.TotalMinutes >= 1)
+            return $"{ts.Minutes}m {ts.Seconds}s";
+        return $"{ts.Seconds}s";
     }
 }

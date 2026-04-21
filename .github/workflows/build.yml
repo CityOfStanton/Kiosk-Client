@@ -1,0 +1,145 @@
+name: Build, Test & Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  SOLUTION_PATH: KioskClient.slnx
+  APP_PROJECT_PATH: src/KioskClient/KioskClient.csproj
+  TEST_PROJECT_PATH: tests/KioskClient.Tests/KioskClient.Tests.csproj
+  CONFIGURATION: Release
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:Platform=${{ matrix.platform }}
+
+    - name: Run tests
+      run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.platform }}
+        path: '**/*.trx'
+
+  security-analysis:
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: Run .NET security audit
+      run: dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: csharp
+        build-mode: manual
+
+    - name: Build for CodeQL analysis
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }}
+
+    - name: Perform CodeQL analysis
+      uses: github/codeql-action/analyze@v3
+
+  package:
+    runs-on: windows-latest
+    needs: [build-and-test, security-analysis]
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Decode signing certificate
+      if: env.SIGNING_CERTIFICATE_BASE64 != ''
+      env:
+        SIGNING_CERTIFICATE_BASE64: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
+      run: |
+        $certBytes = [Convert]::FromBase64String($env:SIGNING_CERTIFICATE_BASE64)
+        [IO.File]::WriteAllBytes("${{ github.workspace }}\SigningCert.pfx", $certBytes)
+
+    - name: Build MSIX package (signed)
+      if: env.SIGNING_CERTIFICATE_BASE64 != ''
+      env:
+        SIGNING_CERTIFICATE_BASE64: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
+        SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+      run: |
+        dotnet publish ${{ env.APP_PROJECT_PATH }} `
+          --configuration ${{ env.CONFIGURATION }} `
+          -p:Platform=${{ matrix.platform }} `
+          -p:AppxPackageSigningEnabled=true `
+          -p:PackageCertificateKeyFile="${{ github.workspace }}\SigningCert.pfx" `
+          -p:PackageCertificatePassword="${{ env.SIGNING_CERTIFICATE_PASSWORD }}" `
+          -p:GenerateAppxPackageOnBuild=true
+
+    - name: Build MSIX package (unsigned)
+      if: env.SIGNING_CERTIFICATE_BASE64 == ''
+      env:
+        SIGNING_CERTIFICATE_BASE64: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
+      run: |
+        dotnet publish ${{ env.APP_PROJECT_PATH }} `
+          --configuration ${{ env.CONFIGURATION }} `
+          -p:Platform=${{ matrix.platform }} `
+          -p:AppxPackageSigningEnabled=false `
+          -p:GenerateAppxPackageOnBuild=true
+
+    - name: Remove signing certificate
+      if: always()
+      run: |
+        if (Test-Path "${{ github.workspace }}\SigningCert.pfx") {
+          Remove-Item "${{ github.workspace }}\SigningCert.pfx" -Force
+        }
+
+    - name: Upload MSIX artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: KioskClient-MSIX-${{ matrix.platform }}
+        path: |
+          src/KioskClient/bin/${{ matrix.platform }}/${{ env.CONFIGURATION }}/**/*.msix
+          src/KioskClient/bin/${{ matrix.platform }}/${{ env.CONFIGURATION }}/**/*.msixbundle
+          src/KioskClient/AppPackages/**/*.msix
+          src/KioskClient/AppPackages/**/*.msixbundle

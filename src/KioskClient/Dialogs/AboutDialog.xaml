@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="KioskClient.Dialogs.AboutDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="About"
+    KeyUp="ContentDialog_KeyUp">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Logo -->
+        <StackPanel Grid.Row="0" Grid.Column="0"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Margin="10">
+            <TextBlock Text="KIOSK" FontSize="36" FontWeight="Bold"
+                       Foreground="#267B30" HorizontalAlignment="Center"/>
+            <TextBlock Text="CLIENT" FontSize="24" FontWeight="SemiBold"
+                       Foreground="#267B30" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Info -->
+        <StackPanel Grid.Row="0" Grid.Column="1"
+                    Margin="20,0,0,0" Spacing="8">
+            <TextBlock Text="Kiosk Client"
+                       Style="{ThemeResource HeaderTextBlockStyle}"/>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Version:"
+                           Style="{ThemeResource TitleTextBlockStyle}"/>
+                <TextBlock x:Name="VersionText"
+                           Style="{ThemeResource TitleTextBlockStyle}"/>
+            </StackPanel>
+            <TextBlock Text="Copyright (c) 2024. City of Stanton. All Rights Reserved."
+                       TextWrapping="Wrap" MaxWidth="275"
+                       Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <TextBlock Text="Disclaimer: This code and information is provided 'as is' without warranty of any kind, either expressed or implied, including but not limited to the implied warranties of merchantability and/or fitness for a particular purpose."
+                       TextWrapping="Wrap" MaxWidth="275"/>
+            <HyperlinkButton Content="Kiosk Client GitHub"
+                             NavigateUri="https://github.com/CityOfStanton/Kiosk-Client"/>
+            <HyperlinkButton Content="Kiosk Client on the Windows Store"
+                             NavigateUri="ms-windows-store://pdp/?productid=9NQZFB05ZMV9"/>
+            <HyperlinkButton Content="City of Stanton Technology"
+                             NavigateUri="https://www.stantonky.gov/technology"/>
+            <HyperlinkButton x:Name="LogsButton"
+                             Content="Open Logs Folder"
+                             Click="LogsButton_Click"/>
+        </StackPanel>
+
+        <Button Grid.Row="1" Grid.Column="1"
+                Content="Close"
+                Style="{StaticResource GreenButtonStyle}"
+                Width="200"
+                HorizontalAlignment="Right"
+                Margin="0,30,0,0"
+                Click="CloseButton_Click"/>
+    </Grid>
+</ContentDialog>

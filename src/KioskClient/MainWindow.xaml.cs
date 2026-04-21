@@ -1,0 +1,60 @@
+using KioskClient.Pages;
+using KioskClient.Services;
+using Microsoft.UI.Xaml;
+
+namespace KioskClient;
+
+/// <summary>
+/// Main application window. Hosts the root frame for page navigation.
+/// </summary>
+public sealed partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        this.InitializeComponent();
+
+        // Set minimum window size
+        var appWindow = this.AppWindow;
+        appWindow.Title = "Kiosk Client";
+
+        // Check if tutorial should be shown
+        var showTutorial = !App.Settings.GetSetting(SettingsKeys.DoNotShowTutorial, false);
+
+        if (showTutorial)
+        {
+            RootFrame.Navigate(typeof(HomePage), "showTutorial");
+        }
+        else
+        {
+            RootFrame.Navigate(typeof(HomePage));
+        }
+    }
+
+    /// <summary>
+    /// Navigates the root frame to the specified page.
+    /// </summary>
+    public void NavigateTo(Type pageType, object? parameter = null)
+    {
+        RootFrame.Navigate(pageType, parameter);
+    }
+
+    /// <summary>
+    /// Enters full screen mode for orchestration display.
+    /// </summary>
+    public void EnterFullScreen()
+    {
+        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+        presenter?.Maximize();
+        presenter?.SetBorderAndTitleBar(false, false);
+    }
+
+    /// <summary>
+    /// Exits full screen mode.
+    /// </summary>
+    public void ExitFullScreen()
+    {
+        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+        presenter?.SetBorderAndTitleBar(true, true);
+        presenter?.Restore();
+    }
+}
