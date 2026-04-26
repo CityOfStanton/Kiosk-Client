@@ -65,6 +65,20 @@ public sealed partial class SettingsPage : Page
         }
     }
 
+    private void Page_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.F5)
+        {
+            RunOrchestration();
+        }
+        else if (e.Key == Windows.System.VirtualKey.R &&
+                 Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+                     .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
+        {
+            RunOrchestration();
+        }
+    }
+
     private void RunOrchestration()
     {
         if (ViewModel.Orchestration is null || !ViewModel.CanStart) return;

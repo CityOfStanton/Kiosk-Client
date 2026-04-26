@@ -16,6 +16,7 @@ namespace KioskClient.Pages;
 public sealed partial class OrchestrationPage : Page
 {
     private OrchestrationRunner? _runner;
+    private Orchestration? _orchestration;
 
     public OrchestrationPage()
     {
@@ -27,6 +28,8 @@ public sealed partial class OrchestrationPage : Page
         base.OnNavigatedTo(e);
 
         if (e.Parameter is not Orchestration orchestration) return;
+
+        _orchestration = orchestration;
 
         // Enter full screen
         var mainWindow = App.MainWindow as MainWindow;
@@ -101,6 +104,23 @@ public sealed partial class OrchestrationPage : Page
         {
             CancelAndReturn();
         }
+        else if (e.Key == Windows.System.VirtualKey.F5)
+        {
+            RestartOrchestration();
+        }
+        else if (e.Key == Windows.System.VirtualKey.R &&
+                 Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+                     .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
+        {
+            RestartOrchestration();
+        }
+    }
+
+    private void RestartOrchestration()
+    {
+        if (_runner is null || _orchestration is null) return;
+        _runner.Stop();
+        _ = _runner.StartAsync(_orchestration);
     }
 
     /// <summary>

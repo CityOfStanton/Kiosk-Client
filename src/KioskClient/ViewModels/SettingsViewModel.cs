@@ -40,6 +40,7 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsOrchestrationLoaded))]
     [NotifyPropertyChangedFor(nameof(IsOrchestrationValid))]
     [NotifyPropertyChangedFor(nameof(CanStart))]
+    [NotifyPropertyChangedFor(nameof(RunTooltip))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryName))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryVersion))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummarySource))]
@@ -52,6 +53,7 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanStart))]
+    [NotifyPropertyChangedFor(nameof(RunTooltip))]
     private ValidationResult? _orchestrationValidationResult;
 
     [ObservableProperty]
@@ -84,6 +86,19 @@ public partial class SettingsViewModel : ObservableObject
     public bool IsOrchestrationLoaded => Orchestration is not null;
     public bool IsOrchestrationValid => OrchestrationValidationResult?.IsFullyValid == true;
     public bool CanStart => IsOrchestrationLoaded && IsOrchestrationValid;
+
+    public string RunTooltip
+    {
+        get
+        {
+            const string baseTooltip = "Start orchestration (F5 or Ctrl+R)";
+            if (!IsOrchestrationLoaded)
+                return $"{baseTooltip} — No orchestration loaded";
+            if (!IsOrchestrationValid)
+                return $"{baseTooltip} — Orchestration has validation errors";
+            return baseTooltip;
+        }
+    }
     public bool CanLoadUri => !IsLocalFile && !string.IsNullOrWhiteSpace(UriPath) && !IsUriLoading;
     public bool CanLoadFile => IsLocalFile && !string.IsNullOrWhiteSpace(LocalPath) && !IsFileLoading;
 
@@ -221,6 +236,18 @@ public partial class SettingsViewModel : ObservableObject
         OrchestrationValidationResult = validationResult;
 
         AddLog($"Validation: {validationResult.PassedCount} passed, {validationResult.FailedCount} failed");
+        if (!validationResult.IsFullyValid)
+            foreach (var failure in GetFailures(validationResult))
+                AddLog($"  ✗ {failure.Identifier}: {failure.Message}");
+    }
+
+    private static IEnumerable<ValidationResult> GetFailures(ValidationResult result)
+    {
+        if (result.IsValid == false)
+            yield return result;
+        foreach (var child in result.Children)
+            foreach (var failure in GetFailures(child))
+                yield return failure;
     }
 
     private void AddToUrlHistory(string url)

@@ -39,7 +39,7 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Enters full screen mode for orchestration display, hiding the taskbar.
+    /// Enters full screen mode for orchestration display, covering the Windows taskbar.
     /// </summary>
     public void EnterFullScreen()
     {
@@ -47,10 +47,10 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Exits full screen mode and restores the overlapped (normal) window.
+    /// Exits full screen mode.
     /// </summary>
     public void ExitFullScreen()
     {
-        this.AppWindow.SetPresenter(Microsoft.UI.Windowing.AppWindowPresenterKind.Overlapped);
+        this.AppWindow.SetPresenter(Microsoft.UI.Windowing.AppWindowPresenterKind.Default);
     }
 }

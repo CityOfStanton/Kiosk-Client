@@ -87,14 +87,14 @@ public class Orchestration
         };
 
         // Validate polling interval
-        if (PollingIntervalMinutes < 15)
+        if (PollingIntervalMinutes < 1)
         {
             root.Children.Add(new ValidationResult
             {
                 Identifier = "PollingIntervalMinutes",
                 IsValid = false,
-                Message = $"Polling interval is {PollingIntervalMinutes} minutes, minimum is 15.",
-                Guidance = "Set PollingIntervalMinutes to 15 or greater."
+                Message = $"Polling interval is {PollingIntervalMinutes} minutes, minimum is 1.",
+                Guidance = "Set PollingIntervalMinutes to 1 or greater."
             });
             root.IsValid = false;
         }
