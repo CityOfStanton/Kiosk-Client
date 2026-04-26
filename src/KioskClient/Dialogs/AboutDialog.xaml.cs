@@ -12,8 +12,20 @@ public sealed partial class AboutDialog : ContentDialog
     {
         this.InitializeComponent();
 
-        var version = Package.Current.Id.Version;
-        VersionText.Text = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        string versionString;
+        try
+        {
+            var version = Package.Current.Id.Version;
+            versionString = $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        }
+        catch (InvalidOperationException)
+        {
+            // Fallback for unpackaged (e.g., debug) execution
+            var asm = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            versionString = asm?.ToString() ?? "Unknown";
+        }
+
+        VersionText.Text = versionString;
     }
 
     private void ContentDialog_KeyUp(object sender, KeyRoutedEventArgs e)

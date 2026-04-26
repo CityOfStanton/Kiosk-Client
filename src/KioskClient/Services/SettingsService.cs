@@ -74,17 +74,17 @@ public class SettingsService : ISettingsService
         return StorageFolder.GetFolderFromPathAsync(UnpackagedCachePath).GetAwaiter().GetResult();
     }
 
-    private Dictionary<string, object?> _unpackagedCache = LoadUnpackagedSettings();
+    private readonly Dictionary<string, object?> _unpackagedCache = LoadUnpackagedSettings();
 
     private static Dictionary<string, object?> LoadUnpackagedSettings()
     {
         try
         {
-            if (!File.Exists(UnpackagedSettingsPath)) return new();
+            if (!File.Exists(UnpackagedSettingsPath)) return [];
             var json = File.ReadAllText(UnpackagedSettingsPath);
-            return JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonOptions) ?? new();
+            return JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonOptions) ?? [];
         }
-        catch { return new(); }
+        catch { return []; }
     }
 
     private void SaveUnpackagedSettings()
