@@ -15,6 +15,9 @@ namespace KioskClient.Pages;
 /// </summary>
 public sealed partial class SettingsPage : Page
 {
+    private DispatcherTimer? _startupRetryTimer;
+    private int _startupRetryCountdown;
+
     public SettingsViewModel ViewModel => App.SettingsVM;
 
     public SettingsPage()
@@ -26,11 +29,18 @@ public sealed partial class SettingsPage : Page
     {
         base.OnNavigatedTo(e);
         UpdateValidationDisplay();
+
+        if (ViewModel.ShouldAutoRetryStart)
+        {
+            ViewModel.ShouldAutoRetryStart = false;
+            StartStartupRetry();
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        StopStartupRetry();
         ViewModel.SaveState();
     }
 
@@ -120,8 +130,10 @@ public sealed partial class SettingsPage : Page
 
     private async void BrowseFile_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new FileOpenPicker();
-        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        var picker = new FileOpenPicker
+        {
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+        };
         picker.FileTypeFilter.Add(".json");
         picker.FileTypeFilter.Add(".xml");
 
@@ -170,6 +182,65 @@ public sealed partial class SettingsPage : Page
         }
 
         return node;
+    }
+
+    private void StartStartupRetry()
+    {
+        _startupRetryCountdown = ViewModel.AutoRetrySeconds;
+        UpdateRetryBanner();
+
+        StartupRetryBanner.IsOpen = true;
+        ViewModel.IsAutoRetryActive = true;
+
+        _startupRetryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _startupRetryTimer.Tick += StartupRetryTimer_Tick;
+        _startupRetryTimer.Start();
+    }
+
+    private async void StartupRetryTimer_Tick(object? sender, object e)
+    {
+        _startupRetryCountdown--;
+        UpdateRetryBanner();
+
+        if (_startupRetryCountdown > 0) return;
+
+        StopStartupRetry();
+        ViewModel.AddLog("Auto-retry: attempting to reload orchestration...");
+
+        var result = await ViewModel.TryAutoStartAsync();
+        UpdateValidationDisplay();
+
+        if (result == StartupLoadResult.LoadedAndValid)
+        {
+            ViewModel.AddLog("Auto-retry succeeded. Starting orchestration.");
+            Frame.Navigate(typeof(OrchestrationPage), ViewModel.Orchestration);
+        }
+        else
+        {
+            ViewModel.AddLog("Auto-retry failed. Restarting countdown.");
+            StartStartupRetry();
+        }
+    }
+
+    private void StopStartupRetry()
+    {
+        _startupRetryTimer?.Stop();
+        _startupRetryTimer = null;
+        StartupRetryBanner.IsOpen = false;
+        ViewModel.IsAutoRetryActive = false;
+    }
+
+    private void UpdateRetryBanner()
+    {
+        ViewModel.CurrentAutoRetryCountdown = _startupRetryCountdown;
+        StartupRetryBanner.Message =
+            $"Failed to load the previous orchestration. Retrying in {_startupRetryCountdown}s...";
+    }
+
+    private void StopStartupRetry_Click(object sender, RoutedEventArgs e)
+    {
+        StopStartupRetry();
+        ViewModel.AddLog("Startup auto-retry stopped.");
     }
 
     private void CopyLog_Click(object sender, RoutedEventArgs e)

@@ -8,6 +8,16 @@ using KioskClient.Services;
 namespace KioskClient.ViewModels;
 
 /// <summary>
+/// Outcome of attempting to auto-start the last orchestration on application startup.
+/// </summary>
+public enum StartupLoadResult
+{
+    NoPreviousOrchestration,
+    LoadedAndValid,
+    LoadFailed,
+}
+
+/// <summary>
 /// ViewModel for the Settings page. Manages orchestration loading, validation,
 /// URL history, auto-retry, and all settings-related state.
 /// </summary>
@@ -145,6 +155,7 @@ public partial class SettingsViewModel : ObservableObject
         IsLocalFile = savedSource == "File";
 
         UriPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri) ?? string.Empty;
+        LocalPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath) ?? string.Empty;
     }
 
     /// <summary>
@@ -156,6 +167,7 @@ public partial class SettingsViewModel : ObservableObject
         _settings.SaveSetting(SettingsKeys.RetryTimeoutSeconds, AutoRetrySeconds);
         _settings.SaveSetting(SettingsKeys.OrchestrationSource, IsLocalFile ? "File" : "URL");
         _settings.SaveSetting(SettingsKeys.OrchestrationUri, UriPath);
+        _settings.SaveSetting(SettingsKeys.OrchestrationFilePath, LocalPath);
         _settings.SaveSetting(SettingsKeys.UrlHistory, UrlHistory.ToList());
     }
 
@@ -306,5 +318,42 @@ public partial class SettingsViewModel : ObservableObject
         if (ts.TotalMinutes >= 1)
             return $"{ts.Minutes}m {ts.Seconds}s";
         return $"{ts.Seconds}s";
+    }
+
+    /// <summary>
+    /// Attempts to load the last saved orchestration. Used on application startup to
+    /// auto-start the previous session's orchestration.
+    /// </summary>
+    public async Task<StartupLoadResult> TryAutoStartAsync()
+    {
+        var source = _settings.GetSetting<string>(SettingsKeys.OrchestrationSource);
+        if (string.IsNullOrEmpty(source))
+            return StartupLoadResult.NoPreviousOrchestration;
+
+        try
+        {
+            if (source == "File")
+            {
+                var filePath = _settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath);
+                if (string.IsNullOrEmpty(filePath))
+                    return StartupLoadResult.NoPreviousOrchestration;
+
+                await LoadFromFileCommand.ExecuteAsync(filePath);
+            }
+            else
+            {
+                var uri = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri);
+                if (string.IsNullOrEmpty(uri))
+                    return StartupLoadResult.NoPreviousOrchestration;
+
+                await LoadFromUriCommand.ExecuteAsync(null);
+            }
+
+            return CanStart ? StartupLoadResult.LoadedAndValid : StartupLoadResult.LoadFailed;
+        }
+        catch
+        {
+            return StartupLoadResult.LoadFailed;
+        }
     }
 }

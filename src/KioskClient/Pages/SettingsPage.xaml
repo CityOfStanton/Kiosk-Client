@@ -49,7 +49,22 @@
 
         <!-- Main Content Area -->
         <ScrollViewer>
-            <Pivot x:Name="MainPivot" Margin="12">
+            <StackPanel>
+
+                <!-- Startup Retry Banner -->
+                <InfoBar x:Name="StartupRetryBanner"
+                         IsOpen="False"
+                         Severity="Warning"
+                         Title="Auto-Retry Active"
+                         IsClosable="False">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="StopStartupRetryButton"
+                                Content="Stop"
+                                Click="StopStartupRetry_Click" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <Pivot x:Name="MainPivot" Margin="12">
 
                 <!-- Orchestration Tab -->
                 <PivotItem Header="Orchestration">
@@ -287,6 +302,9 @@
                 </PivotItem>
 
             </Pivot>
+            </StackPanel>
         </ScrollViewer>
     </NavigationView>
 </Page>
+
+

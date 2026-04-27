@@ -13,6 +13,7 @@ public static class SettingsKeys
     public const string MaxUrlHistory = "MaxUrlHistory";
     public const string UrlHistory = "UrlHistory";
     public const string SavedOrchestration = "SavedOrchestration";
+    public const string OrchestrationFilePath = "OrchestrationFilePath";
 
     /// <summary>Default retry timeout in seconds.</summary>
     public const int DefaultRetryTimeoutSeconds = 30;

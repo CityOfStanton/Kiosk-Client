@@ -1,5 +1,6 @@
 using KioskClient.Dialogs;
 using KioskClient.Services;
+using KioskClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -40,10 +41,14 @@ public sealed partial class HomePage : Page
         {
             StartAutoRetryCountdown();
         }
+        else if (e.Parameter is string startupParam && startupParam == "startup")
+        {
+            await StartupLoadAsync();
+        }
         else
         {
             LoadingRing.IsActive = false;
-            StatusText.Text = "Press Settings to configure an orchestration.";
+            NavigateToSettings();
         }
     }
 
@@ -58,6 +63,9 @@ public sealed partial class HomePage : Page
         var dialog = new TutorialDialog { XamlRoot = this.XamlRoot };
         var result = await dialog.ShowAsync();
 
+        if (dialog.DoNotShowThisAgain)
+            App.Settings.SaveSetting(SettingsKeys.DoNotShowTutorial, true);
+
         if (result == ContentDialogResult.Primary)
         {
             // User wants to run the demo - navigate to settings
@@ -68,6 +76,29 @@ public sealed partial class HomePage : Page
             StatusText.Text = "Press Settings to configure an orchestration.";
         }
     }
+
+    private async Task StartupLoadAsync()
+    {
+        LoadingRing.IsActive = true;
+        StatusText.Text = "Loading last orchestration...";
+
+        var result = await App.SettingsVM.TryAutoStartAsync();
+
+        switch (result)
+        {
+            case StartupLoadResult.LoadedAndValid:
+                Frame.Navigate(typeof(OrchestrationPage), App.SettingsVM.Orchestration);
+                break;
+            case StartupLoadResult.LoadFailed:
+                App.SettingsVM.ShouldAutoRetryStart = true;
+                Frame.Navigate(typeof(SettingsPage));
+                break;
+            default:
+                Frame.Navigate(typeof(SettingsPage));
+                break;
+        }
+    }
+
 
     private void StartAutoRetryCountdown()
     {

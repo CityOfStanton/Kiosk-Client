@@ -26,7 +26,7 @@ public sealed partial class MainWindow : Window
         }
         else
         {
-            RootFrame.Navigate(typeof(HomePage));
+            RootFrame.Navigate(typeof(HomePage), "startup");
         }
     }
 
