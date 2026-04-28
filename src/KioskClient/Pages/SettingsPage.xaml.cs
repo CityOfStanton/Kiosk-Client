@@ -3,6 +3,7 @@ using KioskClient.Dialogs;
 using KioskClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Pickers;
@@ -28,6 +29,7 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         UpdateValidationDisplay();
 
         if (ViewModel.ShouldAutoRetryStart)
@@ -40,8 +42,25 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         StopStartupRetry();
         ViewModel.SaveState();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModel.OrchestrationValidationResult))
+        {
+            if (ViewModel.OrchestrationValidationResult is null)
+                ClearValidationDisplay();
+            else
+                UpdateValidationDisplay();
+        }
+        else if (e.PropertyName == nameof(ViewModel.LoadError))
+        {
+            LoadErrorBar.Message = ViewModel.LoadError ?? string.Empty;
+            LoadErrorBar.IsOpen = ViewModel.LoadError is not null;
+        }
     }
 
     private async void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -144,9 +163,46 @@ public sealed partial class SettingsPage : Page
         var file = await picker.PickSingleFileAsync();
         if (file is not null)
         {
+            ClearValidationDisplay();
             await ViewModel.LoadFromFileCommand.ExecuteAsync(file.Path);
             UpdateValidationDisplay();
+            if (!ViewModel.CanStart)
+                NavigateToValidationTab();
         }
+    }
+
+    private async void UrlAutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        ViewModel.UriPath = args.QueryText;
+        if (ViewModel.LoadFromUriCommand.CanExecute(null))
+        {
+            ClearValidationDisplay();
+            await ViewModel.LoadFromUriCommand.ExecuteAsync(null);
+            UpdateValidationDisplay();
+            if (!ViewModel.CanStart)
+                NavigateToValidationTab();
+        }
+    }
+
+    private void UrlAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        ViewModel.UriPath = args.SelectedItem as string ?? string.Empty;
+    }
+
+    private void NavigateToValidationTab()
+    {
+        MainPivot.SelectedIndex = 1;
+    }
+
+    private void ClearValidationDisplay()
+    {
+        PassedCount.Text = string.Empty;
+        FailedCount.Text = string.Empty;
+        PassedCount.ClearValue(TextBlock.ForegroundProperty);
+        FailedCount.ClearValue(TextBlock.ForegroundProperty);
+        PassedIcon.ClearValue(IconElement.ForegroundProperty);
+        FailedIcon.ClearValue(IconElement.ForegroundProperty);
+        ValidationTree.RootNodes.Clear();
     }
 
     private void UpdateValidationDisplay()
@@ -154,8 +210,37 @@ public sealed partial class SettingsPage : Page
         var result = ViewModel.OrchestrationValidationResult;
         if (result is not null)
         {
-            PassedCount.Text = result.PassedCount.ToString();
-            FailedCount.Text = result.FailedCount.ToString();
+            var passed = result.PassedCount;
+            var failed = result.FailedCount;
+
+            PassedCount.Text = $"Passed: {passed}";
+            FailedCount.Text = $"Failed: {failed}";
+
+            var greenBrush = (Brush)Application.Current.Resources["KioskGreenBrush"];
+            var redBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
+
+            if (passed > 0)
+            {
+                PassedCount.Foreground = greenBrush;
+                PassedIcon.Foreground = greenBrush;
+            }
+            else
+            {
+                PassedCount.ClearValue(TextBlock.ForegroundProperty);
+                PassedIcon.ClearValue(IconElement.ForegroundProperty);
+            }
+
+            if (failed > 0)
+            {
+                FailedCount.Foreground = redBrush;
+                FailedIcon.Foreground = redBrush;
+            }
+            else
+            {
+                FailedCount.ClearValue(TextBlock.ForegroundProperty);
+                FailedIcon.ClearValue(IconElement.ForegroundProperty);
+            }
+
             BuildValidationTree(result);
         }
     }
@@ -167,19 +252,33 @@ public sealed partial class SettingsPage : Page
         ValidationTree.RootNodes.Add(rootNode);
     }
 
+    private sealed class ValidationNodeItem
+    {
+        public string Glyph { get; init; } = string.Empty;
+        public Brush IconForeground { get; init; } = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        public string Label { get; init; } = string.Empty;
+    }
+
     private static TreeViewNode CreateTreeNode(ValidationResult result)
     {
-        var icon = result.IsValid == true ? "\u2713" : "\u2717";
+        var isValid = result.IsValid == true;
+
+        var greenBrush = (Brush)Application.Current.Resources["KioskGreenBrush"];
+        var redBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
+
         var node = new TreeViewNode
         {
-            Content = $"{icon} {result.Identifier}: {result.Message}",
-            IsExpanded = true
+            Content = new ValidationNodeItem
+            {
+                Glyph = isValid ? "\uE73E" : "\uE711",
+                IconForeground = isValid ? greenBrush : redBrush,
+                Label = $"{result.Identifier}: {result.Message}",
+            },
+            IsExpanded = true,
         };
 
         foreach (var child in result.Children)
-        {
             node.Children.Add(CreateTreeNode(child));
-        }
 
         return node;
     }

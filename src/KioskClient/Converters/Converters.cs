@@ -43,6 +43,16 @@ public partial class NullToVisibilityConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Converts null to false, non-null to true.</summary>
+public partial class NullToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        value is not null;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>Converts a nullable boolean to a validation symbol (checkmark or X).</summary>
 public partial class BooleanToSymbolConverter : IValueConverter
 {

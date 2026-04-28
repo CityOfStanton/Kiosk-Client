@@ -146,8 +146,9 @@ public sealed partial class WebsitePage : Page
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        if (this.Frame.Parent is Frame parentFrame &&
-            parentFrame.Parent is Pages.OrchestrationPage orchestrationPage)
+        // Visual tree: OrchestrationPage > Grid > ActionFrame > WebsitePage
+        if (this.Frame.Parent is FrameworkElement parent &&
+            parent.Parent is Pages.OrchestrationPage orchestrationPage)
         {
             orchestrationPage.CancelAndReturn();
         }

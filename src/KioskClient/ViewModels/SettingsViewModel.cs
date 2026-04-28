@@ -67,6 +67,9 @@ public partial class SettingsViewModel : ObservableObject
     private ValidationResult? _orchestrationValidationResult;
 
     [ObservableProperty]
+    private string? _loadError;
+
+    [ObservableProperty]
     private bool _isUriLoading;
 
     [ObservableProperty]
@@ -178,6 +181,9 @@ public partial class SettingsViewModel : ObservableObject
 
         IsUriLoading = true;
         IsUriPathVerified = null;
+        Orchestration = null;
+        OrchestrationValidationResult = null;
+        LoadError = null;
         AddLog($"Loading orchestration from: {UriPath}");
 
         try
@@ -205,6 +211,7 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             IsUriPathVerified = false;
+            LoadError = ex.Message;
             AddLog($"Error loading orchestration: {ex.Message}");
         }
         finally
@@ -220,6 +227,9 @@ public partial class SettingsViewModel : ObservableObject
 
         IsFileLoading = true;
         IsLocalPathVerified = null;
+        Orchestration = null;
+        OrchestrationValidationResult = null;
+        LoadError = null;
         LocalPath = filePath;
         AddLog($"Loading orchestration from file: {filePath}");
 
@@ -233,6 +243,7 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             IsLocalPathVerified = false;
+            LoadError = ex.Message;
             AddLog($"Error loading file: {ex.Message}");
         }
         finally
@@ -303,6 +314,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         Orchestration = null;
         OrchestrationValidationResult = null;
+        LoadError = null;
         IsUriPathVerified = null;
         IsLocalPathVerified = null;
         IsAutoRetryActive = false;

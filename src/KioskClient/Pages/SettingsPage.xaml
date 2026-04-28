@@ -14,6 +14,7 @@
         <converters:BooleanToInvertedVisibilityConverter x:Key="BoolToInvVis" />
         <converters:InvertBooleanConverter x:Key="InvertBool" />
         <converters:NullToVisibilityConverter x:Key="NullToVis" />
+        <converters:NullToBoolConverter x:Key="NullToBool" />
         <converters:BooleanToSymbolConverter x:Key="BoolToSymbol" />
         <converters:BooleanToColorConverter x:Key="BoolToColor" />
         <converters:AutoRetryActiveToSymbolConverter x:Key="RetrySymbol" />
@@ -88,13 +89,14 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <ComboBox x:Name="UrlComboBox"
-                                          Grid.Column="0"
-                                          IsEditable="True"
-                                          Text="{x:Bind ViewModel.UriPath, Mode=TwoWay}"
-                                          ItemsSource="{x:Bind ViewModel.UrlHistory}"
-                                          HorizontalAlignment="Stretch"
-                                          PlaceholderText="Enter URL to orchestration file..." />
+                                <AutoSuggestBox x:Name="UrlAutoSuggestBox"
+                                                Grid.Column="0"
+                                                Text="{x:Bind ViewModel.UriPath, Mode=TwoWay}"
+                                                ItemsSource="{x:Bind ViewModel.UrlHistory, Mode=OneWay}"
+                                                PlaceholderText="Enter URL to orchestration file..."
+                                                QuerySubmitted="UrlAutoSuggestBox_QuerySubmitted"
+                                                SuggestionChosen="UrlAutoSuggestBox_SuggestionChosen"
+                                                HorizontalAlignment="Stretch" />
                                 <Button Grid.Column="1"
                                         Content="Load"
                                         Command="{x:Bind ViewModel.LoadFromUriCommand}"
@@ -127,6 +129,13 @@
                             <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsFileLoading, Mode=OneWay}"
                                          Visibility="{x:Bind ViewModel.IsFileLoading, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
                         </StackPanel>
+
+                        <!-- Load Error -->
+                        <InfoBar x:Name="LoadErrorBar"
+                                 IsOpen="False"
+                                 Severity="Error"
+                                 Title="Failed to Load Orchestration"
+                                 IsClosable="False" />
 
                         <!-- Orchestration Summary -->
                         <Border Visibility="{x:Bind ViewModel.Orchestration, Mode=OneWay, Converter={StaticResource NullToVis}}"
@@ -202,20 +211,33 @@
                 <!-- Validation Tab -->
                 <PivotItem Header="Validation">
                     <StackPanel Spacing="12" Padding="0,12,0,0">
-                        <StackPanel Orientation="Horizontal" Spacing="16"
+                        <StackPanel Orientation="Horizontal" Spacing="24"
                                     Visibility="{x:Bind ViewModel.OrchestrationValidationResult, Mode=OneWay, Converter={StaticResource NullToVis}}">
-                            <TextBlock FontWeight="SemiBold">
-                                <Run Text="Passed: " />
-                                <Run x:Name="PassedCount" Foreground="{StaticResource KioskGreenBrush}" />
-                            </TextBlock>
-                            <TextBlock FontWeight="SemiBold">
-                                <Run Text="Failed: " />
-                                <Run x:Name="FailedCount" Foreground="Red" />
-                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon x:Name="PassedIcon" Glyph="&#xE73E;" FontSize="22" />
+                                <TextBlock x:Name="PassedCount" FontWeight="SemiBold" FontSize="22" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon x:Name="FailedIcon" Glyph="&#xE711;" FontSize="22" />
+                                <TextBlock x:Name="FailedCount" FontWeight="SemiBold" FontSize="22" VerticalAlignment="Center" />
+                            </StackPanel>
                         </StackPanel>
 
                         <TreeView x:Name="ValidationTree"
-                                  Visibility="{x:Bind ViewModel.OrchestrationValidationResult, Mode=OneWay, Converter={StaticResource NullToVis}}" />
+                                  Visibility="{x:Bind ViewModel.OrchestrationValidationResult, Mode=OneWay, Converter={StaticResource NullToVis}}">
+                            <TreeView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="{Binding Content.Glyph}"
+                                                  Foreground="{Binding Content.IconForeground}"
+                                                  FontSize="14"
+                                                  VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Content.Label}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
 
                         <TextBlock Text="Load an orchestration to see validation results."
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"

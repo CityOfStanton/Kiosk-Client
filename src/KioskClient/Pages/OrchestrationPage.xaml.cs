@@ -1,6 +1,7 @@
 using KioskClient.Core.Models;
 using KioskClient.Core.Services;
 using KioskClient.Pages.Actions;
+using KioskClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -17,6 +18,7 @@ public sealed partial class OrchestrationPage : Page
 {
     private OrchestrationRunner? _runner;
     private Orchestration? _orchestration;
+    private DispatcherTimer? _pollingTimer;
 
     public OrchestrationPage()
     {
@@ -45,6 +47,10 @@ public sealed partial class OrchestrationPage : Page
 
         // Start the orchestration
         _ = _runner.StartAsync(orchestration);
+
+        // Start polling timer for URL-sourced orchestrations
+        if (orchestration.Source == OrchestrationSource.URL && orchestration.PollingIntervalMinutes > 0)
+            StartPollingTimer(orchestration.PollingIntervalMinutes);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -123,6 +129,38 @@ public sealed partial class OrchestrationPage : Page
         _ = _runner.StartAsync(_orchestration);
     }
 
+    private void StartPollingTimer(int intervalMinutes)
+    {
+        _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(intervalMinutes) };
+        _pollingTimer.Tick += PollingTimer_Tick;
+        _pollingTimer.Start();
+        App.SettingsVM.AddLog($"Polling: will check for orchestration updates every {intervalMinutes} minute(s).");
+    }
+
+    private async void PollingTimer_Tick(object? sender, object e)
+    {
+        _pollingTimer?.Stop();
+        App.SettingsVM.AddLog("Polling: checking for orchestration updates...");
+
+        _runner?.Stop();
+
+        var result = await App.SettingsVM.TryAutoStartAsync();
+
+        if (result == StartupLoadResult.LoadedAndValid)
+        {
+            App.SettingsVM.AddLog("Polling: orchestration updated successfully. Resuming.");
+            _orchestration = App.SettingsVM.Orchestration;
+            _ = _runner?.StartAsync(_orchestration!);
+            _pollingTimer?.Start();
+        }
+        else
+        {
+            App.SettingsVM.AddLog("Polling: failed to reload orchestration. Returning to settings to retry.");
+            App.SettingsVM.ShouldAutoRetryStart = true;
+            Frame.Navigate(typeof(SettingsPage));
+        }
+    }
+
     /// <summary>
     /// Called from action pages when user clicks the settings/exit button.
     /// </summary>
@@ -149,6 +187,9 @@ public sealed partial class OrchestrationPage : Page
 
     private void CleanupRunner()
     {
+        _pollingTimer?.Stop();
+        _pollingTimer = null;
+
         if (_runner is not null)
         {
             _runner.NextAction -= Runner_NextAction;
