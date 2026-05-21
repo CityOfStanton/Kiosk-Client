@@ -20,10 +20,30 @@ public static class OrchestrationSerializer
 
     /// <summary>
     /// Deserializes an orchestration from a JSON string.
+    /// Also detects the deprecated <c>pollingIntervalMinutes</c> field and migrates its
+    /// value into <see cref="Orchestration.PollingInterval"/>, flagging
+    /// <see cref="Orchestration.UsedDeprecatedPollingIntervalMinutes"/> when found.
     /// </summary>
     public static Orchestration? DeserializeJson(string json)
     {
-        return JsonSerializer.Deserialize<Orchestration>(json, JsonOptions);
+        var orchestration = JsonSerializer.Deserialize<Orchestration>(json, JsonOptions);
+        if (orchestration is null) return null;
+
+        // Detect the deprecated pollingIntervalMinutes field (case-insensitive)
+        using var doc = JsonDocument.Parse(json);
+        foreach (var prop in doc.RootElement.EnumerateObject())
+        {
+            if (prop.Name.Equals("pollingIntervalMinutes", StringComparison.OrdinalIgnoreCase) &&
+                prop.Value.TryGetInt32(out var legacyMinutes))
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                orchestration.PollingIntervalMinutes = legacyMinutes;
+#pragma warning restore CS0618
+                break;
+            }
+        }
+
+        return orchestration;
     }
 
     /// <summary>

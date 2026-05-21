@@ -59,6 +59,8 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryActionCount))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryRuntime))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryPollingInterval))]
+    [NotifyPropertyChangedFor(nameof(OrchestrationUsesDeprecatedPollingInterval))]
+    [NotifyPropertyChangedFor(nameof(CanSaveWithUpdatedFormat))]
     private Orchestration? _orchestration;
 
     [ObservableProperty]
@@ -126,8 +128,10 @@ public partial class SettingsViewModel : ObservableObject
         ? FormatTimeSpan(Orchestration.TotalRuntime)
         : "N/A";
     public string OrchestrationSummaryPollingInterval => Orchestration is not null
-        ? $"{Orchestration.PollingIntervalMinutes} minutes"
+        ? $"{Orchestration.PollingInterval} seconds"
         : "N/A";
+    public bool OrchestrationUsesDeprecatedPollingInterval => Orchestration?.UsedDeprecatedPollingIntervalMinutes == true;
+    public bool CanSaveWithUpdatedFormat => OrchestrationUsesDeprecatedPollingInterval && Orchestration?.Source == OrchestrationSource.File;
     public string AutoRetryCountdownDisplay => $"{CurrentAutoRetryCountdown}s";
 
     public SettingsViewModel(ISettingsService settings, IOrchestrationLoader loader, IHttpService httpService)
@@ -304,6 +308,18 @@ public partial class SettingsViewModel : ObservableObject
     {
         var entry = $"[{DateTime.Now:HH:mm:ss}] {message}";
         LogEntries.Insert(0, entry);
+    }
+
+    /// <summary>
+    /// Resets the deprecated-field flag after the orchestration has been saved with the
+    /// updated format, and re-evaluates the related computed properties.
+    /// </summary>
+    public void NotifyOrchestrationSaved()
+    {
+        if (Orchestration is not null)
+            Orchestration.UsedDeprecatedPollingIntervalMinutes = false;
+        OnPropertyChanged(nameof(OrchestrationUsesDeprecatedPollingInterval));
+        OnPropertyChanged(nameof(CanSaveWithUpdatedFormat));
     }
 
     /// <summary>

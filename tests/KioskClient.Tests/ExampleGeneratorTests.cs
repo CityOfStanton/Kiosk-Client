@@ -14,7 +14,7 @@ public class ExampleGeneratorTests
 
         Assert.NotNull(orchestration);
         Assert.Contains("Test", orchestration.Name);
-        Assert.Equal(15, orchestration.PollingIntervalMinutes);
+        Assert.Equal(900, orchestration.PollingInterval);
         Assert.Equal(LifecycleBehavior.ContinuousLoop, orchestration.Lifecycle);
         Assert.Equal(Ordering.Sequential, orchestration.Order);
         Assert.Equal(2, orchestration.Actions.Count);

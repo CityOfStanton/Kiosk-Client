@@ -11,7 +11,7 @@ public class OrchestrationValidationTests
         var orchestration = new Orchestration
         {
             Name = "Test",
-            PollingIntervalMinutes = 15,
+            PollingInterval = 900,
             Actions =
             [
                 new ImageAction { Name = "Image", Duration = 5, Path = "https://example.com/img.png" }
@@ -29,7 +29,7 @@ public class OrchestrationValidationTests
         var orchestration = new Orchestration
         {
             Name = "Test",
-            PollingIntervalMinutes = 5,
+            PollingInterval = 30,
             Actions =
             [
                 new ImageAction { Name = "Image", Duration = 5, Path = "https://example.com/img.png" }
@@ -47,7 +47,7 @@ public class OrchestrationValidationTests
         var orchestration = new Orchestration
         {
             Name = "Empty",
-            PollingIntervalMinutes = 15,
+            PollingInterval = 900,
             Actions = []
         };
 

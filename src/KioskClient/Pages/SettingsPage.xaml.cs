@@ -1,4 +1,5 @@
 using KioskClient.Core.Models;
+using KioskClient.Core.Serialization;
 using KioskClient.Dialogs;
 using KioskClient.ViewModels;
 using Microsoft.UI.Xaml;
@@ -340,6 +341,69 @@ public sealed partial class SettingsPage : Page
     {
         StopStartupRetry();
         ViewModel.AddLog("Startup auto-retry stopped.");
+    }
+
+    private async void SaveWithNewFormat_Click(object sender, RoutedEventArgs e)
+    {
+        var orchestration = ViewModel.Orchestration;
+        if (orchestration is null || orchestration.Source != OrchestrationSource.File ||
+            string.IsNullOrEmpty(orchestration.SourcePath))
+            return;
+
+        try
+        {
+            var ext = Path.GetExtension(orchestration.SourcePath).ToLowerInvariant();
+            var content = ext == ".xml"
+                ? OrchestrationSerializer.SerializeXml(orchestration)
+                : OrchestrationSerializer.SerializeJson(orchestration);
+
+            await File.WriteAllTextAsync(orchestration.SourcePath, content);
+            ViewModel.AddLog($"Orchestration saved with updated format: {orchestration.SourcePath}");
+            ViewModel.NotifyOrchestrationSaved();
+        }
+        catch (Exception ex)
+        {
+            ViewModel.AddLog($"Failed to save orchestration: {ex.Message}");
+        }
+    }
+
+    private async void SaveAsWithNewFormat_Click(object sender, RoutedEventArgs e)
+    {
+        var orchestration = ViewModel.Orchestration;
+        if (orchestration is null) return;
+
+        var picker = new FileSavePicker
+        {
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            SuggestedFileName = !string.IsNullOrWhiteSpace(orchestration.SourcePath)
+                ? Path.GetFileNameWithoutExtension(orchestration.SourcePath)
+                : !string.IsNullOrWhiteSpace(orchestration.Name)
+                    ? orchestration.Name
+                    : "orchestration"
+        };
+        picker.FileTypeChoices.Add("JSON Orchestration", [".json"]);
+        picker.FileTypeChoices.Add("XML Orchestration", [".xml"]);
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+        var file = await picker.PickSaveFileAsync();
+        if (file is null) return;
+
+        try
+        {
+            var content = file.FileType.Equals(".xml", StringComparison.OrdinalIgnoreCase)
+                ? OrchestrationSerializer.SerializeXml(orchestration)
+                : OrchestrationSerializer.SerializeJson(orchestration);
+
+            await File.WriteAllTextAsync(file.Path, content);
+            ViewModel.AddLog($"Orchestration saved with updated format: {file.Path}");
+            ViewModel.NotifyOrchestrationSaved();
+        }
+        catch (Exception ex)
+        {
+            ViewModel.AddLog($"Failed to save orchestration: {ex.Message}");
+        }
     }
 
     private void CopyLog_Click(object sender, RoutedEventArgs e)

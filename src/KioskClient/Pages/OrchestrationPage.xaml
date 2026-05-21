@@ -9,6 +9,10 @@
     Background="Black"
     KeyDown="Page_KeyDown">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="EscapeAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
     <Grid>
         <!-- Action Content Frame -->
         <Frame x:Name="ActionFrame" />

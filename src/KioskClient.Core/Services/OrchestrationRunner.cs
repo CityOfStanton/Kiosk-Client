@@ -157,8 +157,8 @@ public class OrchestrationRunner : IDisposable
 
         try
         {
-            var delayMinutes = Math.Max(_currentOrchestration.PollingIntervalMinutes, 15);
-            await Task.Delay(TimeSpan.FromMinutes(delayMinutes), ct);
+            var delaySeconds = Math.Max(_currentOrchestration.PollingInterval, 60);
+            await Task.Delay(TimeSpan.FromSeconds(delaySeconds), ct);
 
             ct.ThrowIfCancellationRequested();
 

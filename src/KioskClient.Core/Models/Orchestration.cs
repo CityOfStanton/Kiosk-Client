@@ -21,12 +21,47 @@ public class Orchestration
     public string Version { get; set; } = "1.0";
 
     /// <summary>
-    /// Interval in minutes between polling for updated orchestration content.
-    /// Minimum value is 15.
+    /// Interval in seconds between polling for updated orchestration content.
+    /// Minimum value is 60.
     /// </summary>
-    [JsonPropertyName("pollingIntervalMinutes")]
+    [JsonPropertyName("pollingInterval")]
+    [XmlElement("PollingInterval")]
+    public int PollingInterval { get; set; } = 900;
+
+    /// <summary>
+    /// Tracks whether this orchestration was loaded from a source that contained
+    /// the deprecated <c>pollingIntervalMinutes</c> field.
+    /// </summary>
+    [JsonIgnore]
+    [XmlIgnore]
+    public bool UsedDeprecatedPollingIntervalMinutes { get; set; }
+
+    /// <summary>
+    /// Interval in minutes between polling for updated orchestration content.
+    /// </summary>
+    /// <remarks>
+    /// <b>Deprecated:</b> Use <see cref="PollingInterval"/> (seconds) instead.
+    /// This property will be removed in the next version. When present, its value
+    /// is converted to seconds and stored in <see cref="PollingInterval"/>.
+    /// </remarks>
+    [Obsolete("Use PollingInterval (seconds) instead. This property will be removed in the next version.")]
+    [JsonIgnore]
     [XmlElement("PollingIntervalMinutes")]
-    public int PollingIntervalMinutes { get; set; } = 15;
+    public int PollingIntervalMinutes
+    {
+        get => PollingInterval / 60;
+        set
+        {
+            PollingInterval = value * 60;
+            UsedDeprecatedPollingIntervalMinutes = true;
+        }
+    }
+
+    /// <summary>
+    /// Controls whether <c>PollingIntervalMinutes</c> is emitted during XML serialization.
+    /// Always returns <see langword="false"/> so the deprecated field is never written.
+    /// </summary>
+    public bool ShouldSerializePollingIntervalMinutes() => false;
 
     /// <summary>
     /// Defines behavior after all actions have been displayed.
@@ -87,14 +122,14 @@ public class Orchestration
         };
 
         // Validate polling interval
-        if (PollingIntervalMinutes < 1)
+        if (PollingInterval < 60)
         {
             root.Children.Add(new ValidationResult
             {
-                Identifier = "PollingIntervalMinutes",
+                Identifier = "PollingInterval",
                 IsValid = false,
-                Message = $"Polling interval is {PollingIntervalMinutes} minutes, minimum is 1.",
-                Guidance = "Set PollingIntervalMinutes to 1 or greater."
+                Message = $"Polling interval is {PollingInterval} seconds, minimum is 60.",
+                Guidance = "Set PollingInterval to 60 or greater."
             });
             root.IsValid = false;
         }
@@ -102,9 +137,9 @@ public class Orchestration
         {
             root.Children.Add(new ValidationResult
             {
-                Identifier = "PollingIntervalMinutes",
+                Identifier = "PollingInterval",
                 IsValid = true,
-                Message = $"Polling interval is {PollingIntervalMinutes} minutes."
+                Message = $"Polling interval is {PollingInterval} seconds."
             });
         }
 

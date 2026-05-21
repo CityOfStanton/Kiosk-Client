@@ -17,7 +17,7 @@ public static class ExampleGenerator
         {
             Name = $"Example demo project for {format}",
             Version = "1.0",
-            PollingIntervalMinutes = 15,
+            PollingInterval = 900,
             Lifecycle = LifecycleBehavior.ContinuousLoop,
             Order = Ordering.Sequential,
             Actions =

@@ -65,6 +65,25 @@
                     </InfoBar.ActionButton>
                 </InfoBar>
 
+                <!-- Deprecated pollingIntervalMinutes Banner -->
+                <InfoBar x:Name="DeprecatedPollingIntervalBanner"
+                         IsOpen="{x:Bind ViewModel.OrchestrationUsesDeprecatedPollingInterval, Mode=OneWay}"
+                         Severity="Warning"
+                         Title="Deprecated Field Detected"
+                         Message="This orchestration uses 'pollingIntervalMinutes', which is deprecated and will be removed in the next version. Replace it with 'pollingInterval' (value in seconds). Saving will upgrade the orchestration file."
+                         IsClosable="False">
+                    <InfoBar.Content>
+                        <Button Content="Save File"
+                                Visibility="{x:Bind ViewModel.CanSaveWithUpdatedFormat, Mode=OneWay, Converter={StaticResource BoolToVis}}"
+                                Margin="0,0,0,8"
+                                Click="SaveWithNewFormat_Click" />
+                    </InfoBar.Content>
+                    <InfoBar.ActionButton>
+                        <Button Content="Save As..."
+                                Click="SaveAsWithNewFormat_Click" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
                 <Pivot x:Name="MainPivot" Margin="12">
 
                 <!-- Orchestration Tab -->

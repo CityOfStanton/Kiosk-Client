@@ -45,12 +45,15 @@ public sealed partial class OrchestrationPage : Page
         _runner.NetworkStatusChanged += Runner_NetworkStatusChanged;
         _runner.StatusUpdate += Runner_StatusUpdate;
 
+        // Ensure this page has focus so keyboard events (e.g. Escape) are received
+        this.Focus(FocusState.Programmatic);
+
         // Start the orchestration
         _ = _runner.StartAsync(orchestration);
 
         // Start polling timer for URL-sourced orchestrations
-        if (orchestration.Source == OrchestrationSource.URL && orchestration.PollingIntervalMinutes > 0)
-            StartPollingTimer(orchestration.PollingIntervalMinutes);
+        if (orchestration.Source == OrchestrationSource.URL && orchestration.PollingInterval > 0)
+            StartPollingTimer(orchestration.PollingInterval);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -103,6 +106,12 @@ public sealed partial class OrchestrationPage : Page
         App.SettingsVM.AddLog(e.Message);
     }
 
+    private void EscapeAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        CancelAndReturn();
+        args.Handled = true;
+    }
+
     private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == Windows.System.VirtualKey.Escape ||
@@ -129,12 +138,12 @@ public sealed partial class OrchestrationPage : Page
         _ = _runner.StartAsync(_orchestration);
     }
 
-    private void StartPollingTimer(int intervalMinutes)
+    private void StartPollingTimer(int intervalSeconds)
     {
-        _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(intervalMinutes) };
+        _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(intervalSeconds) };
         _pollingTimer.Tick += PollingTimer_Tick;
         _pollingTimer.Start();
-        App.SettingsVM.AddLog($"Polling: will check for orchestration updates every {intervalMinutes} minute(s).");
+        App.SettingsVM.AddLog($"Polling: will check for orchestration updates every {intervalSeconds} second(s).");
     }
 
     private async void PollingTimer_Tick(object? sender, object e)
