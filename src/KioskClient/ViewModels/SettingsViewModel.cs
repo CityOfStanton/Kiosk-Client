@@ -128,7 +128,7 @@ public partial class SettingsViewModel : ObservableObject
         ? FormatTimeSpan(Orchestration.TotalRuntime)
         : "N/A";
     public string OrchestrationSummaryPollingInterval => Orchestration is not null
-        ? $"{Orchestration.PollingInterval} seconds"
+        ? (Orchestration.PollingInterval > 0 ? FormatTimeSpan(TimeSpan.FromSeconds(Orchestration.PollingInterval)) : "N/A")
         : "N/A";
     public bool OrchestrationUsesDeprecatedPollingInterval => Orchestration?.UsedDeprecatedPollingIntervalMinutes == true;
     public bool CanSaveWithUpdatedFormat => OrchestrationUsesDeprecatedPollingInterval && Orchestration?.Source == OrchestrationSource.File;

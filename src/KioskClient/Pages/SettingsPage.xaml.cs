@@ -192,7 +192,7 @@ public sealed partial class SettingsPage : Page
 
     private void NavigateToValidationTab()
     {
-        MainPivot.SelectedIndex = 1;
+        ValidationExpander.IsExpanded = true;
     }
 
     private void ClearValidationDisplay()
@@ -204,6 +204,7 @@ public sealed partial class SettingsPage : Page
         PassedIcon.ClearValue(IconElement.ForegroundProperty);
         FailedIcon.ClearValue(IconElement.ForegroundProperty);
         ValidationTree.RootNodes.Clear();
+        ValidationExpander.IsExpanded = false;
     }
 
     private void UpdateValidationDisplay()
@@ -211,6 +212,8 @@ public sealed partial class SettingsPage : Page
         var result = ViewModel.OrchestrationValidationResult;
         if (result is not null)
         {
+            ValidationExpander.IsExpanded = true;
+
             var passed = result.PassedCount;
             var failed = result.FailedCount;
 

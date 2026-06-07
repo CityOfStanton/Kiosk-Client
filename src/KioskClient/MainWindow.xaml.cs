@@ -16,6 +16,7 @@ public sealed partial class MainWindow : Window
         // Set minimum window size
         var appWindow = this.AppWindow;
         appWindow.Title = "Kiosk Client";
+        appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
 
         // Check if tutorial should be shown
         var showTutorial = !App.Settings.GetSetting(SettingsKeys.DoNotShowTutorial, false);

@@ -208,6 +208,41 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Validation Results (collapsible) -->
+                        <Expander x:Name="ValidationExpander"
+                                  Header="Validation Results"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch"
+                                  Visibility="{x:Bind ViewModel.OrchestrationValidationResult, Mode=OneWay, Converter={StaticResource NullToVis}}">
+                            <StackPanel Spacing="12" Padding="0,8,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="24">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <FontIcon x:Name="PassedIcon" Glyph="&#xE73E;" FontSize="22" />
+                                        <TextBlock x:Name="PassedCount" FontWeight="SemiBold" FontSize="22" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <FontIcon x:Name="FailedIcon" Glyph="&#xE711;" FontSize="22" />
+                                        <TextBlock x:Name="FailedCount" FontWeight="SemiBold" FontSize="22" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <TreeView x:Name="ValidationTree">
+                                    <TreeView.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="{Binding Content.Glyph}"
+                                                          Foreground="{Binding Content.IconForeground}"
+                                                          FontSize="14"
+                                                          VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Content.Label}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </TreeView.ItemTemplate>
+                                </TreeView>
+                            </StackPanel>
+                        </Expander>
+
                         <!-- Auto-Retry Section -->
                         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 CornerRadius="8"
@@ -215,7 +250,7 @@
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                 BorderThickness="1">
                             <StackPanel Spacing="8">
-                                <ToggleSwitch Header="Auto-Retry on Return"
+                                <ToggleSwitch Header="Auto-Retry"
                                               IsOn="{x:Bind ViewModel.IsAutoRetryEnabled, Mode=TwoWay}" />
                                 <TextBlock Text="When enabled, the orchestration will automatically restart after returning to the home screen."
                                            TextWrapping="Wrap"
@@ -224,43 +259,6 @@
                             </StackPanel>
                         </Border>
 
-                    </StackPanel>
-                </PivotItem>
-
-                <!-- Validation Tab -->
-                <PivotItem Header="Validation">
-                    <StackPanel Spacing="12" Padding="0,12,0,0">
-                        <StackPanel Orientation="Horizontal" Spacing="24"
-                                    Visibility="{x:Bind ViewModel.OrchestrationValidationResult, Mode=OneWay, Converter={StaticResource NullToVis}}">
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <FontIcon x:Name="PassedIcon" Glyph="&#xE73E;" FontSize="22" />
-                                <TextBlock x:Name="PassedCount" FontWeight="SemiBold" FontSize="22" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <FontIcon x:Name="FailedIcon" Glyph="&#xE711;" FontSize="22" />
-                                <TextBlock x:Name="FailedCount" FontWeight="SemiBold" FontSize="22" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </StackPanel>
-
-                        <TreeView x:Name="ValidationTree"
-                                  Visibility="{x:Bind ViewModel.OrchestrationValidationResult, Mode=OneWay, Converter={StaticResource NullToVis}}">
-                            <TreeView.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <FontIcon Glyph="{Binding Content.Glyph}"
-                                                  Foreground="{Binding Content.IconForeground}"
-                                                  FontSize="14"
-                                                  VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Content.Label}"
-                                                   VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </TreeView.ItemTemplate>
-                        </TreeView>
-
-                        <TextBlock Text="Load an orchestration to see validation results."
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   FontStyle="Italic" />
                     </StackPanel>
                 </PivotItem>
 
