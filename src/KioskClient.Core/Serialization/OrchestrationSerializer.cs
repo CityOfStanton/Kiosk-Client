@@ -20,25 +20,23 @@ public static class OrchestrationSerializer
 
     /// <summary>
     /// Deserializes an orchestration from a JSON string.
-    /// Also detects the deprecated <c>pollingIntervalMinutes</c> field and migrates its
-    /// value into <see cref="Orchestration.PollingInterval"/>, flagging
-    /// <see cref="Orchestration.UsedDeprecatedPollingIntervalMinutes"/> when found.
+    /// Detects deprecated polling fields (<c>pollingInterval</c>, <c>pollingIntervalMinutes</c>)
+    /// and flags <see cref="Orchestration.UsedDeprecatedPollingField"/> when found.
+    /// These fields are ignored at runtime; polling is derived from action durations.
     /// </summary>
     public static Orchestration? DeserializeJson(string json)
     {
         var orchestration = JsonSerializer.Deserialize<Orchestration>(json, JsonOptions);
         if (orchestration is null) return null;
 
-        // Detect the deprecated pollingIntervalMinutes field (case-insensitive)
+        // Detect deprecated polling fields
         using var doc = JsonDocument.Parse(json);
         foreach (var prop in doc.RootElement.EnumerateObject())
         {
-            if (prop.Name.Equals("pollingIntervalMinutes", StringComparison.OrdinalIgnoreCase) &&
-                prop.Value.TryGetInt32(out var legacyMinutes))
+            if (prop.Name.Equals("pollingIntervalMinutes", StringComparison.OrdinalIgnoreCase) ||
+                prop.Name.Equals("pollingInterval", StringComparison.OrdinalIgnoreCase))
             {
-#pragma warning disable CS0618 // Type or member is obsolete
-                orchestration.PollingIntervalMinutes = legacyMinutes;
-#pragma warning restore CS0618
+                orchestration.UsedDeprecatedPollingField = true;
                 break;
             }
         }
@@ -56,12 +54,23 @@ public static class OrchestrationSerializer
 
     /// <summary>
     /// Deserializes an orchestration from an XML string.
+    /// Detects deprecated polling fields and flags <see cref="Orchestration.UsedDeprecatedPollingField"/>.
     /// </summary>
     public static Orchestration? DeserializeXml(string xml)
     {
         var serializer = new XmlSerializer(typeof(Orchestration));
         using var reader = new StringReader(xml);
-        return serializer.Deserialize(reader) as Orchestration;
+        var orchestration = serializer.Deserialize(reader) as Orchestration;
+        if (orchestration is null) return null;
+
+        // Detect deprecated polling fields in XML
+        if (xml.Contains("<PollingInterval>", StringComparison.OrdinalIgnoreCase) ||
+            xml.Contains("<PollingIntervalMinutes>", StringComparison.OrdinalIgnoreCase))
+        {
+            orchestration.UsedDeprecatedPollingField = true;
+        }
+
+        return orchestration;
     }
 
     /// <summary>

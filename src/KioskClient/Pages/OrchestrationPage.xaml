@@ -7,7 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="Black"
-    KeyDown="Page_KeyDown">
+    KeyDown="Page_KeyDown"
+    KeyboardAcceleratorPlacementMode="Hidden">
 
     <Page.KeyboardAccelerators>
         <KeyboardAccelerator Key="Escape" Invoked="EscapeAccelerator_Invoked" />
@@ -16,6 +17,16 @@
     <Grid>
         <!-- Action Content Frame -->
         <Frame x:Name="ActionFrame" />
+
+        <!-- Duration Countdown -->
+        <TextBlock x:Name="CountdownText"
+                   FontSize="32"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Left"
+                   Margin="16,0,0,16"
+                   IsHitTestVisible="False"
+                   Visibility="Collapsed" />
 
         <!-- Network Disconnected Watermark -->
         <TextBlock x:Name="NetworkWatermark"

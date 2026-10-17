@@ -40,6 +40,16 @@ public static class ExampleGenerator
                     ScrollingTime = 15,
                     ScrollingResetDelay = 5,
                     SettingsDisplayTime = 5
+                },
+                new VideoAction
+                {
+                    Name = "Play a local video file",
+                    Version = "1.0",
+                    Duration = 30,
+                    Path = "C:\\Videos\\example.mp4",
+                    Stretch = ImageStretch.Uniform,
+                    IsMuted = false,
+                    PlayMode = VideoPlayMode.DurationLoop
                 }
             ]
         };

@@ -21,47 +21,44 @@ public class Orchestration
     public string Version { get; set; } = "1.0";
 
     /// <summary>
-    /// Interval in seconds between polling for updated orchestration content.
-    /// Minimum value is 60.
+    /// Read-only stub for the deprecated <c>pollingInterval</c> field.
+    /// This field is no longer used; polling timing is derived from action durations.
+    /// Kept for deserialization compatibility with existing orchestration files.
     /// </summary>
     [JsonPropertyName("pollingInterval")]
     [XmlElement("PollingInterval")]
-    public int PollingInterval { get; set; } = 900;
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public int PollingInterval { get; set; }
 
     /// <summary>
-    /// Tracks whether this orchestration was loaded from a source that contained
-    /// the deprecated <c>pollingIntervalMinutes</c> field.
+    /// Read-only stub for the deprecated <c>pollingIntervalMinutes</c> field.
+    /// This field is no longer used; polling timing is derived from action durations.
+    /// Kept for deserialization compatibility with existing orchestration files.
     /// </summary>
-    [JsonIgnore]
-    [XmlIgnore]
-    public bool UsedDeprecatedPollingIntervalMinutes { get; set; }
-
-    /// <summary>
-    /// Interval in minutes between polling for updated orchestration content.
-    /// </summary>
-    /// <remarks>
-    /// <b>Deprecated:</b> Use <see cref="PollingInterval"/> (seconds) instead.
-    /// This property will be removed in the next version. When present, its value
-    /// is converted to seconds and stored in <see cref="PollingInterval"/>.
-    /// </remarks>
-    [Obsolete("Use PollingInterval (seconds) instead. This property will be removed in the next version.")]
+    [Obsolete("pollingIntervalMinutes is no longer used. Polling is derived from action durations.")]
     [JsonIgnore]
     [XmlElement("PollingIntervalMinutes")]
-    public int PollingIntervalMinutes
-    {
-        get => PollingInterval / 60;
-        set
-        {
-            PollingInterval = value * 60;
-            UsedDeprecatedPollingIntervalMinutes = true;
-        }
-    }
+    public int PollingIntervalMinutes { get; set; }
 
     /// <summary>
     /// Controls whether <c>PollingIntervalMinutes</c> is emitted during XML serialization.
     /// Always returns <see langword="false"/> so the deprecated field is never written.
     /// </summary>
     public bool ShouldSerializePollingIntervalMinutes() => false;
+
+    /// <summary>
+    /// Controls whether <c>PollingInterval</c> is emitted during XML serialization.
+    /// Always returns <see langword="false"/> so the deprecated field is never written.
+    /// </summary>
+    public bool ShouldSerializePollingInterval() => false;
+
+    /// <summary>
+    /// Indicates whether the loaded orchestration file contained a deprecated polling field
+    /// (<c>pollingInterval</c> or <c>pollingIntervalMinutes</c>). These fields are ignored at runtime.
+    /// </summary>
+    [JsonIgnore]
+    [XmlIgnore]
+    public bool UsedDeprecatedPollingField { get; set; }
 
     /// <summary>
     /// Defines behavior after all actions have been displayed.
@@ -102,6 +99,14 @@ public class Orchestration
     public string SourcePath { get; set; } = string.Empty;
 
     /// <summary>
+    /// SHA256 hash of the raw content this orchestration was deserialized from.
+    /// Used to detect whether the remote file has changed between polling intervals.
+    /// </summary>
+    [JsonIgnore]
+    [XmlIgnore]
+    public string? ContentHash { get; set; }
+
+    /// <summary>
     /// Total runtime of all actions combined.
     /// </summary>
     [JsonIgnore]
@@ -120,28 +125,6 @@ public class Orchestration
             IsValid = true,
             Message = "Orchestration validation"
         };
-
-        // Validate polling interval
-        if (PollingInterval < 60)
-        {
-            root.Children.Add(new ValidationResult
-            {
-                Identifier = "PollingInterval",
-                IsValid = false,
-                Message = $"Polling interval is {PollingInterval} seconds, minimum is 60.",
-                Guidance = "Set PollingInterval to 60 or greater."
-            });
-            root.IsValid = false;
-        }
-        else
-        {
-            root.Children.Add(new ValidationResult
-            {
-                Identifier = "PollingInterval",
-                IsValid = true,
-                Message = $"Polling interval is {PollingInterval} seconds."
-            });
-        }
 
         // Validate actions exist
         if (Actions.Count == 0)

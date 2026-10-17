@@ -114,7 +114,14 @@ public class SettingsService : ISettingsService
         }
         if (raw is JsonElement el)
         {
-            try { return el.Deserialize<T>(JsonOptions); }
+            try
+            {
+                // Complex values are stored as JSON text inside a JSON string.
+                if (el.ValueKind == JsonValueKind.String && typeof(T) != typeof(string))
+                    return JsonSerializer.Deserialize<T>(el.GetString()!, JsonOptions);
+
+                return el.Deserialize<T>(JsonOptions);
+            }
             catch { return defaultValue; }
         }
         return defaultValue;

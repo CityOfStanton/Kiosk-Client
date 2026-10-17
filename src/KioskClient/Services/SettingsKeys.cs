@@ -14,6 +14,17 @@ public static class SettingsKeys
     public const string UrlHistory = "UrlHistory";
     public const string SavedOrchestration = "SavedOrchestration";
     public const string OrchestrationFilePath = "OrchestrationFilePath";
+    public const string LastRunSource = "LastRunSource";
+    public const string LastRunPath = "LastRunPath";
+    public const string ShowCountdown = "ShowCountdown";
+    public const string CountdownColor = "CountdownColor";
+    public const string CountdownOpacityPercent = "CountdownOpacityPercent";
+
+    /// <summary>Default countdown font color (ARGB hex).</summary>
+    public const string DefaultCountdownColor = "#FFFFFFFF";
+
+    /// <summary>Default countdown opacity percentage.</summary>
+    public const int DefaultCountdownOpacityPercent = 25;
 
     /// <summary>Default retry timeout in seconds.</summary>
     public const int DefaultRetryTimeoutSeconds = 30;

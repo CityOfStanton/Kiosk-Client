@@ -32,6 +32,7 @@ public sealed partial class SettingsPage : Page
         base.OnNavigatedTo(e);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         UpdateValidationDisplay();
+        _ = UpdatePreviewAsync();
 
         if (ViewModel.ShouldAutoRetryStart)
         {
@@ -57,6 +58,11 @@ public sealed partial class SettingsPage : Page
             else
                 UpdateValidationDisplay();
         }
+        else if (e.PropertyName == nameof(ViewModel.Orchestration))
+        {
+            _previewIndex = 0;
+            _ = UpdatePreviewAsync();
+        }
         else if (e.PropertyName == nameof(ViewModel.LoadError))
         {
             LoadErrorBar.Message = ViewModel.LoadError ?? string.Empty;
@@ -72,9 +78,6 @@ public sealed partial class SettingsPage : Page
         {
             case "Run":
                 RunOrchestration();
-                break;
-            case "Save":
-                SaveAsStartup();
                 break;
             case "Reset":
                 ResetSettings();
@@ -115,14 +118,6 @@ public sealed partial class SettingsPage : Page
 
         ViewModel.AddLog("Starting orchestration...");
         Frame.Navigate(typeof(OrchestrationPage), ViewModel.Orchestration);
-    }
-
-    private void SaveAsStartup()
-    {
-        if (ViewModel.Orchestration is null) return;
-
-        ViewModel.SaveState();
-        ViewModel.AddLog("Orchestration saved as startup configuration.");
     }
 
     private void ResetSettings()
@@ -188,6 +183,167 @@ public sealed partial class SettingsPage : Page
     private void UrlAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
     {
         ViewModel.UriPath = args.SelectedItem as string ?? string.Empty;
+    }
+
+    private void UrlAutoSuggestBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Hide the built-in clear ("x") button; history is managed via the Settings tab.
+        if (sender is not DependencyObject root) return;
+        var clearButton = FindDescendant<Button>(root, "DeleteButton");
+        if (clearButton is null) return;
+        clearButton.Opacity = 0;
+        clearButton.IsHitTestVisible = false;
+        clearButton.IsTabStop = false;
+    }
+
+    private static T? FindDescendant<T>(DependencyObject parent, string name) where T : FrameworkElement
+    {
+        var count = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(parent);
+        for (int i = 0; i < count; i++)
+        {
+            var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(parent, i);
+            if (child is T match && match.Name == name) return match;
+            var result = FindDescendant<T>(child, name);
+            if (result is not null) return result;
+        }
+        return null;
+    }
+
+    private int _previewVersion;
+    private int _previewIndex;
+
+    private void PreviewPrev_Click(object sender, RoutedEventArgs e)
+    {
+        if (_previewIndex > 0)
+        {
+            _previewIndex--;
+            _ = UpdatePreviewAsync();
+        }
+    }
+
+    private void PreviewNext_Click(object sender, RoutedEventArgs e)
+    {
+        var count = ViewModel.Orchestration?.Actions.Count ?? 0;
+        if (_previewIndex < count - 1)
+        {
+            _previewIndex++;
+            _ = UpdatePreviewAsync();
+        }
+    }
+
+    private async Task UpdatePreviewAsync()
+    {
+        var version = ++_previewVersion;
+        var orchestration = ViewModel.Orchestration;
+
+        PreviewImage.Visibility = Visibility.Collapsed;
+        PreviewImage.Source = null;
+        PreviewWeb.Visibility = Visibility.Collapsed;
+        if (PreviewVideo.MediaPlayer is { } oldPlayer)
+        {
+            PreviewVideo.SetMediaPlayer(null);
+            oldPlayer.Dispose();
+        }
+        PreviewVideo.Visibility = Visibility.Collapsed;
+        PreviewMessage.Visibility = Visibility.Collapsed;
+        PreviewProgress.IsActive = false;
+        try { PreviewWeb.Source = new Uri("about:blank"); } catch { }
+
+        var total = orchestration?.Actions.Count ?? 0;
+        _previewIndex = Math.Clamp(_previewIndex, 0, Math.Max(total - 1, 0));
+
+        var action = orchestration?.Actions.ElementAtOrDefault(_previewIndex);
+        if (orchestration is null || action is null)
+        {
+            PreviewCaption.Text = string.Empty;
+            PreviewNavPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        PreviewNavPanel.Visibility = total > 1 ? Visibility.Visible : Visibility.Collapsed;
+        PreviewPositionText.Text = $"{_previewIndex + 1} / {total}";
+        PreviewPrevButton.IsEnabled = _previewIndex > 0;
+        PreviewNextButton.IsEnabled = _previewIndex < total - 1;
+
+        PreviewCaption.Text = $"Preview: {action.Name}";
+
+        try
+        {
+            PreviewProgress.IsActive = true;
+
+            switch (action)
+            {
+                case ImageAction image:
+                    var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                    if (Uri.TryCreate(image.Path, UriKind.Absolute, out var imageUri))
+                    {
+                        bitmap.UriSource = imageUri;
+                    }
+                    else
+                    {
+                        var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(image.Path);
+                        using var stream = await file.OpenReadAsync();
+                        await bitmap.SetSourceAsync(stream);
+                    }
+                    if (version != _previewVersion) return;
+                    PreviewImage.Source = bitmap;
+                    PreviewImage.Visibility = Visibility.Visible;
+                    break;
+
+                case WebsiteAction website:
+                    if (version != _previewVersion) return;
+                    await PreviewWeb.EnsureCoreWebView2Async();
+                    PreviewWeb.CoreWebView2.IsMuted = true;
+                    if (version != _previewVersion) return;
+                    PreviewWeb.Source = new Uri(website.Path);
+                    PreviewWeb.Visibility = Visibility.Visible;
+                    break;
+
+                case VideoAction video:
+                    if (!Uri.TryCreate(video.Path, UriKind.Absolute, out var videoUri))
+                        throw new UriFormatException("The video path is not a valid URL or file path.");
+                    if (version != _previewVersion) return;
+                    var player = new Windows.Media.Playback.MediaPlayer
+                    {
+                        Source = Windows.Media.Core.MediaSource.CreateFromUri(videoUri),
+                        IsMuted = true,
+                        IsLoopingEnabled = true,
+                        AutoPlay = true
+                    };
+                    PreviewVideo.SetMediaPlayer(player);
+                    PreviewVideo.Visibility = Visibility.Visible;
+                    break;
+
+                default:
+                    PreviewMessage.Text = "Preview not available for this action type.";
+                    PreviewMessage.Visibility = Visibility.Visible;
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (version != _previewVersion) return;
+            PreviewMessage.Text = $"Unable to load preview: {ex.Message}";
+            PreviewMessage.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            if (version == _previewVersion)
+                PreviewProgress.IsActive = false;
+        }
+    }
+
+    private void UrlHistoryDropDown_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.UrlHistory.Count == 0) return;
+        UrlAutoSuggestBox.Focus(FocusState.Programmatic);
+        UrlAutoSuggestBox.IsSuggestionListOpen = true;
+    }
+
+    private void DeleteHistoryEntry_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string url })
+            ViewModel.RemoveFromUrlHistory(url);
     }
 
     private void NavigateToValidationTab()
@@ -344,69 +500,6 @@ public sealed partial class SettingsPage : Page
     {
         StopStartupRetry();
         ViewModel.AddLog("Startup auto-retry stopped.");
-    }
-
-    private async void SaveWithNewFormat_Click(object sender, RoutedEventArgs e)
-    {
-        var orchestration = ViewModel.Orchestration;
-        if (orchestration is null || orchestration.Source != OrchestrationSource.File ||
-            string.IsNullOrEmpty(orchestration.SourcePath))
-            return;
-
-        try
-        {
-            var ext = Path.GetExtension(orchestration.SourcePath).ToLowerInvariant();
-            var content = ext == ".xml"
-                ? OrchestrationSerializer.SerializeXml(orchestration)
-                : OrchestrationSerializer.SerializeJson(orchestration);
-
-            await File.WriteAllTextAsync(orchestration.SourcePath, content);
-            ViewModel.AddLog($"Orchestration saved with updated format: {orchestration.SourcePath}");
-            ViewModel.NotifyOrchestrationSaved();
-        }
-        catch (Exception ex)
-        {
-            ViewModel.AddLog($"Failed to save orchestration: {ex.Message}");
-        }
-    }
-
-    private async void SaveAsWithNewFormat_Click(object sender, RoutedEventArgs e)
-    {
-        var orchestration = ViewModel.Orchestration;
-        if (orchestration is null) return;
-
-        var picker = new FileSavePicker
-        {
-            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-            SuggestedFileName = !string.IsNullOrWhiteSpace(orchestration.SourcePath)
-                ? Path.GetFileNameWithoutExtension(orchestration.SourcePath)
-                : !string.IsNullOrWhiteSpace(orchestration.Name)
-                    ? orchestration.Name
-                    : "orchestration"
-        };
-        picker.FileTypeChoices.Add("JSON Orchestration", [".json"]);
-        picker.FileTypeChoices.Add("XML Orchestration", [".xml"]);
-
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-
-        var file = await picker.PickSaveFileAsync();
-        if (file is null) return;
-
-        try
-        {
-            var content = file.FileType.Equals(".xml", StringComparison.OrdinalIgnoreCase)
-                ? OrchestrationSerializer.SerializeXml(orchestration)
-                : OrchestrationSerializer.SerializeJson(orchestration);
-
-            await File.WriteAllTextAsync(file.Path, content);
-            ViewModel.AddLog($"Orchestration saved with updated format: {file.Path}");
-            ViewModel.NotifyOrchestrationSaved();
-        }
-        catch (Exception ex)
-        {
-            ViewModel.AddLog($"Failed to save orchestration: {ex.Message}");
-        }
     }
 
     private void CopyLog_Click(object sender, RoutedEventArgs e)

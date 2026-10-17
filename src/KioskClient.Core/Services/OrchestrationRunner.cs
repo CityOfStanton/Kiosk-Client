@@ -27,13 +27,22 @@ public class OrchestrationStatusEventArgs : EventArgs
 /// </summary>
 public class OrchestrationRunner : IDisposable
 {
+    private const int PollLeadTimeSeconds = 15;
+
     private readonly IOrchestrationLoader _loader;
+    private readonly IImageHashService _imageHasher;
+    private string? _displayedImageKey;
+    private string? _displayedImageHash;
     private CancellationTokenSource? _cts;
     private Orchestration? _currentOrchestration;
     private Orchestration? _nextOrchestration;
     private bool _isRunning;
+    private volatile int _currentActionDuration;
+    private TaskCompletionSource? _actionCompletion;
 
     public event EventHandler<NextActionEventArgs>? NextAction;
+    /// <summary>Raised whenever an action's duration timer begins (even if the display was not reloaded). Argument is the duration in seconds.</summary>
+    public event EventHandler<int>? ActionTimerStarted;
     public event EventHandler? OrchestrationStarted;
     public event EventHandler? OrchestrationCompleted;
     public event EventHandler? OrchestrationCancelled;
@@ -43,9 +52,10 @@ public class OrchestrationRunner : IDisposable
     public bool IsRunning => _isRunning;
     public Orchestration? CurrentOrchestration => _currentOrchestration;
 
-    public OrchestrationRunner(IOrchestrationLoader loader)
+    public OrchestrationRunner(IOrchestrationLoader loader, IImageHashService? imageHasher = null)
     {
         _loader = loader;
+        _imageHasher = imageHasher ?? new ImageHashService();
     }
 
     /// <summary>
@@ -91,15 +101,24 @@ public class OrchestrationRunner : IDisposable
         _isRunning = false;
     }
 
+    /// <summary>
+    /// Signals that the current action finished on its own (for example, a video that played to the end).
+    /// Only affects actions that end on completion rather than on a duration.
+    /// </summary>
+    public void NotifyActionCompleted() => _actionCompletion?.TrySetResult();
+
     private async Task RunLoopAsync(CancellationToken ct)
     {
         if (_currentOrchestration is null) return;
 
+        // Start a single persistent background polling loop for URL-based orchestrations
+        var pollingTask = TryReloadInBackgroundAsync(ct);
+
+        _displayedImageKey = null;
+        _displayedImageHash = null;
+
         do
         {
-            // Start background reload for URL-based orchestrations
-            _ = TryReloadInBackgroundAsync(ct);
-
             var actions = GetOrderedActions(_currentOrchestration);
 
             for (int i = 0; i < actions.Count; i++)
@@ -107,18 +126,39 @@ public class OrchestrationRunner : IDisposable
                 ct.ThrowIfCancellationRequested();
 
                 var action = actions[i];
-                NextAction?.Invoke(this, new NextActionEventArgs
-                {
-                    Action = action,
-                    ActionIndex = i,
-                    TotalActions = actions.Count
-                });
+                var endsWhenComplete = action is VideoAction { PlayMode: VideoPlayMode.PlayOnce };
+                var duration = endsWhenComplete ? 0 : action.Duration ?? 10;
+                _currentActionDuration = duration;
 
-                var duration = action.Duration ?? 10;
-                await Task.Delay(TimeSpan.FromSeconds(duration), ct);
+                _actionCompletion = endsWhenComplete
+                    ? new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously)
+                    : null;
+
+                if (!await IsImageUnchangedAsync(action, ct))
+                {
+                    NextAction?.Invoke(this, new NextActionEventArgs
+                    {
+                        Action = action,
+                        ActionIndex = i,
+                        TotalActions = actions.Count
+                    });
+                }
+
+                ActionTimerStarted?.Invoke(this, duration);
+
+                var completion = _actionCompletion;
+                if (completion is not null)
+                {
+                    using var registration = ct.Register(() => completion.TrySetCanceled(ct));
+                    await completion.Task;
+                }
+                else
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(duration), ct);
+                }
             }
 
-            // Check if a new orchestration was loaded in the background
+            // Apply any update that arrived between cycles
             if (_nextOrchestration is not null)
             {
                 _currentOrchestration = _nextOrchestration;
@@ -128,8 +168,37 @@ public class OrchestrationRunner : IDisposable
 
         } while (_currentOrchestration.Lifecycle == LifecycleBehavior.ContinuousLoop);
 
+        await pollingTask;
+
         OrchestrationCompleted?.Invoke(this, EventArgs.Empty);
         RaiseStatus("Orchestration completed.");
+    }
+
+    /// <summary>
+    /// Returns true when the action is an image that is already on screen with identical content.
+    /// Also records the image currently being displayed.
+    /// </summary>
+    private async Task<bool> IsImageUnchangedAsync(ActionBase action, CancellationToken ct)
+    {
+        if (action is not ImageAction image)
+        {
+            _displayedImageKey = null;
+            _displayedImageHash = null;
+            return false;
+        }
+
+        var key = $"{image.Path}|{image.Stretch}";
+        var hash = await _imageHasher.ComputeHashAsync(image.Path, ct);
+
+        if (hash is not null && key == _displayedImageKey && hash == _displayedImageHash)
+        {
+            RaiseStatus($"Image unchanged, not reloading: {image.Path}");
+            return true;
+        }
+
+        _displayedImageKey = key;
+        _displayedImageHash = hash;
+        return false;
     }
 
     private List<ActionBase> GetOrderedActions(Orchestration orchestration)
@@ -155,27 +224,54 @@ public class OrchestrationRunner : IDisposable
             string.IsNullOrWhiteSpace(_currentOrchestration.SourcePath))
             return;
 
-        try
+        while (!ct.IsCancellationRequested)
         {
-            var delaySeconds = Math.Max(_currentOrchestration.PollingInterval, 60);
-            await Task.Delay(TimeSpan.FromSeconds(delaySeconds), ct);
+            try
+            {
+                // Derive the poll delay from the current action's duration:
+                //   duration > 15s  → poll 15s before the action ends
+                //   duration ≤ 15s  → poll at the halfway point
+                var duration = _currentActionDuration > 0 ? _currentActionDuration : 10;
+                var delaySeconds = duration > PollLeadTimeSeconds
+                    ? duration - PollLeadTimeSeconds
+                    : duration / 2.0;
 
-            ct.ThrowIfCancellationRequested();
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), ct);
+                ct.ThrowIfCancellationRequested();
 
-            RaiseStatus("Reloading orchestration from URL...");
-            var reloaded = await _loader.LoadFromUrlAsync(_currentOrchestration.SourcePath, ct);
-            _nextOrchestration = reloaded;
-            NetworkStatusChanged?.Invoke(this, true);
-            RaiseStatus("Orchestration reload complete.");
-        }
-        catch (OperationCanceledException)
-        {
-            // Normal cancellation
-        }
-        catch (Exception ex)
-        {
-            NetworkStatusChanged?.Invoke(this, false);
-            RaiseStatus($"Failed to reload orchestration: {ex.Message}");
+                RaiseStatus("Polling: checking for orchestration updates...");
+                var reloaded = await _loader.LoadFromUrlAsync(_currentOrchestration.SourcePath, ct);
+
+                if (reloaded.ContentHash == _currentOrchestration.ContentHash)
+                {
+                    RaiseStatus("Polling: orchestration unchanged.");
+                    NetworkStatusChanged?.Invoke(this, true);
+                }
+                else
+                {
+                    _nextOrchestration = reloaded;
+                    NetworkStatusChanged?.Invoke(this, true);
+                    RaiseStatus("Polling: orchestration changed, will apply at next cycle boundary.");
+                }
+
+                // Wait for the remainder of the action before polling again
+                var remaining = Math.Max(duration - delaySeconds, 0);
+                if (remaining > 0)
+                    await Task.Delay(TimeSpan.FromSeconds(remaining), ct);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                NetworkStatusChanged?.Invoke(this, false);
+                RaiseStatus($"Polling: failed to check for updates: {ex.Message}");
+
+                // Back off for the current action duration before retrying
+                var backoff = Math.Max(_currentActionDuration, 10);
+                await Task.Delay(TimeSpan.FromSeconds(backoff), ct).ConfigureAwait(false);
+            }
         }
     }
 

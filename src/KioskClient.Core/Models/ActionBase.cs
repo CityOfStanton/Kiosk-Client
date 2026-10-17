@@ -10,8 +10,10 @@ namespace KioskClient.Core.Models;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(ImageAction), "KioskLibrary.Actions.ImageAction, KioskLibrary")]
 [JsonDerivedType(typeof(WebsiteAction), "KioskLibrary.Actions.WebsiteAction, KioskLibrary")]
+[JsonDerivedType(typeof(VideoAction), "KioskLibrary.Actions.VideoAction, KioskLibrary")]
 [XmlInclude(typeof(ImageAction))]
 [XmlInclude(typeof(WebsiteAction))]
+[XmlInclude(typeof(VideoAction))]
 public abstract class ActionBase
 {
     /// <summary>Display name of the action.</summary>
@@ -36,6 +38,11 @@ public abstract class ActionBase
     {
         var results = new List<ValidationResult>();
 
+        if (!RequiresDuration)
+        {
+            return results;
+        }
+
         if (Duration is null or <= 0)
         {
             results.Add(new ValidationResult
@@ -58,4 +65,7 @@ public abstract class ActionBase
 
         return results;
     }
+
+    /// <summary>Whether this action needs a Duration to determine when it ends.</summary>
+    protected virtual bool RequiresDuration => true;
 }

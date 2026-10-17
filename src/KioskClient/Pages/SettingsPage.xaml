@@ -29,7 +29,6 @@
             <NavigationViewItem x:Name="NavItem_Run" Content="Run Orchestration" Icon="Play" Tag="Run"
                                 IsEnabled="{x:Bind ViewModel.CanStart, Mode=OneWay}"
                                 ToolTipService.ToolTip="{x:Bind ViewModel.RunTooltip, Mode=OneWay}" />
-            <NavigationViewItem x:Name="NavItem_Save" Content="Save as Startup" Icon="SaveLocal" Tag="Save" />
             <NavigationViewItem x:Name="NavItem_Reset" Content="Reset Settings" Icon="Clear" Tag="Reset" />
         </NavigationView.MenuItems>
 
@@ -65,24 +64,13 @@
                     </InfoBar.ActionButton>
                 </InfoBar>
 
-                <!-- Deprecated pollingIntervalMinutes Banner -->
+                <!-- Deprecated polling field banner -->
                 <InfoBar x:Name="DeprecatedPollingIntervalBanner"
-                         IsOpen="{x:Bind ViewModel.OrchestrationUsesDeprecatedPollingInterval, Mode=OneWay}"
-                         Severity="Warning"
-                         Title="Deprecated Field Detected"
-                         Message="This orchestration uses 'pollingIntervalMinutes', which is deprecated and will be removed in the next version. Replace it with 'pollingInterval' (value in seconds). Saving will upgrade the orchestration file."
-                         IsClosable="False">
-                    <InfoBar.Content>
-                        <Button Content="Save File"
-                                Visibility="{x:Bind ViewModel.CanSaveWithUpdatedFormat, Mode=OneWay, Converter={StaticResource BoolToVis}}"
-                                Margin="0,0,0,8"
-                                Click="SaveWithNewFormat_Click" />
-                    </InfoBar.Content>
-                    <InfoBar.ActionButton>
-                        <Button Content="Save As..."
-                                Click="SaveAsWithNewFormat_Click" />
-                    </InfoBar.ActionButton>
-                </InfoBar>
+                         IsOpen="{x:Bind ViewModel.HasDeprecatedPollingField, Mode=OneWay}"
+                         Severity="Informational"
+                         Title="Deprecated Polling Field Detected"
+                         Message="This orchestration file contains 'pollingInterval' or 'pollingIntervalMinutes', which are no longer used. Polling is now derived automatically from action durations. These fields will not be written if you re-save the file."
+                         IsClosable="True" />
 
                 <Pivot x:Name="MainPivot" Margin="12">
 
@@ -108,14 +96,28 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <AutoSuggestBox x:Name="UrlAutoSuggestBox"
-                                                Grid.Column="0"
-                                                Text="{x:Bind ViewModel.UriPath, Mode=TwoWay}"
-                                                ItemsSource="{x:Bind ViewModel.UrlHistory, Mode=OneWay}"
-                                                PlaceholderText="Enter URL to orchestration file..."
-                                                QuerySubmitted="UrlAutoSuggestBox_QuerySubmitted"
-                                                SuggestionChosen="UrlAutoSuggestBox_SuggestionChosen"
-                                                HorizontalAlignment="Stretch" />
+                                <Grid Grid.Column="0">
+                                    <AutoSuggestBox x:Name="UrlAutoSuggestBox"
+                                                    Loaded="UrlAutoSuggestBox_Loaded"
+                                                    Text="{x:Bind ViewModel.UriPath, Mode=TwoWay}"
+                                                    ItemsSource="{x:Bind ViewModel.UrlHistory, Mode=OneWay}"
+                                                    PlaceholderText="Enter URL to orchestration file..."
+                                                    QuerySubmitted="UrlAutoSuggestBox_QuerySubmitted"
+                                                    SuggestionChosen="UrlAutoSuggestBox_SuggestionChosen"
+                                                    HorizontalAlignment="Stretch" />
+                                    <Button x:Name="UrlHistoryDropDownButton"
+                                            Click="UrlHistoryDropDown_Click"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,4,0"
+                                            Padding="8,4"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ToolTipService.ToolTip="Show URL history"
+                                            AutomationProperties.Name="Show URL history">
+                                        <FontIcon Glyph="&#xE70D;" FontSize="12" />
+                                    </Button>
+                                </Grid>
                                 <Button Grid.Column="1"
                                         Content="Load"
                                         Command="{x:Bind ViewModel.LoadFromUriCommand}"
@@ -165,13 +167,17 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Orchestration Summary" FontWeight="Bold" FontSize="16" />
-                                <Grid ColumnSpacing="12" RowSpacing="4">
+                                <Grid ColumnSpacing="24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0" ColumnSpacing="12" RowSpacing="4" VerticalAlignment="Top">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
@@ -201,9 +207,64 @@
 
                                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Runtime:" FontWeight="SemiBold" />
                                     <TextBlock Grid.Row="6" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryRuntime, Mode=OneWay}" />
+                                </Grid>
 
-                                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Polling Interval:" FontWeight="SemiBold" />
-                                    <TextBlock Grid.Row="7" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryPollingInterval, Mode=OneWay}" />
+                                <StackPanel Grid.Column="1" Spacing="8">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="PreviewCaption"
+                                               Grid.Column="0"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel x:Name="PreviewNavPanel"
+                                                Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Spacing="4"
+                                                Visibility="Collapsed">
+                                        <Button x:Name="PreviewPrevButton"
+                                                Click="PreviewPrev_Click"
+                                                Padding="6"
+                                                ToolTipService.ToolTip="Previous action"
+                                                AutomationProperties.Name="Previous action">
+                                            <FontIcon Glyph="&#xE76B;" FontSize="12" />
+                                        </Button>
+                                        <TextBlock x:Name="PreviewPositionText"
+                                                   VerticalAlignment="Center"
+                                                   MinWidth="40"
+                                                   TextAlignment="Center" />
+                                        <Button x:Name="PreviewNextButton"
+                                                Click="PreviewNext_Click"
+                                                Padding="6"
+                                                ToolTipService.ToolTip="Next action"
+                                                AutomationProperties.Name="Next action">
+                                            <FontIcon Glyph="&#xE76C;" FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <Border Background="Black"
+                                        CornerRadius="4"
+                                        Height="240"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1">
+                                    <Grid>
+                                        <Image x:Name="PreviewImage" Stretch="Uniform" Visibility="Collapsed" />
+                                        <WebView2 x:Name="PreviewWeb" IsHitTestVisible="False" Visibility="Collapsed" />
+                                        <MediaPlayerElement x:Name="PreviewVideo" AreTransportControlsEnabled="False" IsHitTestVisible="False" Visibility="Collapsed" />
+                                        <ProgressRing x:Name="PreviewProgress" IsActive="False" Width="32" Height="32" Foreground="White" />
+                                        <TextBlock x:Name="PreviewMessage"
+                                                   Foreground="Gray"
+                                                   TextWrapping="Wrap"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12"
+                                                   Visibility="Collapsed" />
+                                    </Grid>
+                                </Border>
+                                </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -314,12 +375,50 @@
                                 CornerRadius="8" Padding="16"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                             <StackPanel Spacing="12">
+                                <TextBlock Text="Countdown Overlay" FontWeight="Bold" FontSize="16" />
+
+                                <ToggleSwitch Header="Show countdown in bottom-left corner"
+                                              IsOn="{x:Bind ViewModel.ShowCountdown, Mode=TwoWay}" />
+
+                                <DropDownButton Content="Font Color"
+                                                IsEnabled="{x:Bind ViewModel.ShowCountdown, Mode=OneWay}">
+                                    <DropDownButton.Flyout>
+                                        <Flyout>
+                                            <ColorPicker Color="{x:Bind ViewModel.CountdownColor, Mode=TwoWay}"
+                                                         IsAlphaEnabled="False" />
+                                        </Flyout>
+                                    </DropDownButton.Flyout>
+                                </DropDownButton>
+
+                                <NumberBox Header="Opacity (%)"
+                                           Value="{x:Bind ViewModel.CountdownOpacityPercent, Mode=TwoWay}"
+                                           IsEnabled="{x:Bind ViewModel.ShowCountdown, Mode=OneWay}"
+                                           Minimum="0"
+                                           Maximum="100"
+                                           SpinButtonPlacementMode="Inline"
+                                           SmallChange="5"
+                                           LargeChange="25" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8" Padding="16"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="12">
                                 <TextBlock Text="URL History" FontWeight="Bold" FontSize="16" />
 
                                 <TextBlock Text="Previously loaded URLs are saved for quick access."
                                            TextWrapping="Wrap"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            FontSize="12" />
+
+                                <NumberBox Header="Maximum entries to keep"
+                                           Value="{x:Bind ViewModel.MaxUrlHistory, Mode=TwoWay}"
+                                           Minimum="1"
+                                           Maximum="50"
+                                           SpinButtonPlacementMode="Inline"
+                                           SmallChange="1"
+                                           LargeChange="5" />
 
                                 <ListView ItemsSource="{x:Bind ViewModel.UrlHistory}" SelectionMode="None">
                                     <ListView.ItemTemplate>
@@ -329,7 +428,17 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{x:Bind}" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="0" Text="{x:Bind}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                <Button Grid.Column="1"
+                                                        Tag="{x:Bind}"
+                                                        Click="DeleteHistoryEntry_Click"
+                                                        Padding="6"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        ToolTipService.ToolTip="Delete entry"
+                                                        AutomationProperties.Name="Delete entry">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                                </Button>
                                             </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>

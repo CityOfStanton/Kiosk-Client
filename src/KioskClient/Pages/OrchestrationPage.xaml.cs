@@ -18,7 +18,8 @@ public sealed partial class OrchestrationPage : Page
 {
     private OrchestrationRunner? _runner;
     private Orchestration? _orchestration;
-    private DispatcherTimer? _pollingTimer;
+    private DispatcherTimer? _countdownTimer;
+    private DateTime _actionEndUtc;
 
     public OrchestrationPage()
     {
@@ -32,6 +33,7 @@ public sealed partial class OrchestrationPage : Page
         if (e.Parameter is not Orchestration orchestration) return;
 
         _orchestration = orchestration;
+        App.SettingsVM.RecordLastRun(orchestration);
 
         // Enter full screen
         var mainWindow = App.MainWindow as MainWindow;
@@ -40,6 +42,7 @@ public sealed partial class OrchestrationPage : Page
         // Set up the runner
         _runner = App.OrchestrationRunner;
         _runner.NextAction += Runner_NextAction;
+        _runner.ActionTimerStarted += Runner_ActionTimerStarted;
         _runner.OrchestrationCompleted += Runner_Completed;
         _runner.OrchestrationCancelled += Runner_Cancelled;
         _runner.NetworkStatusChanged += Runner_NetworkStatusChanged;
@@ -50,10 +53,6 @@ public sealed partial class OrchestrationPage : Page
 
         // Start the orchestration
         _ = _runner.StartAsync(orchestration);
-
-        // Start polling timer for URL-sourced orchestrations
-        if (orchestration.Source == OrchestrationSource.URL && orchestration.PollingInterval > 0)
-            StartPollingTimer(orchestration.PollingInterval);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -77,8 +76,51 @@ public sealed partial class OrchestrationPage : Page
                 case WebsiteAction websiteAction:
                     ActionFrame.Navigate(typeof(WebsitePage), websiteAction);
                     break;
+                case VideoAction videoAction:
+                    ActionFrame.Navigate(typeof(VideoPage), videoAction);
+                    break;
             }
         });
+    }
+
+    private void Runner_ActionTimerStarted(object? sender, int durationSeconds)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            var vm = App.SettingsVM;
+            if (!vm.ShowCountdown || durationSeconds <= 0)
+            {
+                StopCountdown();
+                return;
+            }
+
+            CountdownText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(vm.CountdownColor);
+            CountdownText.Opacity = Math.Clamp(vm.CountdownOpacityPercent, 0, 100) / 100.0;
+            CountdownText.Visibility = Visibility.Visible;
+            UpdateCountdownPlacement();
+
+            _actionEndUtc = DateTime.UtcNow.AddSeconds(durationSeconds);
+            UpdateCountdownText();
+
+            _countdownTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+            _countdownTimer.Tick -= CountdownTimer_Tick;
+            _countdownTimer.Tick += CountdownTimer_Tick;
+            _countdownTimer.Start();
+        });
+    }
+
+    private void CountdownTimer_Tick(object? sender, object e) => UpdateCountdownText();
+
+    private void UpdateCountdownText()
+    {
+        var remaining = (int)Math.Ceiling((_actionEndUtc - DateTime.UtcNow).TotalSeconds);
+        CountdownText.Text = Math.Max(remaining, 0).ToString();
+    }
+
+    private void StopCountdown()
+    {
+        _countdownTimer?.Stop();
+        CountdownText.Visibility = Visibility.Collapsed;
     }
 
     private void Runner_Completed(object? sender, EventArgs e)
@@ -98,7 +140,15 @@ public sealed partial class OrchestrationPage : Page
             NetworkWatermark.Visibility = isConnected
                 ? Visibility.Collapsed
                 : Visibility.Visible;
+            UpdateCountdownPlacement();
         });
+    }
+
+    private void UpdateCountdownPlacement()
+    {
+        CountdownText.HorizontalAlignment = NetworkWatermark.Visibility == Visibility.Visible
+            ? HorizontalAlignment.Center
+            : HorizontalAlignment.Left;
     }
 
     private void Runner_StatusUpdate(object? sender, OrchestrationStatusEventArgs e)
@@ -138,38 +188,6 @@ public sealed partial class OrchestrationPage : Page
         _ = _runner.StartAsync(_orchestration);
     }
 
-    private void StartPollingTimer(int intervalSeconds)
-    {
-        _pollingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(intervalSeconds) };
-        _pollingTimer.Tick += PollingTimer_Tick;
-        _pollingTimer.Start();
-        App.SettingsVM.AddLog($"Polling: will check for orchestration updates every {intervalSeconds} second(s).");
-    }
-
-    private async void PollingTimer_Tick(object? sender, object e)
-    {
-        _pollingTimer?.Stop();
-        App.SettingsVM.AddLog("Polling: checking for orchestration updates...");
-
-        _runner?.Stop();
-
-        var result = await App.SettingsVM.TryAutoStartAsync();
-
-        if (result == StartupLoadResult.LoadedAndValid)
-        {
-            App.SettingsVM.AddLog("Polling: orchestration updated successfully. Resuming.");
-            _orchestration = App.SettingsVM.Orchestration;
-            _ = _runner?.StartAsync(_orchestration!);
-            _pollingTimer?.Start();
-        }
-        else
-        {
-            App.SettingsVM.AddLog("Polling: failed to reload orchestration. Returning to settings to retry.");
-            App.SettingsVM.ShouldAutoRetryStart = true;
-            Frame.Navigate(typeof(SettingsPage));
-        }
-    }
-
     /// <summary>
     /// Called from action pages when user clicks the settings/exit button.
     /// </summary>
@@ -196,12 +214,11 @@ public sealed partial class OrchestrationPage : Page
 
     private void CleanupRunner()
     {
-        _pollingTimer?.Stop();
-        _pollingTimer = null;
-
+        _countdownTimer?.Stop();
         if (_runner is not null)
         {
             _runner.NextAction -= Runner_NextAction;
+            _runner.ActionTimerStarted -= Runner_ActionTimerStarted;
             _runner.OrchestrationCompleted -= Runner_Completed;
             _runner.OrchestrationCancelled -= Runner_Cancelled;
             _runner.NetworkStatusChanged -= Runner_NetworkStatusChanged;

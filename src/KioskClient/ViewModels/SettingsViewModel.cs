@@ -58,9 +58,7 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryOrder))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryActionCount))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryRuntime))]
-    [NotifyPropertyChangedFor(nameof(OrchestrationSummaryPollingInterval))]
-    [NotifyPropertyChangedFor(nameof(OrchestrationUsesDeprecatedPollingInterval))]
-    [NotifyPropertyChangedFor(nameof(CanSaveWithUpdatedFormat))]
+    [NotifyPropertyChangedFor(nameof(HasDeprecatedPollingField))]
     private Orchestration? _orchestration;
 
     [ObservableProperty]
@@ -92,6 +90,55 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _shouldAutoRetryStart;
+
+    [ObservableProperty]
+    private double _maxUrlHistory = SettingsKeys.DefaultMaxUrlHistory;
+
+    partial void OnMaxUrlHistoryChanged(double value)
+    {
+        if (double.IsNaN(value)) return;
+
+        var max = (int)Math.Clamp(Math.Round(value), 1, 50);
+        _settings.SaveSetting(SettingsKeys.MaxUrlHistory, max);
+
+        var trimmed = false;
+        while (UrlHistory.Count > max)
+        {
+            UrlHistory.RemoveAt(UrlHistory.Count - 1);
+            trimmed = true;
+        }
+
+        if (trimmed)
+            _settings.SaveSetting(SettingsKeys.UrlHistory, UrlHistory.ToList());
+    }
+
+    [ObservableProperty]
+    private bool _showCountdown;
+
+    [ObservableProperty]
+    private Windows.UI.Color _countdownColor = Microsoft.UI.Colors.White;
+
+    [ObservableProperty]
+    private double _countdownOpacityPercent = SettingsKeys.DefaultCountdownOpacityPercent;
+
+    partial void OnShowCountdownChanged(bool value) => _settings.SaveSetting(SettingsKeys.ShowCountdown, value);
+
+    partial void OnCountdownColorChanged(Windows.UI.Color value) =>
+        _settings.SaveSetting(SettingsKeys.CountdownColor, $"#{value.A:X2}{value.R:X2}{value.G:X2}{value.B:X2}");
+
+    partial void OnCountdownOpacityPercentChanged(double value)
+    {
+        if (double.IsNaN(value)) return;
+        _settings.SaveSetting(SettingsKeys.CountdownOpacityPercent, (int)Math.Round(Math.Clamp(value, 0, 100)));
+    }
+
+    private static Windows.UI.Color ParseColor(string hex)
+    {
+        var s = hex.TrimStart('#');
+        if (s.Length == 8 && uint.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out var v))
+            return Windows.UI.Color.FromArgb((byte)(v >> 24), (byte)(v >> 16), (byte)(v >> 8), (byte)v);
+        return Microsoft.UI.Colors.White;
+    }
 
     public ObservableCollection<string> UrlHistory { get; } = [];
     public ObservableCollection<string> LogEntries { get; } = [];
@@ -127,11 +174,7 @@ public partial class SettingsViewModel : ObservableObject
     public string OrchestrationSummaryRuntime => Orchestration is not null
         ? FormatTimeSpan(Orchestration.TotalRuntime)
         : "N/A";
-    public string OrchestrationSummaryPollingInterval => Orchestration is not null
-        ? (Orchestration.PollingInterval > 0 ? FormatTimeSpan(TimeSpan.FromSeconds(Orchestration.PollingInterval)) : "N/A")
-        : "N/A";
-    public bool OrchestrationUsesDeprecatedPollingInterval => Orchestration?.UsedDeprecatedPollingIntervalMinutes == true;
-    public bool CanSaveWithUpdatedFormat => OrchestrationUsesDeprecatedPollingInterval && Orchestration?.Source == OrchestrationSource.File;
+    public bool HasDeprecatedPollingField => Orchestration?.UsedDeprecatedPollingField == true;
     public string AutoRetryCountdownDisplay => $"{CurrentAutoRetryCountdown}s";
 
     public SettingsViewModel(ISettingsService settings, IOrchestrationLoader loader, IHttpService httpService)
@@ -150,7 +193,12 @@ public partial class SettingsViewModel : ObservableObject
         IsAutoRetryEnabled = _settings.GetSetting(SettingsKeys.AutoRetryEnabled, true);
         AutoRetrySeconds = _settings.GetSetting(SettingsKeys.RetryTimeoutSeconds, SettingsKeys.DefaultRetryTimeoutSeconds);
 
+        ShowCountdown = _settings.GetSetting(SettingsKeys.ShowCountdown, false);
+        CountdownColor = ParseColor(_settings.GetSetting(SettingsKeys.CountdownColor, SettingsKeys.DefaultCountdownColor) ?? SettingsKeys.DefaultCountdownColor);
+        CountdownOpacityPercent = _settings.GetSetting(SettingsKeys.CountdownOpacityPercent, SettingsKeys.DefaultCountdownOpacityPercent);
+
         var maxHistory = _settings.GetSetting(SettingsKeys.MaxUrlHistory, SettingsKeys.DefaultMaxUrlHistory);
+        MaxUrlHistory = maxHistory;
         var historyList = _settings.GetSetting<List<string>>(SettingsKeys.UrlHistory);
         if (historyList is not null)
         {
@@ -311,18 +359,6 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Resets the deprecated-field flag after the orchestration has been saved with the
-    /// updated format, and re-evaluates the related computed properties.
-    /// </summary>
-    public void NotifyOrchestrationSaved()
-    {
-        if (Orchestration is not null)
-            Orchestration.UsedDeprecatedPollingIntervalMinutes = false;
-        OnPropertyChanged(nameof(OrchestrationUsesDeprecatedPollingInterval));
-        OnPropertyChanged(nameof(CanSaveWithUpdatedFormat));
-    }
-
-    /// <summary>
     /// Resets the orchestration and related state.
     /// </summary>
     [RelayCommand]
@@ -349,31 +385,38 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Attempts to load the last saved orchestration. Used on application startup to
+    /// Remembers the orchestration that is being run so it can be reloaded on the next startup.
+    /// </summary>
+    public void RecordLastRun(Orchestration orchestration)
+    {
+        if (string.IsNullOrWhiteSpace(orchestration.SourcePath)) return;
+
+        _settings.SaveSetting(SettingsKeys.LastRunSource, orchestration.Source == OrchestrationSource.File ? "File" : "URL");
+        _settings.SaveSetting(SettingsKeys.LastRunPath, orchestration.SourcePath);
+    }
+
+    /// <summary>
+    /// Attempts to load the last orchestration that was run. Used on application startup to
     /// auto-start the previous session's orchestration.
     /// </summary>
     public async Task<StartupLoadResult> TryAutoStartAsync()
     {
-        var source = _settings.GetSetting<string>(SettingsKeys.OrchestrationSource);
-        if (string.IsNullOrEmpty(source))
+        var source = _settings.GetSetting<string>(SettingsKeys.LastRunSource);
+        var path = _settings.GetSetting<string>(SettingsKeys.LastRunPath);
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(path))
             return StartupLoadResult.NoPreviousOrchestration;
 
         try
         {
             if (source == "File")
             {
-                var filePath = _settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath);
-                if (string.IsNullOrEmpty(filePath))
-                    return StartupLoadResult.NoPreviousOrchestration;
-
-                await LoadFromFileCommand.ExecuteAsync(filePath);
+                IsLocalFile = true;
+                await LoadFromFileCommand.ExecuteAsync(path);
             }
             else
             {
-                var uri = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri);
-                if (string.IsNullOrEmpty(uri))
-                    return StartupLoadResult.NoPreviousOrchestration;
-
+                IsLocalFile = false;
+                UriPath = path;
                 await LoadFromUriCommand.ExecuteAsync(null);
             }
 

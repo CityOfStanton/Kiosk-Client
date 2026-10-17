@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="KioskClient.Pages.Actions.VideoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Black">
+
+    <Grid>
+        <!-- Error State -->
+        <StackPanel x:Name="ErrorPanel"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Visibility="Collapsed">
+            <FontIcon Glyph="&#xE783;"
+                      Foreground="Red"
+                      FontSize="48"
+                      HorizontalAlignment="Center" />
+            <TextBlock Text="Unable to play video"
+                       Foreground="White"
+                       FontSize="20"
+                       HorizontalAlignment="Center"
+                       Margin="0,12,0,0" />
+            <TextBlock x:Name="ErrorDetail"
+                       Foreground="Gray"
+                       FontSize="14"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       MaxWidth="400"
+                       Margin="0,8,0,0" />
+        </StackPanel>
+
+        <!-- Video Display -->
+        <MediaPlayerElement x:Name="VideoDisplay"
+                            AutoPlay="True"
+                            AreTransportControlsEnabled="False"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch" />
+
+        <!-- Settings/Exit Button -->
+        <Button x:Name="SettingsButton"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,16,16"
+                Style="{StaticResource OverlayButtonStyle}"
+                Click="SettingsButton_Click">
+            <SymbolIcon Symbol="Setting" />
+        </Button>
+    </Grid>
+</Page>

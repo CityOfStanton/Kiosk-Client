@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using KioskClient.Core.Models;
 using KioskClient.Core.Serialization;
 
@@ -41,6 +43,7 @@ public class OrchestrationLoader : IOrchestrationLoader
 
         orchestration.Source = OrchestrationSource.URL;
         orchestration.SourcePath = url;
+        orchestration.ContentHash = ComputeHash(content);
         return orchestration;
     }
 
@@ -55,12 +58,21 @@ public class OrchestrationLoader : IOrchestrationLoader
 
         orchestration.Source = OrchestrationSource.File;
         orchestration.SourcePath = filePath;
+        orchestration.ContentHash = ComputeHash(content);
         return orchestration;
     }
 
     public Orchestration LoadFromContent(string content)
     {
-        return OrchestrationSerializer.Deserialize(content)
+        var orchestration = OrchestrationSerializer.Deserialize(content)
             ?? throw new InvalidOperationException("Failed to deserialize orchestration from content.");
+        orchestration.ContentHash = ComputeHash(content);
+        return orchestration;
+    }
+
+    private static string ComputeHash(string content)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+        return Convert.ToHexString(bytes);
     }
 }
