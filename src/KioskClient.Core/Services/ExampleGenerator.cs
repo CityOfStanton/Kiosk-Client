@@ -16,7 +16,7 @@ public static class ExampleGenerator
         return new Orchestration
         {
             Name = $"Example demo project for {format}",
-            Version = "1.0",
+            Version = "2.0",
             PollingInterval = 900,
             Lifecycle = LifecycleBehavior.ContinuousLoop,
             Order = Ordering.Sequential,

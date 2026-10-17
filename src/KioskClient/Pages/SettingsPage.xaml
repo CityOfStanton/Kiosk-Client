@@ -29,6 +29,7 @@
             <NavigationViewItem x:Name="NavItem_Run" Content="Run Orchestration" Icon="Play" Tag="Run"
                                 IsEnabled="{x:Bind ViewModel.CanStart, Mode=OneWay}"
                                 ToolTipService.ToolTip="{x:Bind ViewModel.RunTooltip, Mode=OneWay}" />
+            <NavigationViewItem x:Name="NavItem_Editor" Content="Orchestration Editor" Icon="Edit" Tag="Editor" />
             <NavigationViewItem x:Name="NavItem_Reset" Content="Reset Settings" Icon="Clear" Tag="Reset" />
         </NavigationView.MenuItems>
 
@@ -70,7 +71,11 @@
                          Severity="Informational"
                          Title="Deprecated Polling Field Detected"
                          Message="This orchestration file contains 'pollingInterval' or 'pollingIntervalMinutes', which are no longer used. Polling is now derived automatically from action durations. These fields will not be written if you re-save the file."
-                         IsClosable="True" />
+                         IsClosable="True">
+                    <InfoBar.ActionButton>
+                        <Button Content="Open in Editor" Click="OpenInEditor_Click" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
 
                 <Pivot x:Name="MainPivot" Margin="12">
 

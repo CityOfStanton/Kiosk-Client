@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="KioskClient.EditorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:KioskClient.Controls"
+    xmlns:vm="using:KioskClient.ViewModels">
+
+    <Grid x:Name="Root">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" IsOpen="False" HorizontalAlignment="Left">
+            <AppBarButton Label="New" Icon="Add" Click="NewButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="N" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Open" Icon="OpenFile" Click="OpenButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="O" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Save" Icon="Save" Click="SaveButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Save As" Icon="SaveLocal" Click="SaveAsButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control,Shift" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton x:Name="UndoButton" Label="Undo" Icon="Undo" IsEnabled="False" Click="UndoButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Z" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton x:Name="RedoButton" Label="Redo" Icon="Redo" IsEnabled="False" Click="RedoButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Y" Modifiers="Control" />
+                    <KeyboardAccelerator Key="Z" Modifiers="Control,Shift" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton Label="Validate" Icon="Accept" Click="ValidateButton_Click">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F5" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+        </CommandBar>
+
+        <StackPanel Grid.Row="1">
+            <InfoBar x:Name="MigrationBar"
+                     IsOpen="False"
+                     Severity="Informational"
+                     Title="Converted to version 2.0"
+                     IsClosable="True" />
+            <InfoBar x:Name="ValidationBar"
+                     IsOpen="False"
+                     IsClosable="True" />
+        </StackPanel>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Action list -->
+            <Grid Grid.Column="0" Padding="12" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Actions" FontWeight="SemiBold" FontSize="16" />
+
+                <ListView x:Name="ActionList"
+                          Grid.Row="1"
+                          SelectionMode="Single"
+                          CanReorderItems="True"
+                          CanDragItems="True"
+                          AllowDrop="True"
+                          DragItemsCompleted="ActionList_DragItemsCompleted"
+                          SelectionChanged="ActionList_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:EditorActionItem">
+                            <StackPanel Padding="0,6">
+                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind TypeLabel}" Opacity="0.6" FontSize="12" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
+                    <DropDownButton Content="Add">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Image" Tag="Image" Click="AddAction_Click" />
+                                <MenuFlyoutItem Text="Website" Tag="Website" Click="AddAction_Click" />
+                                <MenuFlyoutItem Text="Video" Tag="Video" Click="AddAction_Click" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <Button x:Name="MoveUpButton" Content="&#xE74A;" FontFamily="Segoe MDL2 Assets" ToolTipService.ToolTip="Move up" Click="MoveUp_Click" />
+                    <Button x:Name="MoveDownButton" Content="&#xE74B;" FontFamily="Segoe MDL2 Assets" ToolTipService.ToolTip="Move down" Click="MoveDown_Click" />
+                    <Button x:Name="RemoveButton" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" ToolTipService.ToolTip="Remove action" Click="RemoveAction_Click" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Form -->
+            <ScrollViewer Grid.Column="1">
+                <StackPanel Spacing="12" Padding="16">
+
+                    <TextBlock Text="Orchestration" FontWeight="SemiBold" FontSize="16" />
+                    <TextBox x:Name="NameBox" Header="Name" TextChanged="NameBox_TextChanged" />
+                    <TextBlock x:Name="VersionText" Opacity="0.7" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ComboBox x:Name="LifecycleBox" Header="Lifecycle" MinWidth="180" SelectionChanged="LifecycleBox_SelectionChanged" />
+                        <ComboBox x:Name="OrderBox" Header="Order" MinWidth="180" SelectionChanged="OrderBox_SelectionChanged" />
+                    </StackPanel>
+
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" />
+
+                    <TextBlock x:Name="NoSelectionText" Text="Select or add an action to edit it." Opacity="0.7" />
+
+                    <StackPanel x:Name="ActionPanel" Spacing="12" Visibility="Collapsed">
+                        <TextBlock x:Name="ActionTypeText" FontWeight="SemiBold" FontSize="16" />
+                        <TextBox x:Name="ActionNameBox" Header="Action name" TextChanged="ActionNameBox_TextChanged" />
+                        <NumberBox x:Name="DurationBox"
+                                   Header="Duration (seconds)"
+                                   Minimum="0"
+                                   SpinButtonPlacementMode="Compact"
+                                   Width="200"
+                                   HorizontalAlignment="Left"
+                                   ValueChanged="DurationBox_ValueChanged" />
+
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="PathBox" Header="Path (URL or full file path)" TextChanged="PathBox_TextChanged" />
+                            <Button x:Name="TestPathButton" Grid.Column="1" Content="Test" VerticalAlignment="Bottom" Click="TestPath_Click" />
+                        </Grid>
+                        <TextBlock x:Name="PathStatus" TextWrapping="Wrap" />
+
+                        <ComboBox x:Name="StretchBox" Header="Stretch" MinWidth="180" SelectionChanged="StretchBox_SelectionChanged" />
+
+                        <StackPanel x:Name="VideoPanel" Spacing="12" Visibility="Collapsed">
+                            <ComboBox x:Name="PlayModeBox" Header="Play mode" MinWidth="180" SelectionChanged="PlayModeBox_SelectionChanged" />
+                            <CheckBox x:Name="MuteCheck" Content="Mute audio" Click="MuteCheck_Click" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="WebsitePanel" Spacing="12" Visibility="Collapsed">
+                            <CheckBox x:Name="AutoScrollCheck" Content="Auto-scroll" Click="AutoScrollCheck_Click" />
+                            <NumberBox x:Name="ScrollingTimeBox" Header="Scrolling time (seconds)" Minimum="0" SpinButtonPlacementMode="Compact" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
+                            <NumberBox x:Name="ScrollingResetDelayBox" Header="Scrolling reset delay (seconds)" Minimum="0" SpinButtonPlacementMode="Compact" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
+                            <NumberBox x:Name="SettingsDisplayTimeBox" Header="Settings display time (seconds)" Minimum="0" SpinButtonPlacementMode="Compact" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
+                        </StackPanel>
+
+                        <TextBlock Text="Preview" FontWeight="SemiBold" />
+                        <controls:ActionPreviewControl x:Name="ActionPreview" Height="260" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <TextBlock x:Name="StatusText" Grid.Row="3" Margin="12,4" Opacity="0.7" />
+    </Grid>
+</Window>

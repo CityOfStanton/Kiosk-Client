@@ -21,6 +21,18 @@ public partial class App : Application
 
     public static Window MainWindow => ((App)Current)._window!;
 
+    /// <summary>
+    /// Opens the orchestration editor in its own window, optionally loading an existing orchestration.
+    /// </summary>
+    public static async Task OpenEditorAsync(KioskClient.Core.Models.Orchestration? orchestration)
+    {
+        var editor = new EditorWindow();
+        editor.BringToFront();
+        if (orchestration is not null)
+            await editor.LoadFromOrchestrationAsync(orchestration);
+        editor.BringToFront();
+    }
+
     public App()
     {
         this.InitializeComponent();

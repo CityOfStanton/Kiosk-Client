@@ -79,6 +79,9 @@ public sealed partial class SettingsPage : Page
             case "Run":
                 RunOrchestration();
                 break;
+            case "Editor":
+                await App.OpenEditorAsync(null);
+                break;
             case "Reset":
                 ResetSettings();
                 break;
@@ -141,6 +144,11 @@ public sealed partial class SettingsPage : Page
     {
         var dialog = new AboutDialog { XamlRoot = this.XamlRoot };
         await dialog.ShowAsync();
+    }
+
+    private async void OpenInEditor_Click(object sender, RoutedEventArgs e)
+    {
+        await App.OpenEditorAsync(ViewModel.Orchestration);
     }
 
     private async void BrowseFile_Click(object sender, RoutedEventArgs e)
