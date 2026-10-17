@@ -8,7 +8,10 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_VERSION: '8.0.x'
+  # .slnx solution files require the .NET 9 SDK (9.0.200+); projects still target net8.
+  DOTNET_VERSION: |
+    8.0.x
+    9.0.x
   SOLUTION_PATH: KioskClient.slnx
   APP_PROJECT_PATH: src/KioskClient/KioskClient.csproj
   TEST_PROJECT_PATH: tests/KioskClient.Tests/KioskClient.Tests.csproj
