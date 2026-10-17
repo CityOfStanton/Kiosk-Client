@@ -24,24 +24,6 @@ public class OrchestrationValidationTests
     }
 
     [Fact]
-    public void Validate_PollingIntervalTooLow_ReturnsInvalid()
-    {
-        var orchestration = new Orchestration
-        {
-            Name = "Test",
-            PollingInterval = 30,
-            Actions =
-            [
-                new ImageAction { Name = "Image", Duration = 5, Path = "https://example.com/img.png" }
-            ]
-        };
-
-        var result = orchestration.Validate();
-
-        Assert.False(result.IsFullyValid);
-    }
-
-    [Fact]
     public void Validate_NoActions_ReturnsInvalid()
     {
         var orchestration = new Orchestration

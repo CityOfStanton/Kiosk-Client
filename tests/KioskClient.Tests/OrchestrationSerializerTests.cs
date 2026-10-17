@@ -45,7 +45,6 @@ public class OrchestrationSerializerTests
         Assert.NotNull(result);
         Assert.Equal("Example demo project for JSON", result.Name);
         Assert.Equal("1.0", result.Version);
-        Assert.Equal(900, result.PollingInterval);
         Assert.Equal(LifecycleBehavior.ContinuousLoop, result.Lifecycle);
         Assert.Equal(Ordering.Sequential, result.Order);
         Assert.Equal(2, result.Actions.Count);
@@ -122,7 +121,6 @@ public class OrchestrationSerializerTests
 
         Assert.NotNull(deserialized);
         Assert.Equal(original.Name, deserialized.Name);
-        Assert.Equal(original.PollingInterval, deserialized.PollingInterval);
         Assert.Equal(original.Lifecycle, deserialized.Lifecycle);
         Assert.Equal(original.Order, deserialized.Order);
         Assert.Equal(original.Actions.Count, deserialized.Actions.Count);

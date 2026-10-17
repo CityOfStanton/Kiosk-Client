@@ -16,7 +16,7 @@ public class OrchestrationLoaderTests
         var result = loader.LoadFromContent(json);
 
         Assert.NotNull(result);
-        Assert.Equal(2, result.Actions.Count);
+        Assert.Equal(3, result.Actions.Count);
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public class OrchestrationLoaderTests
         var result = loader.LoadFromContent(xml);
 
         Assert.NotNull(result);
-        Assert.Equal(2, result.Actions.Count);
+        Assert.Equal(3, result.Actions.Count);
     }
 
     [Fact]

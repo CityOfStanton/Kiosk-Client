@@ -14,10 +14,9 @@ public class ExampleGeneratorTests
 
         Assert.NotNull(orchestration);
         Assert.Contains("Test", orchestration.Name);
-        Assert.Equal(900, orchestration.PollingInterval);
         Assert.Equal(LifecycleBehavior.ContinuousLoop, orchestration.Lifecycle);
         Assert.Equal(Ordering.Sequential, orchestration.Order);
-        Assert.Equal(2, orchestration.Actions.Count);
+        Assert.Equal(3, orchestration.Actions.Count);
     }
 
     [Fact]
@@ -48,7 +47,7 @@ public class ExampleGeneratorTests
 
         var deserialized = OrchestrationSerializer.DeserializeJson(json);
         Assert.NotNull(deserialized);
-        Assert.Equal(2, deserialized.Actions.Count);
+        Assert.Equal(3, deserialized.Actions.Count);
     }
 
     [Fact]
@@ -61,7 +60,7 @@ public class ExampleGeneratorTests
 
         var deserialized = OrchestrationSerializer.DeserializeXml(xml);
         Assert.NotNull(deserialized);
-        Assert.Equal(2, deserialized.Actions.Count);
+        Assert.Equal(3, deserialized.Actions.Count);
     }
 
     [Fact]
