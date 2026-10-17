@@ -17,6 +17,19 @@ public static class SettingsKeys
     public const string LastRunSource = "LastRunSource";
     public const string LastRunPath = "LastRunPath";
     public const string ShowCountdown = "ShowCountdown";
+    public const string ShowNetworkWatermark = "ShowNetworkWatermark";
+    public const string SettingsButtonOpacityPercent = "SettingsButtonOpacityPercent";
+
+    /// <summary>Default overlay Settings button opacity percentage.</summary>
+    public const int DefaultSettingsButtonOpacityPercent = 50;
+    public const string NetworkWatermarkBackground = "NetworkWatermarkBackground";
+    public const string NetworkWatermarkForeground = "NetworkWatermarkForeground";
+
+    /// <summary>Default network indicator background color (ARGB hex).</summary>
+    public const string DefaultNetworkWatermarkBackground = "#FFFF0000";
+
+    /// <summary>Default network indicator font color (ARGB hex).</summary>
+    public const string DefaultNetworkWatermarkForeground = "#FF000000";
     public const string CountdownColor = "CountdownColor";
     public const string CountdownOpacityPercent = "CountdownOpacityPercent";
 

@@ -97,7 +97,6 @@ public sealed partial class OrchestrationPage : Page
             CountdownText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(vm.CountdownColor);
             CountdownText.Opacity = Math.Clamp(vm.CountdownOpacityPercent, 0, 100) / 100.0;
             CountdownText.Visibility = Visibility.Visible;
-            UpdateCountdownPlacement();
 
             _actionEndUtc = DateTime.UtcNow.AddSeconds(durationSeconds);
             UpdateCountdownText();
@@ -137,18 +136,15 @@ public sealed partial class OrchestrationPage : Page
     {
         DispatcherQueue.TryEnqueue(() =>
         {
+            var vm = App.SettingsVM;
+            var foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(vm.NetworkWatermarkForeground);
+            NetworkWatermark.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(vm.NetworkWatermarkBackground);
+            NetworkWatermarkIcon.Foreground = foreground;
+            NetworkWatermarkText.Foreground = foreground;
             NetworkWatermark.Visibility = isConnected
                 ? Visibility.Collapsed
                 : Visibility.Visible;
-            UpdateCountdownPlacement();
         });
-    }
-
-    private void UpdateCountdownPlacement()
-    {
-        CountdownText.HorizontalAlignment = NetworkWatermark.Visibility == Visibility.Visible
-            ? HorizontalAlignment.Center
-            : HorizontalAlignment.Left;
     }
 
     private void Runner_StatusUpdate(object? sender, OrchestrationStatusEventArgs e)

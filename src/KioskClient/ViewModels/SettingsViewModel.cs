@@ -121,6 +121,34 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private double _countdownOpacityPercent = SettingsKeys.DefaultCountdownOpacityPercent;
 
+    [ObservableProperty]
+    private double _settingsButtonOpacityPercent = SettingsKeys.DefaultSettingsButtonOpacityPercent;
+
+    partial void OnSettingsButtonOpacityPercentChanged(double value)
+    {
+        if (double.IsNaN(value)) return;
+        _settings.SaveSetting(SettingsKeys.SettingsButtonOpacityPercent, (int)Math.Round(Math.Clamp(value, 0, 100)));
+    }
+
+    public double SettingsButtonOpacity => Math.Clamp(SettingsButtonOpacityPercent, 0, 100) / 100.0;
+
+    [ObservableProperty]
+    private bool _showNetworkWatermark = true;
+
+    partial void OnShowNetworkWatermarkChanged(bool value) => _settings.SaveSetting(SettingsKeys.ShowNetworkWatermark, value);
+
+    [ObservableProperty]
+    private Windows.UI.Color _networkWatermarkBackground = Microsoft.UI.Colors.Red;
+
+    [ObservableProperty]
+    private Windows.UI.Color _networkWatermarkForeground = Microsoft.UI.Colors.Black;
+
+    partial void OnNetworkWatermarkBackgroundChanged(Windows.UI.Color value) =>
+        _settings.SaveSetting(SettingsKeys.NetworkWatermarkBackground, $"#{value.A:X2}{value.R:X2}{value.G:X2}{value.B:X2}");
+
+    partial void OnNetworkWatermarkForegroundChanged(Windows.UI.Color value) =>
+        _settings.SaveSetting(SettingsKeys.NetworkWatermarkForeground, $"#{value.A:X2}{value.R:X2}{value.G:X2}{value.B:X2}");
+
     partial void OnShowCountdownChanged(bool value) => _settings.SaveSetting(SettingsKeys.ShowCountdown, value);
 
     partial void OnCountdownColorChanged(Windows.UI.Color value) =>
@@ -194,6 +222,10 @@ public partial class SettingsViewModel : ObservableObject
         AutoRetrySeconds = _settings.GetSetting(SettingsKeys.RetryTimeoutSeconds, SettingsKeys.DefaultRetryTimeoutSeconds);
 
         ShowCountdown = _settings.GetSetting(SettingsKeys.ShowCountdown, false);
+        ShowNetworkWatermark = _settings.GetSetting(SettingsKeys.ShowNetworkWatermark, true);
+        SettingsButtonOpacityPercent = _settings.GetSetting(SettingsKeys.SettingsButtonOpacityPercent, SettingsKeys.DefaultSettingsButtonOpacityPercent);
+        NetworkWatermarkBackground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkBackground, SettingsKeys.DefaultNetworkWatermarkBackground) ?? SettingsKeys.DefaultNetworkWatermarkBackground);
+        NetworkWatermarkForeground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkForeground, SettingsKeys.DefaultNetworkWatermarkForeground) ?? SettingsKeys.DefaultNetworkWatermarkForeground);
         CountdownColor = ParseColor(_settings.GetSetting(SettingsKeys.CountdownColor, SettingsKeys.DefaultCountdownColor) ?? SettingsKeys.DefaultCountdownColor);
         CountdownOpacityPercent = _settings.GetSetting(SettingsKeys.CountdownOpacityPercent, SettingsKeys.DefaultCountdownOpacityPercent);
 

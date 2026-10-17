@@ -18,24 +18,31 @@
         <!-- Action Content Frame -->
         <Frame x:Name="ActionFrame" />
 
-        <!-- Duration Countdown -->
-        <TextBlock x:Name="CountdownText"
-                   FontSize="32"
-                   FontWeight="SemiBold"
-                   VerticalAlignment="Bottom"
-                   HorizontalAlignment="Left"
-                   Margin="16,0,0,16"
-                   IsHitTestVisible="False"
-                   Visibility="Collapsed" />
+        <StackPanel Orientation="Horizontal"
+                    Spacing="12"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Left"
+                    Margin="16,0,0,16"
+                    IsHitTestVisible="False">
+            <!-- Network Disconnected Watermark -->
+            <Border x:Name="NetworkWatermark"
+                    Background="Red"
+                    CornerRadius="4"
+                    Padding="10,4"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon x:Name="NetworkWatermarkIcon" Glyph="&#xF384;" FontSize="14" Foreground="Black" />
+                    <TextBlock x:Name="NetworkWatermarkText" Text="Network Disconnected" FontSize="14" FontWeight="SemiBold" Foreground="Black" />
+                </StackPanel>
+            </Border>
 
-        <!-- Network Disconnected Watermark -->
-        <TextBlock x:Name="NetworkWatermark"
-                   Text="&#xE871; Network Disconnected"
-                   FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                   Style="{StaticResource WatermarkTextStyle}"
-                   VerticalAlignment="Bottom"
-                   HorizontalAlignment="Left"
-                   Margin="16,0,0,16"
-                   Visibility="Collapsed" />
+            <!-- Duration Countdown -->
+            <TextBlock x:Name="CountdownText"
+                       FontSize="32"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Visibility="Collapsed" />
+        </StackPanel>
     </Grid>
 </Page>

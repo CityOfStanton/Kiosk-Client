@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="using:KioskClient.Converters"
+    xmlns:vm="using:KioskClient.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -309,22 +310,6 @@
                             </StackPanel>
                         </Expander>
 
-                        <!-- Auto-Retry Section -->
-                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="8"
-                                Padding="16"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <ToggleSwitch Header="Auto-Retry"
-                                              IsOn="{x:Bind ViewModel.IsAutoRetryEnabled, Mode=TwoWay}" />
-                                <TextBlock Text="When enabled, the orchestration will automatically restart after returning to the home screen."
-                                           TextWrapping="Wrap"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="12" />
-                            </StackPanel>
-                        </Border>
-
                     </StackPanel>
                 </PivotItem>
 
@@ -365,6 +350,10 @@
 
                                 <ToggleSwitch Header="Enable Auto-Retry"
                                               IsOn="{x:Bind ViewModel.IsAutoRetryEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="When enabled, the orchestration will automatically restart after returning to the home screen."
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="12" />
 
                                 <NumberBox Header="Retry Delay (seconds)"
                                            Value="{x:Bind ViewModel.AutoRetrySeconds, Mode=TwoWay}"
@@ -403,6 +392,54 @@
                                            SpinButtonPlacementMode="Inline"
                                            SmallChange="5"
                                            LargeChange="25" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8" Padding="16"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Settings Button Overlay" FontWeight="Bold" FontSize="16" />
+
+                                <NumberBox Header="Opacity (%)"
+                                           Value="{x:Bind ViewModel.SettingsButtonOpacityPercent, Mode=TwoWay}"
+                                           Minimum="0"
+                                           Maximum="100"
+                                           SpinButtonPlacementMode="Inline"
+                                           SmallChange="5"
+                                           LargeChange="25" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8" Padding="16"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Network Disconnected Indicator" FontWeight="Bold" FontSize="16" />
+
+
+                                <ToggleSwitch Header="Show indicator in bottom-left corner when the connection drops"
+                                              IsOn="{x:Bind ViewModel.ShowNetworkWatermark, Mode=TwoWay}" />
+
+                                <DropDownButton Content="Background Color"
+                                                IsEnabled="{x:Bind ViewModel.ShowNetworkWatermark, Mode=OneWay}">
+                                    <DropDownButton.Flyout>
+                                        <Flyout>
+                                            <ColorPicker Color="{x:Bind ViewModel.NetworkWatermarkBackground, Mode=TwoWay}"
+                                                         IsAlphaEnabled="False" />
+                                        </Flyout>
+                                    </DropDownButton.Flyout>
+                                </DropDownButton>
+
+                                <DropDownButton Content="Font Color"
+                                                IsEnabled="{x:Bind ViewModel.ShowNetworkWatermark, Mode=OneWay}">
+                                    <DropDownButton.Flyout>
+                                        <Flyout>
+                                            <ColorPicker Color="{x:Bind ViewModel.NetworkWatermarkForeground, Mode=TwoWay}"
+                                                         IsAlphaEnabled="False" />
+                                        </Flyout>
+                                    </DropDownButton.Flyout>
+                                </DropDownButton>
                             </StackPanel>
                         </Border>
 

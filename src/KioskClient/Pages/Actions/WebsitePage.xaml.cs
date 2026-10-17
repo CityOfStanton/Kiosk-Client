@@ -25,6 +25,7 @@ public sealed partial class WebsitePage : Page
     public WebsitePage()
     {
         this.InitializeComponent();
+        SettingsButton.Opacity = App.SettingsVM.SettingsButtonOpacity;
         WebviewDisplay.NavigationCompleted += WebviewDisplay_NavigationCompleted;
     }
 

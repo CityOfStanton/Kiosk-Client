@@ -17,6 +17,7 @@ public sealed partial class ImagePage : Page
     public ImagePage()
     {
         this.InitializeComponent();
+        SettingsButton.Opacity = App.SettingsVM.SettingsButtonOpacity;
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)

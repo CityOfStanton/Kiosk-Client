@@ -28,6 +28,7 @@ public class OrchestrationStatusEventArgs : EventArgs
 public class OrchestrationRunner : IDisposable
 {
     private const int PollLeadTimeSeconds = 15;
+    private const int PollRetrySeconds = 5;
 
     private readonly IOrchestrationLoader _loader;
     private readonly IImageHashService _imageHasher;
@@ -259,7 +260,7 @@ public class OrchestrationRunner : IDisposable
                 if (remaining > 0)
                     await Task.Delay(TimeSpan.FromSeconds(remaining), ct);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
                 return;
             }
@@ -268,10 +269,48 @@ public class OrchestrationRunner : IDisposable
                 NetworkStatusChanged?.Invoke(this, false);
                 RaiseStatus($"Polling: failed to check for updates: {ex.Message}");
 
-                // Back off for the current action duration before retrying
-                var backoff = Math.Max(_currentActionDuration, 10);
-                await Task.Delay(TimeSpan.FromSeconds(backoff), ct).ConfigureAwait(false);
+                // Retry quickly until the connection is restored so the indicator clears promptly
+                try
+                {
+                    do
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(PollRetrySeconds), ct);
+                    }
+                    while (!await TryProbeAsync(ct));
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                NetworkStatusChanged?.Invoke(this, true);
             }
+        }
+    }
+
+    private async Task<bool> TryProbeAsync(CancellationToken ct)
+    {
+        try
+        {
+            var reloaded = await _loader.LoadFromUrlAsync(_currentOrchestration!.SourcePath!, ct);
+            if (reloaded.ContentHash != _currentOrchestration.ContentHash)
+            {
+                _nextOrchestration = reloaded;
+                RaiseStatus("Polling: connection restored, orchestration changed, will apply at next cycle boundary.");
+            }
+            else
+            {
+                RaiseStatus("Polling: connection restored.");
+            }
+            return true;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return false;
         }
     }
 

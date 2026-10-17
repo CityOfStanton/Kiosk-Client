@@ -17,6 +17,7 @@ public sealed partial class VideoPage : Page
     public VideoPage()
     {
         this.InitializeComponent();
+        SettingsButton.Opacity = App.SettingsVM.SettingsButtonOpacity;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
