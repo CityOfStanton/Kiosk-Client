@@ -33,14 +33,18 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_PATH }}
+      run: msbuild ${{ env.SOLUTION_PATH }} -t:Restore -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }}
 
     - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }} --no-restore -p:Platform=${{ matrix.platform }}
+      run: msbuild ${{ env.SOLUTION_PATH }} -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }} -m
 
     - name: Run tests
-      run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      if: matrix.platform == 'x64'
+      run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration ${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -62,8 +66,11 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_PATH }}
+      run: msbuild ${{ env.SOLUTION_PATH }} -t:Restore -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=x64
 
     - name: Run .NET security audit
       run: dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive
@@ -75,7 +82,7 @@ jobs:
         build-mode: manual
 
     - name: Build for CodeQL analysis
-      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }}
+      run: msbuild ${{ env.SOLUTION_PATH }} -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=x64 -m
 
     - name: Perform CodeQL analysis
       uses: github/codeql-action/analyze@v3
