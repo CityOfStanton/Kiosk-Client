@@ -9,6 +9,9 @@ public static class SettingsKeys
     public const string OrchestrationUri = "OrchestrationUri";
     public const string DoNotShowTutorial = "DoNotShowTutorialOnStartup";
     public const string AutoRetryEnabled = "AutoRetryEnabled";
+    public const string BlockHttp = "BlockHttp";
+    public const string MaxContentMegabytes = "MaxContentMegabytes";
+    public const int DefaultMaxContentMegabytes = 50;
     public const string RetryTimeoutSeconds = "RetryTimeoutSeconds";
     public const string MaxUrlHistory = "MaxUrlHistory";
     public const string UrlHistory = "UrlHistory";

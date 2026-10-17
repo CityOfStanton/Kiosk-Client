@@ -79,6 +79,25 @@ public partial class SettingsViewModel : ObservableObject
     private bool _isAutoRetryEnabled;
 
     [ObservableProperty]
+    private bool _blockHttp = true;
+
+    [ObservableProperty]
+    private double _maxContentMegabytes = SettingsKeys.DefaultMaxContentMegabytes;
+
+    partial void OnBlockHttpChanged(bool value)
+    {
+        SecurityPolicy.BlockHttp = value;
+        _settings.SaveSetting(SettingsKeys.BlockHttp, value);
+    }
+
+    partial void OnMaxContentMegabytesChanged(double value)
+    {
+        if (double.IsNaN(value) || value < 1) return;
+        SecurityPolicy.MaxContentBytes = (long)value * 1024 * 1024;
+        _settings.SaveSetting(SettingsKeys.MaxContentMegabytes, (int)value);
+    }
+
+    [ObservableProperty]
     private int _autoRetrySeconds;
 
     [ObservableProperty]
@@ -220,6 +239,10 @@ public partial class SettingsViewModel : ObservableObject
     {
         IsAutoRetryEnabled = _settings.GetSetting(SettingsKeys.AutoRetryEnabled, true);
         AutoRetrySeconds = _settings.GetSetting(SettingsKeys.RetryTimeoutSeconds, SettingsKeys.DefaultRetryTimeoutSeconds);
+        BlockHttp = _settings.GetSetting(SettingsKeys.BlockHttp, true);
+        SecurityPolicy.BlockHttp = BlockHttp;
+        MaxContentMegabytes = Math.Clamp(_settings.GetSetting(SettingsKeys.MaxContentMegabytes, SettingsKeys.DefaultMaxContentMegabytes), 1, 1024);
+        SecurityPolicy.MaxContentBytes = (long)MaxContentMegabytes * 1024 * 1024;
 
         ShowCountdown = _settings.GetSetting(SettingsKeys.ShowCountdown, false);
         ShowNetworkWatermark = _settings.GetSetting(SettingsKeys.ShowNetworkWatermark, true);

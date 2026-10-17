@@ -34,17 +34,22 @@ public class ImageHashService : IImageHashService
             if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
                 (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
             {
+                if (SecurityPolicy.CheckRemoteUrl(uri) is not null) return null;
+
                 using var response = await SharedClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 response.EnsureSuccessStatusCode();
+                if (response.Content.Headers.ContentLength > SecurityPolicy.MaxContentBytes) return null;
                 await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                return Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken));
+                return await HashBoundedAsync(stream, cancellationToken);
             }
 
+            if (uri is { IsFile: false }) return null;
             var filePath = uri is { IsFile: true } ? uri.LocalPath : path;
             if (!File.Exists(filePath)) return null;
+            if (new FileInfo(filePath).Length > SecurityPolicy.MaxContentBytes) return null;
 
             await using var fileStream = File.OpenRead(filePath);
-            return Convert.ToHexString(await SHA256.HashDataAsync(fileStream, cancellationToken));
+            return await HashBoundedAsync(fileStream, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -54,5 +59,20 @@ public class ImageHashService : IImageHashService
         {
             return null;
         }
+    }
+
+    private static async Task<string?> HashBoundedAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var buffer = new byte[81920];
+        long total = 0;
+        int read;
+        while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
+        {
+            total += read;
+            if (total > SecurityPolicy.MaxContentBytes) return null;
+            sha.AppendData(buffer, 0, read);
+        }
+        return Convert.ToHexString(sha.GetHashAndReset());
     }
 }

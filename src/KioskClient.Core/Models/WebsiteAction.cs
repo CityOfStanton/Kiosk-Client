@@ -38,58 +38,26 @@ public class WebsiteAction : ActionBase
     {
         var results = base.Validate();
 
-        if (string.IsNullOrWhiteSpace(Path))
+        var pathResult = ValidatePath(Path, "Set the Path property to a valid URL.");
+        if (pathResult.IsValid == true && !Uri.TryCreate(Path, UriKind.Absolute, out _))
         {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - Path",
-                IsValid = false,
-                Message = "Path is required.",
-                Guidance = "Set the Path property to a valid URL."
-            });
+            pathResult.IsValid = false;
+            pathResult.Message = "Website path must be an absolute URL.";
+            pathResult.Guidance = "Use an https:// URL.";
         }
-        else
+        results.Add(pathResult);
+
+        if (AutoScroll)
         {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - Path",
-                IsValid = true,
-                Message = "Path is set."
-            });
+            var scrolling = ValidateSecondsRange("ScrollingTime", ScrollingTime, 1);
+            if (scrolling.IsValid == false) results.Add(scrolling);
+
+            var resetDelay = ValidateSecondsRange("ScrollingResetDelay", ScrollingResetDelay, 0);
+            if (resetDelay.IsValid == false) results.Add(resetDelay);
         }
 
-        if (AutoScroll && ScrollingTime <= 0)
-        {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - ScrollingTime",
-                IsValid = false,
-                Message = "ScrollingTime must be greater than 0 when AutoScroll is enabled.",
-                Guidance = "Set ScrollingTime to a positive integer (seconds)."
-            });
-        }
-
-        if (AutoScroll && ScrollingResetDelay < 0)
-        {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - ScrollingResetDelay",
-                IsValid = false,
-                Message = "ScrollingResetDelay must be 0 or greater.",
-                Guidance = "Set ScrollingResetDelay to 0 or a positive integer (seconds)."
-            });
-        }
-
-        if (SettingsDisplayTime < 1)
-        {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - SettingsDisplayTime",
-                IsValid = false,
-                Message = "SettingsDisplayTime must be at least 1 second.",
-                Guidance = "Set SettingsDisplayTime to 1 or greater."
-            });
-        }
+        var settingsTime = ValidateSecondsRange("SettingsDisplayTime", SettingsDisplayTime, 1);
+        if (settingsTime.IsValid == false) results.Add(settingsTime);
 
         return results;
     }

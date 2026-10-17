@@ -35,9 +35,16 @@ public class HttpService : IHttpService, IDisposable
 
     public async Task<string> GetStringAsync(Uri uri, CancellationToken cancellationToken = default)
     {
-        var response = await _client.GetAsync(uri, cancellationToken);
+        var error = SecurityPolicy.CheckRemoteUrl(uri);
+        if (error is not null)
+            throw new InvalidOperationException(error);
+
+        using var response = await _client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        if (response.Content.Headers.ContentLength > SecurityPolicy.MaxOrchestrationBytes)
+            throw new InvalidOperationException($"Orchestration exceeds the maximum size of {SecurityPolicy.MaxOrchestrationBytes} bytes.");
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        return await SecurityPolicy.ReadBoundedStringAsync(stream, SecurityPolicy.MaxOrchestrationBytes, cancellationToken);
     }
 
     public async Task<ValidationResult> ValidateUriAsync(string uri, CancellationToken cancellationToken = default)
@@ -55,11 +62,12 @@ public class HttpService : IHttpService, IDisposable
             return result;
         }
 
-        if (parsedUri.Scheme != Uri.UriSchemeHttp && parsedUri.Scheme != Uri.UriSchemeHttps)
+        var policyError = SecurityPolicy.CheckRemoteUrl(parsedUri);
+        if (policyError is not null)
         {
             result.IsValid = false;
-            result.Message = "URI must use HTTP or HTTPS scheme.";
-            result.Guidance = "Change the URI scheme to http:// or https://.";
+            result.Message = policyError;
+            result.Guidance = "Use an https:// address.";
             return result;
         }
 
@@ -77,7 +85,7 @@ public class HttpService : IHttpService, IDisposable
             else
             {
                 // Some servers don't support HEAD, try GET
-                response = await _client.GetAsync(parsedUri, cancellationToken);
+                response = await _client.GetAsync(parsedUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     result.IsValid = true;

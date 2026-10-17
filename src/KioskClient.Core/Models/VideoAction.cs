@@ -51,25 +51,7 @@ public class VideoAction : ActionBase
     {
         var results = base.Validate();
 
-        if (string.IsNullOrWhiteSpace(Path))
-        {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - Path",
-                IsValid = false,
-                Message = "Path is required.",
-                Guidance = "Set the Path property to a valid URL or file path to a video (for example an .mp4 file)."
-            });
-        }
-        else
-        {
-            results.Add(new ValidationResult
-            {
-                Identifier = $"{Name} - Path",
-                IsValid = true,
-                Message = "Path is set."
-            });
-        }
+        results.Add(ValidatePath(Path, "Set the Path property to a valid URL or file path to a video (for example an .mp4 file)."));
 
         return results;
     }

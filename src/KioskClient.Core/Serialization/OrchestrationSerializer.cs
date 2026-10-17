@@ -59,7 +59,14 @@ public static class OrchestrationSerializer
     public static Orchestration? DeserializeXml(string xml)
     {
         var serializer = new XmlSerializer(typeof(Orchestration));
-        using var reader = new StringReader(xml);
+        using var stringReader = new StringReader(xml);
+        using var reader = XmlReader.Create(stringReader, new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            MaxCharactersFromEntities = 0,
+            MaxCharactersInDocument = 4 * 1024 * 1024
+        });
         var orchestration = serializer.Deserialize(reader) as Orchestration;
         if (orchestration is null) return null;
 
@@ -122,6 +129,10 @@ public static class OrchestrationSerializer
             catch (InvalidOperationException)
             {
                 // XML deserialization failed
+            }
+            catch (XmlException)
+            {
+                // Malformed or prohibited XML (e.g. DTD)
             }
         }
 

@@ -140,8 +140,10 @@ public class Orchestration
         }
 
         // Validate each action
+        var isRemote = Source == OrchestrationSource.URL && !string.IsNullOrEmpty(SourcePath);
         foreach (var action in Actions)
         {
+            action.IsRemoteSource = isRemote;
             var actionResult = new ValidationResult
             {
                 Identifier = action.Name,

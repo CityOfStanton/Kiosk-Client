@@ -369,6 +369,29 @@
                                 CornerRadius="8" Padding="16"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                             <StackPanel Spacing="12">
+                                <TextBlock Text="Security" FontWeight="Bold" FontSize="16" />
+
+                                <ToggleSwitch Header="Block HTTP addresses"
+                                              IsOn="{x:Bind ViewModel.BlockHttp, Mode=TwoWay}" />
+                                <TextBlock Text="When enabled (recommended), orchestrations and content must use HTTPS. Turn off to allow unencrypted http:// addresses."
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="12" />
+
+                                <NumberBox Header="Maximum content size (MB)"
+                                           Value="{x:Bind ViewModel.MaxContentMegabytes, Mode=TwoWay}"
+                                           Minimum="1"
+                                           Maximum="1024"
+                                           SpinButtonPlacementMode="Inline"
+                                           SmallChange="10"
+                                           LargeChange="50" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8" Padding="16"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="12">
                                 <TextBlock Text="Countdown Overlay" FontWeight="Bold" FontSize="16" />
 
                                 <ToggleSwitch Header="Show countdown in bottom-left corner"

@@ -37,7 +37,12 @@ public class OrchestrationLoader : IOrchestrationLoader
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             throw new ArgumentException($"Invalid URL: {url}", nameof(url));
 
+        var urlError = SecurityPolicy.CheckRemoteUrl(uri);
+        if (urlError is not null)
+            throw new InvalidOperationException(urlError);
+
         var content = await _httpService.GetStringAsync(uri, cancellationToken);
+        EnsureOrchestrationSize(content);
         var orchestration = OrchestrationSerializer.Deserialize(content)
             ?? throw new InvalidOperationException("Failed to deserialize orchestration from URL content.");
 
@@ -52,7 +57,13 @@ public class OrchestrationLoader : IOrchestrationLoader
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"Orchestration file not found: {filePath}", filePath);
 
-        var content = await File.ReadAllTextAsync(filePath, cancellationToken);
+        var info = new FileInfo(filePath);
+        if (info.Length > SecurityPolicy.MaxOrchestrationBytes)
+            throw new InvalidOperationException($"Orchestration file exceeds the maximum size of {SecurityPolicy.MaxOrchestrationBytes} bytes.");
+
+        string content;
+        await using (var fs = File.OpenRead(filePath))
+            content = await SecurityPolicy.ReadBoundedStringAsync(fs, SecurityPolicy.MaxOrchestrationBytes, cancellationToken);
         var orchestration = OrchestrationSerializer.Deserialize(content)
             ?? throw new InvalidOperationException($"Failed to deserialize orchestration from file: {filePath}");
 
@@ -64,10 +75,17 @@ public class OrchestrationLoader : IOrchestrationLoader
 
     public Orchestration LoadFromContent(string content)
     {
+        EnsureOrchestrationSize(content);
         var orchestration = OrchestrationSerializer.Deserialize(content)
             ?? throw new InvalidOperationException("Failed to deserialize orchestration from content.");
         orchestration.ContentHash = ComputeHash(content);
         return orchestration;
+    }
+
+    private static void EnsureOrchestrationSize(string content)
+    {
+        if (Encoding.UTF8.GetByteCount(content) > SecurityPolicy.MaxOrchestrationBytes)
+            throw new InvalidOperationException($"Orchestration exceeds the maximum size of {SecurityPolicy.MaxOrchestrationBytes} bytes.");
     }
 
     private static string ComputeHash(string content)
