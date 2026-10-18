@@ -35,6 +35,7 @@ public static class SettingsKeys
     public const string DefaultNetworkWatermarkForeground = "#FF000000";
     public const string CountdownColor = "CountdownColor";
     public const string CountdownOpacityPercent = "CountdownOpacityPercent";
+    public const string CountdownAutoContrast = "CountdownAutoContrast";
 
     /// <summary>Default countdown font color (ARGB hex).</summary>
     public const string DefaultCountdownColor = "#FFFFFFFF";

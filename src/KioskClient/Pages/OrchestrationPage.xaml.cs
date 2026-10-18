@@ -85,7 +85,12 @@ public sealed partial class OrchestrationPage : Page
 
     private void Runner_ActionTimerStarted(object? sender, int durationSeconds)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        DispatcherQueue.TryEnqueue(() => StartCountdown(durationSeconds));
+    }
+
+    /// <summary>Starts (or restarts) the countdown overlay. Called by action pages that know their own length.</summary>
+    public void StartCountdown(int durationSeconds)
+    {
         {
             var vm = App.SettingsVM;
             if (!vm.ShowCountdown || durationSeconds <= 0)
@@ -94,9 +99,18 @@ public sealed partial class OrchestrationPage : Page
                 return;
             }
 
-            CountdownText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(vm.CountdownColor);
-            CountdownText.Opacity = Math.Clamp(vm.CountdownOpacityPercent, 0, 100) / 100.0;
-            CountdownText.Visibility = Visibility.Visible;
+            if (vm.CountdownAutoContrast)
+            {
+                CountdownText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
+                CountdownBadge.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Black);
+            }
+            else
+            {
+                CountdownText.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(vm.CountdownColor);
+                CountdownBadge.Background = null;
+            }
+            CountdownBadge.Opacity = Math.Clamp(vm.CountdownOpacityPercent, 0, 100) / 100.0;
+            CountdownBadge.Visibility = Visibility.Visible;
 
             _actionEndUtc = DateTime.UtcNow.AddSeconds(durationSeconds);
             UpdateCountdownText();
@@ -105,7 +119,7 @@ public sealed partial class OrchestrationPage : Page
             _countdownTimer.Tick -= CountdownTimer_Tick;
             _countdownTimer.Tick += CountdownTimer_Tick;
             _countdownTimer.Start();
-        });
+        }
     }
 
     private void CountdownTimer_Tick(object? sender, object e) => UpdateCountdownText();
@@ -119,7 +133,7 @@ public sealed partial class OrchestrationPage : Page
     private void StopCountdown()
     {
         _countdownTimer?.Stop();
-        CountdownText.Visibility = Visibility.Collapsed;
+        CountdownBadge.Visibility = Visibility.Collapsed;
     }
 
     private void Runner_Completed(object? sender, EventArgs e)

@@ -1,0 +1,50 @@
+name: Store - Promote BETA to RETAIL
+
+# The Store submission API cannot "promote" a flight, so promotion resubmits the exact
+# package that was tested in the beta as a retail submission.
+
+on:
+  workflow_dispatch:
+    inputs:
+      beta_run_id:
+        description: 'Run ID of the "Store - Publish BETA flight" run whose package should go to retail'
+        required: true
+
+jobs:
+  publish-retail:
+    runs-on: windows-latest
+    # Configure required reviewers on this environment for a manual approval gate.
+    environment: store-production
+
+    steps:
+    - name: Download tested beta package
+      uses: actions/download-artifact@v4
+      with:
+        name: store-package
+        path: StorePackage
+        run-id: ${{ inputs.beta_run_id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Microsoft Store CLI
+      uses: microsoft/setup-msstore-cli@v1
+
+    - name: Configure Store credentials
+      env:
+        PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+        PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+        PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+        PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+      run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET --sellerId $env:PARTNER_CENTER_SELLER_ID
+
+    - name: Publish to RETAIL
+      env:
+        STORE_APP_ID: ${{ vars.STORE_APP_ID }}
+      run: |
+        $bundle = Get-ChildItem StorePackage -Filter *.msixbundle | Select-Object -First 1
+        msstore publish $bundle.FullName --appId $env:STORE_APP_ID --inputDirectory StorePackage
+        if ($LASTEXITCODE -ne 0) { throw "msstore publish failed" }
+
+    - name: Summary
+      run: |
+        "### RETAIL submission created" >> $env:GITHUB_STEP_SUMMARY
+        "Promoted package from beta run ${{ inputs.beta_run_id }}" >> $env:GITHUB_STEP_SUMMARY

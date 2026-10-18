@@ -49,6 +49,12 @@ public abstract class ActionBase
             : new ValidationResult { Identifier = $"{Name} - Path", IsValid = false, Message = error, Guidance = "Use an https:// URL or, for local orchestrations, an absolute local path." };
     }
 
+    /// <summary>Names of deprecated fields that were present when this action was loaded.</summary>
+    public virtual IReadOnlyList<string> GetDeprecatedFields() => [];
+
+    /// <summary>Removes deprecated fields and returns a description of each conversion that was made.</summary>
+    public virtual List<string> RemoveDeprecatedFields() => [];
+
     /// <summary>Validates that a seconds value is within 0..MaxSeconds.</summary>
     protected ValidationResult ValidateSecondsRange(string field, int value, int min)
     {

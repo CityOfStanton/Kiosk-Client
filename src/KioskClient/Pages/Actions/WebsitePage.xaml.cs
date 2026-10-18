@@ -8,8 +8,8 @@ namespace KioskClient.Pages.Actions;
 
 /// <summary>
 /// Displays a website in a WebView2 control with optional auto-scrolling.
-/// Auto-scrolling smoothly scrolls through the page content over the configured
-/// ScrollingTime, then resets to the top after ScrollingResetDelay.
+/// Auto-scrolling moves at a fixed, readable speed for as long as the action is displayed,
+/// optionally after ScrollingStartDelay seconds.
 /// A settings/exit button is shown for SettingsDisplayTime seconds, then hidden.
 /// </summary>
 public sealed partial class WebsitePage : Page
@@ -17,11 +17,12 @@ public sealed partial class WebsitePage : Page
     private WebsiteAction? _action;
     private DispatcherTimer? _scrollingTimer;
     private DispatcherTimer? _settingsButtonTimer;
-    private double _currentTick;
-    private double _totalTicks;
-    private double _webviewContentHeight;
+    private double _position;
+    private readonly System.Diagnostics.Stopwatch _stopwatch = new();
+    private TimeSpan _lastTick;
     private const int RefreshRate = 60;
-
+    private const double PixelsPerSecond = 60;
+    private bool _escapeHooked;
     public WebsitePage()
     {
         this.InitializeComponent();
@@ -29,7 +30,7 @@ public sealed partial class WebsitePage : Page
         WebviewDisplay.NavigationCompleted += WebviewDisplay_NavigationCompleted;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
 
@@ -38,14 +39,27 @@ public sealed partial class WebsitePage : Page
 
         try
         {
+            await WebviewDisplay.EnsureCoreWebView2Async();
+            if (!_escapeHooked)
+            {
+                _escapeHooked = true;
+                // WebView2 swallows key events, so forward Escape from the page via a web message.
+                await WebviewDisplay.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
+                    "window.addEventListener('keydown',function(e){if(e.key==='Escape'){window.chrome.webview.postMessage('kiosk-escape');}},true);");
+                WebviewDisplay.CoreWebView2.WebMessageReceived += (s, a) =>
+                {
+                    if (a.TryGetWebMessageAsString() == "kiosk-escape")
+                        DispatcherQueue.TryEnqueue(() => SettingsButton_Click(this, new RoutedEventArgs()));
+                };
+            }
+
             WebviewDisplay.Source = new Uri(_action.Path);
             WebviewDisplay.Visibility = Visibility.Visible;
 
             // Set up auto-scroll timer
-            if (_action.AutoScroll && _action.ScrollingTime > 0)
+            if (_action.AutoScroll)
             {
-                _currentTick = 0;
-                _totalTicks = RefreshRate * _action.ScrollingTime;
+                _position = 0;
 
                 _scrollingTimer = new DispatcherTimer
                 {
@@ -87,12 +101,12 @@ public sealed partial class WebsitePage : Page
                 return;
             }
 
-            // Get the document height for scroll calculations
-            var heightResult = await WebviewDisplay.ExecuteScriptAsync("document.body.scrollHeight");
-            if (!string.IsNullOrEmpty(heightResult) && double.TryParse(heightResult, out var height))
+            if (_scrollingTimer is not null)
             {
-                _webviewContentHeight = height;
-                _scrollingTimer?.Start();
+                _position = 0;
+                _stopwatch.Restart();
+                _lastTick = TimeSpan.Zero;
+                _scrollingTimer.Start();
             }
 
             _settingsButtonTimer?.Start();
@@ -107,24 +121,15 @@ public sealed partial class WebsitePage : Page
     {
         try
         {
-            if (++_currentTick > _totalTicks)
-            {
-                // Pause at bottom, then scroll back to top
-                if (_action?.ScrollingResetDelay > 0)
-                {
-                    _scrollingTimer?.Stop();
-                    await Task.Delay(_action.ScrollingResetDelay * 1000);
-                    _scrollingTimer?.Start();
-                }
+            var now = _stopwatch.Elapsed;
+            var dt = Math.Min((now - _lastTick).TotalSeconds, 0.25);
+            _lastTick = now;
 
-                _currentTick = 0;
-                await WebviewDisplay.ExecuteScriptAsync("window.scrollTo(0,0);");
-            }
-            else if (_webviewContentHeight > 0)
-            {
-                var scrollPosition = (_currentTick / _totalTicks) * _webviewContentHeight;
-                await WebviewDisplay.ExecuteScriptAsync($"window.scrollTo(0,{scrollPosition});");
-            }
+            if (_action is null || now.TotalSeconds < _action.ScrollingStartDelay) return;
+
+            _position += PixelsPerSecond * _action.ScrollSpeed * dt;
+            var y = _position.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+            await WebviewDisplay.ExecuteScriptAsync($"window.scrollTo(0,{y});");
         }
         catch
         {

@@ -1,0 +1,53 @@
+name: Store - Publish BETA flight
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version Major.Minor.Build.0 (leave empty to use the manifest version). Must be higher than any previously submitted version.'
+        required: false
+        default: ''
+
+jobs:
+  package:
+    uses: ./.github/workflows/package.yml
+    with:
+      version: ${{ inputs.version }}
+
+  publish-beta:
+    needs: package
+    runs-on: windows-latest
+    environment: store-beta
+
+    steps:
+    - name: Download package
+      uses: actions/download-artifact@v4
+      with:
+        name: store-package
+        path: StorePackage
+
+    - name: Setup Microsoft Store CLI
+      uses: microsoft/setup-msstore-cli@v1
+
+    - name: Configure Store credentials
+      env:
+        PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+        PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+        PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+        PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+      run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET --sellerId $env:PARTNER_CENTER_SELLER_ID
+
+    - name: Publish to BETA flight
+      env:
+        STORE_APP_ID: ${{ vars.STORE_APP_ID }}
+        STORE_FLIGHT_ID: ${{ vars.STORE_FLIGHT_ID }}
+      run: |
+        $bundle = Get-ChildItem StorePackage -Filter *.msixbundle | Select-Object -First 1
+        msstore publish $bundle.FullName --appId $env:STORE_APP_ID --flightId $env:STORE_FLIGHT_ID --inputDirectory StorePackage
+        if ($LASTEXITCODE -ne 0) { throw "msstore publish failed" }
+
+    - name: Summary
+      run: |
+        "### BETA flight submitted" >> $env:GITHUB_STEP_SUMMARY
+        "Version: ${{ needs.package.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+        "Run ID (use this to promote): ${{ github.run_id }}" >> $env:GITHUB_STEP_SUMMARY

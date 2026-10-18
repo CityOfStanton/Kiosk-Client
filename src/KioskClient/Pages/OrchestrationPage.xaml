@@ -38,11 +38,15 @@
             </Border>
 
             <!-- Duration Countdown -->
-            <TextBlock x:Name="CountdownText"
-                       FontSize="32"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Visibility="Collapsed" />
+            <Border x:Name="CountdownBadge"
+                    CornerRadius="6"
+                    Padding="10,2"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="CountdownText"
+                           FontSize="32"
+                           FontWeight="SemiBold" />
+            </Border>
         </StackPanel>
     </Grid>
 </Page>

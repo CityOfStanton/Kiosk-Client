@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="using:KioskClient.Converters"
     xmlns:vm="using:KioskClient.ViewModels"
+    xmlns:local="using:KioskClient.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -66,12 +67,12 @@
                     </InfoBar.ActionButton>
                 </InfoBar>
 
-                <!-- Deprecated polling field banner -->
+                <!-- Deprecated fields banner -->
                 <InfoBar x:Name="DeprecatedPollingIntervalBanner"
-                         IsOpen="{x:Bind ViewModel.HasDeprecatedPollingField, Mode=OneWay}"
+                         IsOpen="{x:Bind ViewModel.HasDeprecatedFields, Mode=OneWay}"
                          Severity="Informational"
-                         Title="Deprecated Polling Field Detected"
-                         Message="This orchestration file contains 'pollingInterval' or 'pollingIntervalMinutes', which are no longer used. Polling is now derived automatically from action durations. These fields will not be written if you re-save the file."
+                         Title="Deprecated Fields Detected"
+                         Message="{x:Bind ViewModel.DeprecatedFieldsMessage, Mode=OneWay}"
                          IsClosable="True">
                     <InfoBar.ActionButton>
                         <Button Content="Open in Editor" Click="OpenInEditor_Click" />
@@ -348,12 +349,15 @@
                             <StackPanel Spacing="12">
                                 <TextBlock Text="Auto-Retry" FontWeight="Bold" FontSize="16" />
 
-                                <ToggleSwitch Header="Enable Auto-Retry"
-                                              IsOn="{x:Bind ViewModel.IsAutoRetryEnabled, Mode=TwoWay}" />
-                                <TextBlock Text="When enabled, the orchestration will automatically restart after returning to the home screen."
-                                           TextWrapping="Wrap"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="12" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Enable Auto-Retry" />
+                                    <TextBlock Text="When enabled, the orchestration will automatically restart after returning to the home screen."
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12" />
+                                    <ToggleSwitch AutomationProperties.Name="Enable Auto-Retry"
+                                                  IsOn="{x:Bind ViewModel.IsAutoRetryEnabled, Mode=TwoWay}" />
+                                </StackPanel>
 
                                 <NumberBox Header="Retry Delay (seconds)"
                                            Value="{x:Bind ViewModel.AutoRetrySeconds, Mode=TwoWay}"
@@ -371,12 +375,15 @@
                             <StackPanel Spacing="12">
                                 <TextBlock Text="Security" FontWeight="Bold" FontSize="16" />
 
-                                <ToggleSwitch Header="Block HTTP addresses"
-                                              IsOn="{x:Bind ViewModel.BlockHttp, Mode=TwoWay}" />
-                                <TextBlock Text="When enabled (recommended), orchestrations and content must use HTTPS. Turn off to allow unencrypted http:// addresses."
-                                           TextWrapping="Wrap"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="12" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Block HTTP addresses" />
+                                    <TextBlock Text="When enabled (recommended), orchestrations and content must use HTTPS. Turn off to allow unencrypted http:// addresses."
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12" />
+                                    <ToggleSwitch AutomationProperties.Name="Block HTTP addresses"
+                                                  IsOn="{x:Bind ViewModel.BlockHttp, Mode=TwoWay}" />
+                                </StackPanel>
 
                                 <NumberBox Header="Maximum content size (MB)"
                                            Value="{x:Bind ViewModel.MaxContentMegabytes, Mode=TwoWay}"
@@ -394,11 +401,21 @@
                             <StackPanel Spacing="12">
                                 <TextBlock Text="Countdown Overlay" FontWeight="Bold" FontSize="16" />
 
-                                <ToggleSwitch Header="Show countdown in bottom-left corner"
-                                              IsOn="{x:Bind ViewModel.ShowCountdown, Mode=TwoWay}" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Show countdown in bottom-left corner" />
+                                    <ToggleSwitch AutomationProperties.Name="Show countdown in bottom-left corner"
+                                                  IsOn="{x:Bind ViewModel.ShowCountdown, Mode=TwoWay}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Automatically contrast with background" />
+                                    <ToggleSwitch AutomationProperties.Name="Automatically contrast with background"
+                                                  IsEnabled="{x:Bind ViewModel.ShowCountdown, Mode=OneWay}"
+                                                  IsOn="{x:Bind ViewModel.CountdownAutoContrast, Mode=TwoWay}" />
+                                </StackPanel>
 
                                 <DropDownButton Content="Font Color"
-                                                IsEnabled="{x:Bind ViewModel.ShowCountdown, Mode=OneWay}">
+                                                IsEnabled="{x:Bind local:SettingsPage.IsManualColor(ViewModel.ShowCountdown, ViewModel.CountdownAutoContrast), Mode=OneWay}">
                                     <DropDownButton.Flyout>
                                         <Flyout>
                                             <ColorPicker Color="{x:Bind ViewModel.CountdownColor, Mode=TwoWay}"
@@ -441,8 +458,11 @@
                                 <TextBlock Text="Network Disconnected Indicator" FontWeight="Bold" FontSize="16" />
 
 
-                                <ToggleSwitch Header="Show indicator in bottom-left corner when the connection drops"
-                                              IsOn="{x:Bind ViewModel.ShowNetworkWatermark, Mode=TwoWay}" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Show indicator in bottom-left corner when the connection drops" />
+                                    <ToggleSwitch AutomationProperties.Name="Show indicator in bottom-left corner when the connection drops"
+                                                  IsOn="{x:Bind ViewModel.ShowNetworkWatermark, Mode=TwoWay}" />
+                                </StackPanel>
 
                                 <DropDownButton Content="Background Color"
                                                 IsEnabled="{x:Bind ViewModel.ShowNetworkWatermark, Mode=OneWay}">

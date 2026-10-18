@@ -88,68 +88,6 @@ jobs:
       uses: github/codeql-action/analyze@v3
 
   package:
-    runs-on: windows-latest
     needs: [build-and-test, security-analysis]
     if: github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        platform: [x64, ARM64]
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-
-    - name: Decode signing certificate
-      if: env.SIGNING_CERTIFICATE_BASE64 != ''
-      env:
-        SIGNING_CERTIFICATE_BASE64: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
-      run: |
-        $certBytes = [Convert]::FromBase64String($env:SIGNING_CERTIFICATE_BASE64)
-        [IO.File]::WriteAllBytes("${{ github.workspace }}\SigningCert.pfx", $certBytes)
-
-    - name: Build MSIX package (signed)
-      if: env.SIGNING_CERTIFICATE_BASE64 != ''
-      env:
-        SIGNING_CERTIFICATE_BASE64: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
-        SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
-      run: |
-        dotnet publish ${{ env.APP_PROJECT_PATH }} `
-          --configuration ${{ env.CONFIGURATION }} `
-          -p:Platform=${{ matrix.platform }} `
-          -p:AppxPackageSigningEnabled=true `
-          -p:PackageCertificateKeyFile="${{ github.workspace }}\SigningCert.pfx" `
-          -p:PackageCertificatePassword="${{ env.SIGNING_CERTIFICATE_PASSWORD }}" `
-          -p:GenerateAppxPackageOnBuild=true
-
-    - name: Build MSIX package (unsigned)
-      if: env.SIGNING_CERTIFICATE_BASE64 == ''
-      env:
-        SIGNING_CERTIFICATE_BASE64: ${{ secrets.SIGNING_CERTIFICATE_BASE64 }}
-      run: |
-        dotnet publish ${{ env.APP_PROJECT_PATH }} `
-          --configuration ${{ env.CONFIGURATION }} `
-          -p:Platform=${{ matrix.platform }} `
-          -p:AppxPackageSigningEnabled=false `
-          -p:GenerateAppxPackageOnBuild=true
-
-    - name: Remove signing certificate
-      if: always()
-      run: |
-        if (Test-Path "${{ github.workspace }}\SigningCert.pfx") {
-          Remove-Item "${{ github.workspace }}\SigningCert.pfx" -Force
-        }
-
-    - name: Upload MSIX artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: KioskClient-MSIX-${{ matrix.platform }}
-        path: |
-          src/KioskClient/bin/${{ matrix.platform }}/${{ env.CONFIGURATION }}/**/*.msix
-          src/KioskClient/bin/${{ matrix.platform }}/${{ env.CONFIGURATION }}/**/*.msixbundle
-          src/KioskClient/AppPackages/**/*.msix
-          src/KioskClient/AppPackages/**/*.msixbundle
+    uses: ./.github/workflows/package.yml

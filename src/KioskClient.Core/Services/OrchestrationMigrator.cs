@@ -15,6 +15,7 @@ public static class OrchestrationMigrator
     /// <summary>Returns true when the orchestration uses an older version or deprecated fields.</summary>
     public static bool NeedsMigration(Orchestration orchestration) =>
         orchestration.UsedDeprecatedPollingField
+        || orchestration.Actions.Any(a => a.GetDeprecatedFields().Count > 0)
         || IsOutdated(orchestration.Version)
         || orchestration.Actions.Any(a => IsOutdated(a.Version));
 
@@ -38,6 +39,9 @@ public static class OrchestrationMigrator
             changes.Add("Removed deprecated 'pollingInterval' / 'pollingIntervalMinutes' field. Polling is now derived from action durations.");
             orchestration.UsedDeprecatedPollingField = false;
         }
+
+        foreach (var action in orchestration.Actions)
+            changes.AddRange(action.RemoveDeprecatedFields());
 
         var updatedActions = 0;
         foreach (var action in orchestration.Actions.Where(a => IsOutdated(a.Version)))

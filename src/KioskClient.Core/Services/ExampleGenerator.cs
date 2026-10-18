@@ -37,8 +37,7 @@ public static class ExampleGenerator
                     Duration = 20,
                     Path = "https://github.com/CityOfStanton/Kiosk-Client",
                     AutoScroll = true,
-                    ScrollingTime = 15,
-                    ScrollingResetDelay = 5,
+                    ScrollingStartDelay = 3,
                     SettingsDisplayTime = 5
                 },
                 new VideoAction

@@ -135,13 +135,6 @@
                     <StackPanel x:Name="ActionPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock x:Name="ActionTypeText" FontWeight="SemiBold" FontSize="16" />
                         <TextBox x:Name="ActionNameBox" Header="Action name" TextChanged="ActionNameBox_TextChanged" />
-                        <NumberBox x:Name="DurationBox"
-                                   Header="Duration (seconds)"
-                                   Minimum="0"
-                                   SpinButtonPlacementMode="Compact"
-                                   Width="200"
-                                   HorizontalAlignment="Left"
-                                   ValueChanged="DurationBox_ValueChanged" />
 
                         <Grid ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
@@ -157,18 +150,41 @@
 
                         <StackPanel x:Name="VideoPanel" Spacing="12" Visibility="Collapsed">
                             <ComboBox x:Name="PlayModeBox" Header="Play mode" MinWidth="180" SelectionChanged="PlayModeBox_SelectionChanged" />
-                            <CheckBox x:Name="MuteCheck" Content="Mute audio" Click="MuteCheck_Click" />
                         </StackPanel>
+
+                        <NumberBox x:Name="DurationBox"
+                                   Header="Duration (seconds)"
+                                   Minimum="0"
+                                   SpinButtonPlacementMode="Inline"
+                                   Width="200"
+                                   HorizontalAlignment="Left"
+                                   ValueChanged="DurationBox_ValueChanged" />
+
+                        <CheckBox x:Name="MuteCheck" Content="Mute audio" Visibility="Collapsed" Click="MuteCheck_Click" />
 
                         <StackPanel x:Name="WebsitePanel" Spacing="12" Visibility="Collapsed">
                             <CheckBox x:Name="AutoScrollCheck" Content="Auto-scroll" Click="AutoScrollCheck_Click" />
-                            <NumberBox x:Name="ScrollingTimeBox" Header="Scrolling time (seconds)" Minimum="0" SpinButtonPlacementMode="Compact" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
-                            <NumberBox x:Name="ScrollingResetDelayBox" Header="Scrolling reset delay (seconds)" Minimum="0" SpinButtonPlacementMode="Compact" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
-                            <NumberBox x:Name="SettingsDisplayTimeBox" Header="Settings display time (seconds)" Minimum="0" SpinButtonPlacementMode="Compact" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
+                            <NumberBox x:Name="ScrollSpeedBox" Header="Scroll speed (1 = default, 2 = twice as fast, 0.5 = half speed)" Minimum="0.1" Maximum="10" SmallChange="0.1" LargeChange="0.5" SpinButtonPlacementMode="Inline" Width="200" HorizontalAlignment="Left" ValueChanged="ScrollSpeedBox_ValueChanged" />
+                            <NumberBox x:Name="ScrollingStartDelayBox" Header="Scrolling start delay (seconds)" Minimum="0" SpinButtonPlacementMode="Inline" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
+                            <NumberBox x:Name="SettingsDisplayTimeBox" Header="Settings display time (seconds)" Minimum="0" SpinButtonPlacementMode="Inline" Width="200" HorizontalAlignment="Left" ValueChanged="WebsiteNumber_ValueChanged" />
                         </StackPanel>
 
                         <TextBlock Text="Preview" FontWeight="SemiBold" />
-                        <controls:ActionPreviewControl x:Name="ActionPreview" Height="260" />
+                        <Grid Height="260">
+                            <controls:ActionPreviewControl x:Name="ActionPreview" Height="260" />
+                            <Border x:Name="PreviewHintBanner"
+                                    Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
+                                    CornerRadius="4"
+                                    IsHitTestVisible="False">
+                                <TextBlock Text="Click the Test button to load the preview."
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Margin="16"
+                                           FontSize="16" />
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>

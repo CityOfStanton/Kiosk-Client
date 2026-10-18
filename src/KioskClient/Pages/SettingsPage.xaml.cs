@@ -22,6 +22,8 @@ public sealed partial class SettingsPage : Page
 
     public SettingsViewModel ViewModel => App.SettingsVM;
 
+    public static bool IsManualColor(bool show, bool auto) => show && !auto;
+
     public SettingsPage()
     {
         this.InitializeComponent();
@@ -80,7 +82,7 @@ public sealed partial class SettingsPage : Page
                 RunOrchestration();
                 break;
             case "Editor":
-                await App.OpenEditorAsync(null);
+                await App.OpenEditorAsync(ViewModel.Orchestration);
                 break;
             case "Reset":
                 ResetSettings();

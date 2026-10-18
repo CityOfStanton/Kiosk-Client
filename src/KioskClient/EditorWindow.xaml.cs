@@ -50,7 +50,30 @@ public sealed partial class EditorWindow : Window
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
         AppWindow.Closing += AppWindow_Closing;
 
+        SetOwner();
+
         LoadOrchestration(CreateNew(), null, false);
+    }
+
+    private const int GWLP_HWNDPARENT = -8;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    /// <summary>Makes the main window the owner so this window always stays above it.</summary>
+    private void SetOwner()
+    {
+        try
+        {
+            var owner = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+            var self = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            if (owner != IntPtr.Zero && self != IntPtr.Zero)
+                SetWindowLongPtr(self, GWLP_HWNDPARENT, owner);
+        }
+        catch
+        {
+            // Fall back to normal window ordering.
+        }
     }
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
@@ -409,6 +432,7 @@ public sealed partial class EditorWindow : Window
             ActionPanel.Visibility = action is null ? Visibility.Collapsed : Visibility.Visible;
             NoSelectionText.Visibility = action is null ? Visibility.Visible : Visibility.Collapsed;
             ActionPreview.Clear();
+            PreviewHintBanner.Visibility = Visibility.Visible;
             PathStatus.Text = string.Empty;
 
             if (action is null) return;
@@ -426,6 +450,7 @@ public sealed partial class EditorWindow : Window
 
             StretchBox.Visibility = action is WebsiteAction ? Visibility.Collapsed : Visibility.Visible;
             VideoPanel.Visibility = action is VideoAction ? Visibility.Visible : Visibility.Collapsed;
+            MuteCheck.Visibility = action is VideoAction ? Visibility.Visible : Visibility.Collapsed;
             WebsitePanel.Visibility = action is WebsiteAction ? Visibility.Visible : Visibility.Collapsed;
 
             switch (action)
@@ -441,8 +466,8 @@ public sealed partial class EditorWindow : Window
                     break;
                 case WebsiteAction website:
                     AutoScrollCheck.IsChecked = website.AutoScroll;
-                    ScrollingTimeBox.Value = website.ScrollingTime;
-                    ScrollingResetDelayBox.Value = website.ScrollingResetDelay;
+                    ScrollingStartDelayBox.Value = website.ScrollingStartDelay;
+                    ScrollSpeedBox.Value = website.ScrollSpeed;
                     SettingsDisplayTimeBox.Value = website.SettingsDisplayTime;
                     break;
             }
@@ -519,10 +544,16 @@ public sealed partial class EditorWindow : Window
         if (_loading || SelectedAction is not WebsiteAction website) return;
         var value = double.IsNaN(sender.Value) ? 0 : (int)sender.Value;
 
-        if (sender == ScrollingTimeBox) website.ScrollingTime = value;
-        else if (sender == ScrollingResetDelayBox) website.ScrollingResetDelay = value;
+        if (sender == ScrollingStartDelayBox) website.ScrollingStartDelay = value;
         else if (sender == SettingsDisplayTimeBox) website.SettingsDisplayTime = value;
 
+        MarkDirty();
+    }
+
+    private void ScrollSpeedBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loading || SelectedAction is not WebsiteAction website) return;
+        website.ScrollSpeed = double.IsNaN(sender.Value) ? 1.0 : sender.Value;
         MarkDirty();
     }
 
@@ -532,6 +563,7 @@ public sealed partial class EditorWindow : Window
 
         var version = ++_testVersion;
         TestPathButton.IsEnabled = false;
+        PreviewHintBanner.Visibility = Visibility.Collapsed;
         PathStatus.Text = "Testing path...";
         PathStatus.ClearValue(TextBlock.ForegroundProperty);
 

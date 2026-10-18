@@ -18,15 +18,53 @@ public class WebsiteAction : ActionBase
     [XmlElement("AutoScroll")]
     public bool AutoScroll { get; set; }
 
-    /// <summary>Seconds to scroll through the page content.</summary>
-    [JsonPropertyName("scrollingTime")]
-    [XmlElement("ScrollingTime")]
-    public int ScrollingTime { get; set; }
+    /// <summary>Multiplier applied to the default scroll speed. 1 = default, 2 = twice as fast, 0.5 = half speed.</summary>
+    [JsonPropertyName("scrollSpeed")]
+    [XmlElement("ScrollSpeed")]
+    public double ScrollSpeed { get; set; } = 1.0;
 
-    /// <summary>Seconds to wait after reaching the bottom before resetting to the top.</summary>
+    /// <summary>Seconds to wait after the page loads before auto-scrolling begins.</summary>
+    [JsonPropertyName("scrollingStartDelay")]
+    [XmlElement("ScrollingStartDelay")]
+    public int ScrollingStartDelay { get; set; }
+
+    /// <summary>Deprecated and ignored. Auto-scroll now runs at a fixed speed for the whole action.</summary>
+    [JsonPropertyName("scrollingTime")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [XmlElement("ScrollingTime")]
+    public int? ScrollingTime { get; set; }
+
+    /// <summary>Deprecated and ignored.</summary>
     [JsonPropertyName("scrollingResetDelay")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [XmlElement("ScrollingResetDelay")]
-    public int ScrollingResetDelay { get; set; }
+    public int? ScrollingResetDelay { get; set; }
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<string> GetDeprecatedFields()
+    {
+        var fields = new List<string>();
+        if (ScrollingTime is not null) fields.Add("scrollingTime");
+        if (ScrollingResetDelay is not null) fields.Add("scrollingResetDelay");
+        return fields;
+    }
+
+    /// <inheritdoc/>
+    public override List<string> RemoveDeprecatedFields()
+    {
+        var changes = new List<string>();
+        if (ScrollingTime is not null)
+        {
+            changes.Add($"'{Name}': removed deprecated 'scrollingTime'. Auto-scroll now runs continuously at a fixed speed; use 'scrollSpeed' to adjust it.");
+            ScrollingTime = null;
+        }
+        if (ScrollingResetDelay is not null)
+        {
+            changes.Add($"'{Name}': removed deprecated 'scrollingResetDelay'. Scrolling no longer resets; use 'scrollingStartDelay' to delay the start.");
+            ScrollingResetDelay = null;
+        }
+        return changes;
+    }
 
     /// <summary>Seconds to show the settings/exit button overlay.</summary>
     [JsonPropertyName("settingsDisplayTime")]
@@ -49,11 +87,19 @@ public class WebsiteAction : ActionBase
 
         if (AutoScroll)
         {
-            var scrolling = ValidateSecondsRange("ScrollingTime", ScrollingTime, 1);
-            if (scrolling.IsValid == false) results.Add(scrolling);
+            var startDelay = ValidateSecondsRange("ScrollingStartDelay", ScrollingStartDelay, 0);
+            if (startDelay.IsValid == false) results.Add(startDelay);
 
-            var resetDelay = ValidateSecondsRange("ScrollingResetDelay", ScrollingResetDelay, 0);
-            if (resetDelay.IsValid == false) results.Add(resetDelay);
+            if (double.IsNaN(ScrollSpeed) || ScrollSpeed < 0.1 || ScrollSpeed > 10)
+            {
+                results.Add(new ValidationResult
+                {
+                    Identifier = $"{Name} - ScrollSpeed",
+                    IsValid = false,
+                    Message = "ScrollSpeed must be between 0.1 and 10.",
+                    Guidance = "Use 1 for the default speed, 2 for twice as fast, or 0.5 for half speed."
+                });
+            }
         }
 
         var settingsTime = ValidateSecondsRange("SettingsDisplayTime", SettingsDisplayTime, 1);

@@ -58,7 +58,8 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryOrder))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryActionCount))]
     [NotifyPropertyChangedFor(nameof(OrchestrationSummaryRuntime))]
-    [NotifyPropertyChangedFor(nameof(HasDeprecatedPollingField))]
+    [NotifyPropertyChangedFor(nameof(HasDeprecatedFields))]
+    [NotifyPropertyChangedFor(nameof(DeprecatedFieldsMessage))]
     private Orchestration? _orchestration;
 
     [ObservableProperty]
@@ -138,8 +139,12 @@ public partial class SettingsViewModel : ObservableObject
     private Windows.UI.Color _countdownColor = Microsoft.UI.Colors.White;
 
     [ObservableProperty]
-    private double _countdownOpacityPercent = SettingsKeys.DefaultCountdownOpacityPercent;
+    private bool _countdownAutoContrast = true;
 
+    partial void OnCountdownAutoContrastChanged(bool value) => _settings.SaveSetting(SettingsKeys.CountdownAutoContrast, value);
+
+    [ObservableProperty]
+    private double _countdownOpacityPercent = SettingsKeys.DefaultCountdownOpacityPercent;
     [ObservableProperty]
     private double _settingsButtonOpacityPercent = SettingsKeys.DefaultSettingsButtonOpacityPercent;
 
@@ -221,7 +226,25 @@ public partial class SettingsViewModel : ObservableObject
     public string OrchestrationSummaryRuntime => Orchestration is not null
         ? FormatTimeSpan(Orchestration.TotalRuntime)
         : "N/A";
-    public bool HasDeprecatedPollingField => Orchestration?.UsedDeprecatedPollingField == true;
+    public bool HasDeprecatedFields => DeprecatedFieldNames().Any();
+
+    public string DeprecatedFieldsMessage =>
+        $"This orchestration contains deprecated fields that are no longer used: {string.Join(", ", DeprecatedFieldNames())}. Open it in the Editor to convert it automatically. These fields will not be written when you save the file.";
+
+    private IEnumerable<string> DeprecatedFieldNames()
+    {
+        if (Orchestration is null) yield break;
+
+        if (Orchestration.UsedDeprecatedPollingField)
+            yield return "pollingInterval / pollingIntervalMinutes";
+
+        foreach (var action in Orchestration.Actions)
+        {
+            var fields = action.GetDeprecatedFields();
+            if (fields.Count > 0)
+                yield return $"{string.Join(", ", fields)} (in '{action.Name}')";
+        }
+    }
     public string AutoRetryCountdownDisplay => $"{CurrentAutoRetryCountdown}s";
 
     public SettingsViewModel(ISettingsService settings, IOrchestrationLoader loader, IHttpService httpService)
@@ -251,6 +274,7 @@ public partial class SettingsViewModel : ObservableObject
         NetworkWatermarkForeground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkForeground, SettingsKeys.DefaultNetworkWatermarkForeground) ?? SettingsKeys.DefaultNetworkWatermarkForeground);
         CountdownColor = ParseColor(_settings.GetSetting(SettingsKeys.CountdownColor, SettingsKeys.DefaultCountdownColor) ?? SettingsKeys.DefaultCountdownColor);
         CountdownOpacityPercent = _settings.GetSetting(SettingsKeys.CountdownOpacityPercent, SettingsKeys.DefaultCountdownOpacityPercent);
+        CountdownAutoContrast = _settings.GetSetting(SettingsKeys.CountdownAutoContrast, true);
 
         var maxHistory = _settings.GetSetting(SettingsKeys.MaxUrlHistory, SettingsKeys.DefaultMaxUrlHistory);
         MaxUrlHistory = maxHistory;

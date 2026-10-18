@@ -41,6 +41,7 @@ public sealed partial class VideoPage : Page
             };
             player.MediaFailed += Player_MediaFailed;
             player.MediaEnded += Player_MediaEnded;
+            player.MediaOpened += Player_MediaOpened;
 
             VideoDisplay.Stretch = ConvertStretch(_action.Stretch);
             VideoDisplay.SetMediaPlayer(player);
@@ -60,6 +61,7 @@ public sealed partial class VideoPage : Page
         {
             player.MediaFailed -= Player_MediaFailed;
             player.MediaEnded -= Player_MediaEnded;
+            player.MediaOpened -= Player_MediaOpened;
             player.Pause();
             VideoDisplay.SetMediaPlayer(null);
             player.Dispose();
@@ -69,6 +71,19 @@ public sealed partial class VideoPage : Page
     private void Player_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
     {
         DispatcherQueue.TryEnqueue(() => ShowError(args.ErrorMessage));
+    }
+
+    private void Player_MediaOpened(MediaPlayer sender, object args)
+    {
+        // Play-once videos have no fixed duration, so count down the video's own length.
+        if (_action?.PlayMode != VideoPlayMode.PlayOnce) return;
+        var seconds = (int)Math.Ceiling(sender.NaturalDuration.TotalSeconds);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (this.Frame?.Parent is FrameworkElement parent &&
+                parent.Parent is Pages.OrchestrationPage page)
+                page.StartCountdown(seconds);
+        });
     }
 
     private void Player_MediaEnded(MediaPlayer sender, object args)

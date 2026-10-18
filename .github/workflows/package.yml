@@ -1,0 +1,100 @@
+name: Package (MSIX bundle)
+
+# Reusable workflow: builds x64 + ARM64 MSIX packages with Visual Studio MSBuild
+# (dotnet CLI cannot run the WinUI/MSIX PRI tasks) and bundles them for the Store.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Package version (e.g. 2.0.15.0). Revision must be 0 for Store. Empty = use manifest version.'
+        type: string
+        required: false
+        default: ''
+    outputs:
+      version:
+        description: 'Version that was packaged'
+        value: ${{ jobs.package.outputs.version }}
+
+env:
+  DOTNET_VERSION: |
+    8.0.x
+    9.0.x
+  APP_PROJECT_PATH: src/KioskClient/KioskClient.csproj
+  MANIFEST_PATH: src/KioskClient/Package.appxmanifest
+  CONFIGURATION: Release
+
+jobs:
+  package:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Set package version
+      id: version
+      shell: pwsh
+      run: |
+        $manifest = Get-Content "${{ env.MANIFEST_PATH }}" -Raw
+        $requested = '${{ inputs.version }}'
+        if ([string]::IsNullOrWhiteSpace($requested)) {
+          $requested = [regex]::Match($manifest, '(?s)<Identity.*?Version="([^"]+)"').Groups[1].Value
+        }
+        if ($requested -notmatch '^\d+\.\d+\.\d+\.0$') {
+          throw "Version '$requested' is invalid. Store packages require Major.Minor.Build.0"
+        }
+        $updated = [regex]::Replace($manifest, '(?s)(<Identity.*?Version=")[^"]+(")', "`${1}$requested`${2}", 1)
+        Set-Content "${{ env.MANIFEST_PATH }}" $updated -NoNewline
+        "version=$requested" >> $env:GITHUB_OUTPUT
+
+    - name: Build MSIX (x64 + ARM64)
+      shell: pwsh
+      run: |
+        foreach ($platform in 'x64','ARM64') {
+          $rid = if ($platform -eq 'x64') { 'win-x64' } else { 'win-arm64' }
+          msbuild ${{ env.APP_PROJECT_PATH }} /restore `
+            /p:Configuration=${{ env.CONFIGURATION }} `
+            /p:Platform=$platform `
+            /p:RuntimeIdentifier=$rid `
+            /p:GenerateAppxPackageOnBuild=true `
+            /p:AppxBundle=Never `
+            /p:AppxPackageSigningEnabled=false `
+            /p:AppxPackageDir="$env:GITHUB_WORKSPACE\AppPackages\$platform\"
+          if ($LASTEXITCODE -ne 0) { throw "MSBuild failed for $platform" }
+        }
+
+    - name: Create MSIX bundle
+      shell: pwsh
+      run: |
+        $staging = Join-Path $env:RUNNER_TEMP 'bundle-input'
+        $out = Join-Path $env:GITHUB_WORKSPACE 'StorePackage'
+        New-Item -ItemType Directory -Force $staging, $out | Out-Null
+
+        $msix = Get-ChildItem "$env:GITHUB_WORKSPACE\AppPackages" -Recurse -Filter *.msix |
+                Where-Object { $_.FullName -notmatch '\\Dependencies\\' }
+        if ($msix.Count -lt 2) { throw "Expected x64 and ARM64 .msix files, found $($msix.Count)" }
+        $msix | ForEach-Object { Copy-Item $_.FullName $staging }
+
+        $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe" |
+                    Sort-Object FullName -Descending | Select-Object -First 1
+        $bundle = Join-Path $out "KioskClient_${{ steps.version.outputs.version }}.msixbundle"
+        & $makeappx.FullName bundle /d $staging /p $bundle /o
+        if ($LASTEXITCODE -ne 0) { throw "makeappx bundle failed" }
+
+    - name: Upload Store package
+      uses: actions/upload-artifact@v4
+      with:
+        name: store-package
+        path: StorePackage/*.msixbundle
+        if-no-files-found: error
