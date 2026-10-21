@@ -71,7 +71,7 @@ public class OrchestrationRunner : IDisposable
         _isRunning = true;
 
         OrchestrationStarted?.Invoke(this, EventArgs.Empty);
-        RaiseStatus("Orchestration started.");
+        RaiseStatus($"Orchestration started: {orchestration.Name} ({orchestration.Actions.Count} actions, {orchestration.Order}, {orchestration.Lifecycle}).");
 
         try
         {
@@ -130,6 +130,16 @@ public class OrchestrationRunner : IDisposable
                 var endsWhenComplete = action is VideoAction { PlayMode: VideoPlayMode.PlayOnce };
                 var duration = endsWhenComplete ? 0 : action.Duration ?? 10;
                 _currentActionDuration = duration;
+
+                var target = action switch
+                {
+                    ImageAction a => a.Path,
+                    WebsiteAction a => a.Path,
+                    VideoAction a => a.Path,
+                    _ => string.Empty
+                };
+                RaiseStatus($"Action {i + 1}/{actions.Count} started: {action.GetType().Name.Replace("Action", string.Empty)} {target} " +
+                            (endsWhenComplete ? "(until video ends)" : $"({duration}s)"));
 
                 _actionCompletion = endsWhenComplete
                     ? new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously)
@@ -267,6 +277,7 @@ public class OrchestrationRunner : IDisposable
             catch (Exception ex)
             {
                 NetworkStatusChanged?.Invoke(this, false);
+                RaiseStatus("Network disconnected.", isError: true);
                 RaiseStatus($"Polling: failed to check for updates: {ex.Message}");
 
                 // Retry quickly until the connection is restored so the indicator clears promptly
@@ -284,6 +295,7 @@ public class OrchestrationRunner : IDisposable
                 }
 
                 NetworkStatusChanged?.Invoke(this, true);
+                RaiseStatus("Network reconnected.");
             }
         }
     }

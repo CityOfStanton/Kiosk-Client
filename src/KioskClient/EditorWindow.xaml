@@ -14,7 +14,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" IsOpen="False" HorizontalAlignment="Left">
+        <StackPanel Grid.Row="0">
+        <CommandBar DefaultLabelPosition="Right" IsOpen="False" HorizontalAlignment="Left">
             <AppBarButton Label="New" Icon="Add" Click="NewButton_Click">
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="N" Modifiers="Control" />
@@ -54,6 +55,12 @@
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
         </CommandBar>
+        <TextBox x:Name="FilePathBox"
+                 IsReadOnly="True"
+                 PlaceholderText="Unsaved orchestration (no file loaded)"
+                 AutomationProperties.Name="Loaded file path"
+                 Margin="8,8,8,0" />
+        </StackPanel>
 
         <StackPanel Grid.Row="1">
             <InfoBar x:Name="MigrationBar"
@@ -142,7 +149,12 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="PathBox" Header="Path (URL or full file path)" TextChanged="PathBox_TextChanged" />
-                            <Button x:Name="TestPathButton" Grid.Column="1" Content="Test" VerticalAlignment="Bottom" Click="TestPath_Click" />
+                            <Button x:Name="TestPathButton" Grid.Column="1" VerticalAlignment="Bottom" Click="TestPath_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Play" />
+                                    <TextBlock Text="Test" />
+                                </StackPanel>
+                            </Button>
                         </Grid>
                         <TextBlock x:Name="PathStatus" TextWrapping="Wrap" />
 

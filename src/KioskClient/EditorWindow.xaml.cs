@@ -124,6 +124,8 @@ public sealed partial class EditorWindow : Window
         }
 
         LoadOrchestration(copy, file, isXml);
+        if (file is null && !string.IsNullOrWhiteSpace(source.SourcePath))
+            FilePathBox.Text = source.SourcePath;
     }
 
     private async Task LoadFileAsync(StorageFile file)
@@ -154,6 +156,7 @@ public sealed partial class EditorWindow : Window
     {
         _orchestration = orchestration;
         _file = file;
+        FilePathBox.Text = file?.Path ?? string.Empty;
         _isXml = isXml;
 
         var changes = OrchestrationMigrator.Migrate(orchestration);
@@ -247,6 +250,7 @@ public sealed partial class EditorWindow : Window
             if (picked is null) return false;
 
             _file = picked;
+            FilePathBox.Text = picked.Path;
             _isXml = picked.FileType.Equals(".xml", StringComparison.OrdinalIgnoreCase);
         }
 

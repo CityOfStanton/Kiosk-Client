@@ -126,10 +126,14 @@
                                     </Button>
                                 </Grid>
                                 <Button Grid.Column="1"
-                                        Content="Load"
                                         Command="{x:Bind ViewModel.LoadFromUriCommand}"
                                         Style="{StaticResource GreenButtonStyle}"
-                                        Margin="8,0,0,0" />
+                                        Margin="8,0,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <SymbolIcon Symbol="Download" />
+                                        <TextBlock Text="Load" />
+                                    </StackPanel>
+                                </Button>
                             </Grid>
                             <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsUriLoading, Mode=OneWay}"
                                          Visibility="{x:Bind ViewModel.IsUriLoading, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
@@ -323,8 +327,24 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                            <Button Content="Copy All" Click="CopyLog_Click" />
-                            <Button Content="Clear" Click="ClearLog_Click" />
+                            <Button Click="CopyLog_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Copy" />
+                                    <TextBlock Text="Copy To Clipboard" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="SaveLog_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Save" />
+                                    <TextBlock Text="Save as Text File" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="ClearLog_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Delete" />
+                                    <TextBlock Text="Clear" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
 
                         <ListView Grid.Row="1"

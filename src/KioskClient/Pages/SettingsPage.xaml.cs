@@ -520,6 +520,31 @@ public sealed partial class SettingsPage : Page
         Clipboard.SetContent(dataPackage);
     }
 
+    private async void SaveLog_Click(object sender, RoutedEventArgs e)
+    {
+        var picker = new FileSavePicker
+        {
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            SuggestedFileName = $"KioskClient-Log-{DateTime.Now:yyyyMMdd-HHmmss}"
+        };
+        picker.FileTypeChoices.Add("Text file", new List<string> { ".txt" });
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow));
+
+        var file = await picker.PickSaveFileAsync();
+        if (file is null) return;
+
+        try
+        {
+            // Entries are stored newest-first; write oldest-first.
+            await Windows.Storage.FileIO.WriteTextAsync(file, string.Join(Environment.NewLine, ViewModel.LogEntries.Reverse()));
+            ViewModel.AddLog($"Log saved to {file.Path}");
+        }
+        catch (Exception ex)
+        {
+            ViewModel.AddLog($"Failed to save log: {ex.Message}");
+        }
+    }
+
     private void ClearLog_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.LogEntries.Clear();

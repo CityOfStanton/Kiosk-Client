@@ -431,10 +431,14 @@ public partial class SettingsViewModel : ObservableObject
         SaveState();
     }
 
+    public const int MaxLogEntries = 2500;
+
     public void AddLog(string message)
     {
-        var entry = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        var entry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
         LogEntries.Insert(0, entry);
+        while (LogEntries.Count > MaxLogEntries)
+            LogEntries.RemoveAt(LogEntries.Count - 1);
     }
 
     /// <summary>

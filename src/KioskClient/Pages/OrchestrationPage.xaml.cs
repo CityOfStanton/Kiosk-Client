@@ -138,6 +138,7 @@ public sealed partial class OrchestrationPage : Page
 
     private void Runner_Completed(object? sender, EventArgs e)
     {
+        App.SettingsVM.AddLog("Orchestration ended: completed all actions.");
         DispatcherQueue.TryEnqueue(() => ReturnToHome(false));
     }
 
@@ -168,7 +169,7 @@ public sealed partial class OrchestrationPage : Page
 
     private void EscapeAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        CancelAndReturn();
+        CancelAndReturn("Escape key pressed");
         args.Handled = true;
     }
 
@@ -177,7 +178,7 @@ public sealed partial class OrchestrationPage : Page
         if (e.Key == Windows.System.VirtualKey.Escape ||
             e.Key == Windows.System.VirtualKey.Home)
         {
-            CancelAndReturn();
+            CancelAndReturn(e.Key == Windows.System.VirtualKey.Escape ? "Escape key pressed" : "Home key pressed");
         }
         else if (e.Key == Windows.System.VirtualKey.F5)
         {
@@ -194,6 +195,7 @@ public sealed partial class OrchestrationPage : Page
     private void RestartOrchestration()
     {
         if (_runner is null || _orchestration is null) return;
+        App.SettingsVM.AddLog("Orchestration restarted by user.");
         _runner.Stop();
         _ = _runner.StartAsync(_orchestration);
     }
@@ -201,8 +203,9 @@ public sealed partial class OrchestrationPage : Page
     /// <summary>
     /// Called from action pages when user clicks the settings/exit button.
     /// </summary>
-    public void CancelAndReturn()
+    public void CancelAndReturn(string reason = "Settings/exit button clicked")
     {
+        App.SettingsVM.AddLog($"Orchestration stopped by user: {reason}.");
         _runner?.Stop();
         ReturnToHome(true);
     }
