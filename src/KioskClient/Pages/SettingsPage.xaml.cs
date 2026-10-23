@@ -27,6 +27,7 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         this.InitializeComponent();
+        NavView.SelectedItem = NavItem_Orchestration;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -78,14 +79,10 @@ public sealed partial class SettingsPage : Page
 
         switch (item.Tag?.ToString())
         {
-            case "Run":
-                RunOrchestration();
-                break;
-            case "Editor":
-                await App.OpenEditorAsync(ViewModel.Orchestration);
-                break;
-            case "Reset":
-                ResetSettings();
+            case "Orchestration":
+            case "Settings":
+            case "Log":
+                ShowSection(item.Tag.ToString()!);
                 break;
             case "Examples":
                 await ShowExamplesDialogAsync();
@@ -123,6 +120,31 @@ public sealed partial class SettingsPage : Page
 
         ViewModel.AddLog("Starting orchestration...");
         Frame.Navigate(typeof(OrchestrationPage), ViewModel.Orchestration);
+    }
+
+    private void ShowSection(string tag)
+    {
+        OrchestrationSection.Visibility = tag == "Orchestration" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsSection.Visibility = tag == "Settings" ? Visibility.Visible : Visibility.Collapsed;
+        LogSection.Visibility = tag == "Log" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void RunButton_Click(object sender, RoutedEventArgs e) => RunOrchestration();
+
+    private async void ResetButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = this.XamlRoot,
+            Title = "Reset settings?",
+            Content = "All settings will be restored to their defaults. This cannot be undone.",
+            PrimaryButtonText = "Reset",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            ResetSettings();
     }
 
     private void ResetSettings()

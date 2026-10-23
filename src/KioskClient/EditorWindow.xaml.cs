@@ -348,6 +348,15 @@ public sealed partial class EditorWindow : Window
         MarkDirty();
     }
 
+    private void ActionList_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Delete && ActionList.SelectedItem is not null)
+        {
+            RemoveAction_Click(sender, e);
+            e.Handled = true;
+        }
+    }
+
     private void MoveUp_Click(object sender, RoutedEventArgs e) => MoveSelected(-1);
 
     private void MoveDown_Click(object sender, RoutedEventArgs e) => MoveSelected(1);
@@ -567,6 +576,7 @@ public sealed partial class EditorWindow : Window
 
         var version = ++_testVersion;
         TestPathButton.IsEnabled = false;
+        LoadPreviewButton.IsEnabled = false;
         PreviewHintBanner.Visibility = Visibility.Collapsed;
         PathStatus.Text = "Testing path...";
         PathStatus.ClearValue(TextBlock.ForegroundProperty);
@@ -575,6 +585,7 @@ public sealed partial class EditorWindow : Window
         if (version != _testVersion) return;
 
         TestPathButton.IsEnabled = true;
+        LoadPreviewButton.IsEnabled = true;
         if (error is null)
         {
             PathStatus.Text = "Path loaded successfully.";

@@ -25,5 +25,13 @@ public class EditorActionItem : ObservableObject
         _ => "Action"
     };
 
+    public string Glyph => Action switch
+    {
+        ImageAction => "\uE91B",
+        WebsiteAction => "\uE774",
+        VideoAction => "\uE714",
+        _ => "\uE8A5"
+    };
+
     public void Refresh() => OnPropertyChanged(nameof(DisplayName));
 }

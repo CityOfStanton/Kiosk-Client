@@ -39,6 +39,53 @@
         <Setter Property="Opacity" Value="0.8" />
     </Style>
 
+    <!-- Layout Tokens -->
+    <x:Double x:Key="PageMaxWidth">880</x:Double>
+    <x:Double x:Key="SectionSpacing">16</x:Double>
+    <Thickness x:Key="PagePadding">24,16,24,24</Thickness>
+    <CornerRadius x:Key="CardCornerRadius">8</CornerRadius>
+
+    <!-- Card container -->
+    <Style x:Key="CardBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource CardCornerRadius}" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+
+    <!-- Typography -->
+    <Style x:Key="PageTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="SectionTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,8,0,0" />
+    </Style>
+
+    <Style x:Key="SecondaryTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Small pill used for summary values -->
+    <Style x:Key="ChipBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource ControlFillColorSecondaryBrush}" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+
+    <!-- Icon-only borderless button -->
+    <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8" />
+    </Style>
+
     <!-- Validation Icons -->
     <x:String x:Key="ValidationPassedIcon">&#xF78C;</x:String>
     <x:String x:Key="ValidationFailedIcon">&#xE711;</x:String>

@@ -23,27 +23,31 @@
     </Page.Resources>
 
     <NavigationView x:Name="NavView"
-                    PaneDisplayMode="LeftCompact"
+                    PaneDisplayMode="Left"
+                    OpenPaneLength="220"
                     IsBackButtonVisible="Collapsed"
+                    IsSettingsVisible="False"
                     ItemInvoked="NavView_ItemInvoked">
 
         <NavigationView.MenuItems>
-            <NavigationViewItem x:Name="NavItem_Run" Content="Run Orchestration" Icon="Play" Tag="Run"
-                                IsEnabled="{x:Bind ViewModel.CanStart, Mode=OneWay}"
-                                ToolTipService.ToolTip="{x:Bind ViewModel.RunTooltip, Mode=OneWay}" />
-            <NavigationViewItem x:Name="NavItem_Editor" Content="Orchestration Editor" Icon="Edit" Tag="Editor" />
-            <NavigationViewItem x:Name="NavItem_Reset" Content="Reset Settings" Icon="Clear" Tag="Reset" />
+            <NavigationViewItem x:Name="NavItem_Orchestration" Content="Orchestration" Tag="Orchestration">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE768;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="NavItem_Settings" Content="Settings" Icon="Setting" Tag="Settings" />
+            <NavigationViewItem x:Name="NavItem_Log" Content="Log" Icon="Message" Tag="Log" />
         </NavigationView.MenuItems>
 
         <NavigationView.FooterMenuItems>
-            <NavigationViewItem x:Name="NavItem_Examples" Content="Examples" Icon="Download" Tag="Examples" />
-            <NavigationViewItem x:Name="NavItem_Tutorial" Content="Tutorial" Tag="Tutorial">
+            <NavigationViewItem x:Name="NavItem_Examples" Content="Examples" Icon="Download" Tag="Examples" SelectsOnInvoked="False" />
+            <NavigationViewItem x:Name="NavItem_Tutorial" Content="Tutorial" Tag="Tutorial" SelectsOnInvoked="False">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE7BE;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem x:Name="NavItem_Help" Content="Help" Icon="Help" Tag="Help" />
-            <NavigationViewItem x:Name="NavItem_About" Content="About" Tag="About">
+            <NavigationViewItem x:Name="NavItem_Help" Content="Help" Icon="Help" Tag="Help" SelectsOnInvoked="False" />
+            <NavigationViewItem x:Name="NavItem_About" Content="About" Tag="About" SelectsOnInvoked="False">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE946;" />
                 </NavigationViewItem.Icon>
@@ -51,8 +55,13 @@
         </NavigationView.FooterMenuItems>
 
         <!-- Main Content Area -->
-        <ScrollViewer>
-            <StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
 
                 <!-- Startup Retry Banner -->
                 <InfoBar x:Name="StartupRetryBanner"
@@ -78,19 +87,28 @@
                         <Button Content="Open in Editor" Click="OpenInEditor_Click" />
                     </InfoBar.ActionButton>
                 </InfoBar>
+            </StackPanel>
 
-                <Pivot x:Name="MainPivot" Margin="12">
+            <Grid Grid.Row="1">
 
-                <!-- Orchestration Tab -->
-                <PivotItem Header="Orchestration">
-                    <StackPanel Spacing="16" Padding="0,12,0,0">
+                <!-- Orchestration Section -->
+                <ScrollViewer x:Name="OrchestrationSection">
+                    <StackPanel HorizontalAlignment="Stretch"
+                                Padding="{StaticResource PagePadding}"
+                                Spacing="{StaticResource SectionSpacing}">
+
+                        <TextBlock Text="Orchestration" Style="{StaticResource PageTitleTextStyle}" />
+
+                        <!-- Run card: choose source, load, run -->
+                        <Border Style="{StaticResource CardBorderStyle}">
+                        <StackPanel Spacing="12">
 
                         <!-- Source Toggle -->
                         <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock Text="Source:" VerticalAlignment="Center" FontWeight="SemiBold" />
-                            <RadioButton x:Name="RadioUrl" Content="URL" GroupName="Source"
+                            <TextBlock Text="Source" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            <RadioButton x:Name="RadioUrl" Content="URL" GroupName="Source" MinWidth="0"
                                          IsChecked="{x:Bind ViewModel.IsLocalFile, Mode=TwoWay, Converter={StaticResource InvertBool}}" />
-                            <RadioButton x:Name="RadioFile" Content="File" GroupName="Source"
+                            <RadioButton x:Name="RadioFile" Content="File" GroupName="Source" MinWidth="0"
                                          IsChecked="{x:Bind ViewModel.IsLocalFile, Mode=TwoWay}" />
                         </StackPanel>
 
@@ -169,23 +187,44 @@
                                  Title="Failed to Load Orchestration"
                                  IsClosable="False" />
 
+                        <!-- Run actions -->
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="RunButton"
+                                    Click="RunButton_Click"
+                                    Style="{StaticResource AccentGreenButtonStyle}"
+                                    IsEnabled="{x:Bind ViewModel.CanStart, Mode=OneWay}"
+                                    ToolTipService.ToolTip="{x:Bind ViewModel.RunTooltip, Mode=OneWay}"
+                                    AutomationProperties.Name="Run orchestration">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Play" />
+                                    <TextBlock Text="Run orchestration" />
+                                    <TextBlock Text="F5" Opacity="0.7" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                                </Button>
+                                <Button Click="OpenInEditor_Click" AutomationProperties.Name="Open orchestration editor">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <SymbolIcon Symbol="Edit" />
+                                    <TextBlock Text="Open in editor" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        </StackPanel>
+                        </Border>
+
                         <!-- Orchestration Summary -->
                         <Border Visibility="{x:Bind ViewModel.Orchestration, Mode=OneWay, Converter={StaticResource NullToVis}}"
-                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="8"
-                                Padding="16"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                BorderThickness="1">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Orchestration Summary" FontWeight="Bold" FontSize="16" />
+                                Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Summary" Style="{StaticResource SectionTitleTextStyle}" Margin="0" />
                                 <Grid ColumnSpacing="24">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Grid Grid.Column="0" ColumnSpacing="12" RowSpacing="4" VerticalAlignment="Top">
+                                <Grid Grid.Column="0" ColumnSpacing="12" RowSpacing="6" VerticalAlignment="Top">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="Auto" MinWidth="72" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
@@ -198,25 +237,25 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryName, Mode=OneWay}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" Style="{StaticResource SecondaryTextStyle}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryName, Mode=OneWay}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Version:" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Version" Style="{StaticResource SecondaryTextStyle}" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryVersion, Mode=OneWay}" />
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Source:" FontWeight="SemiBold" />
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummarySource, Mode=OneWay}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Source" Style="{StaticResource SecondaryTextStyle}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummarySource, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
 
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Lifecycle:" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Lifecycle" Style="{StaticResource SecondaryTextStyle}" />
                                     <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryLifecycle, Mode=OneWay}" />
 
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Order:" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Order" Style="{StaticResource SecondaryTextStyle}" />
                                     <TextBlock Grid.Row="4" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryOrder, Mode=OneWay}" />
 
-                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Actions:" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Actions" Style="{StaticResource SecondaryTextStyle}" />
                                     <TextBlock Grid.Row="5" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryActionCount, Mode=OneWay}" />
 
-                                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Runtime:" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Runtime" Style="{StaticResource SecondaryTextStyle}" />
                                     <TextBlock Grid.Row="6" Grid.Column="1" Text="{x:Bind ViewModel.OrchestrationSummaryRuntime, Mode=OneWay}" />
                                 </Grid>
 
@@ -316,17 +355,19 @@
                         </Expander>
 
                     </StackPanel>
-                </PivotItem>
+                </ScrollViewer>
 
-                <!-- Log Tab -->
-                <PivotItem Header="Log">
-                    <Grid Padding="0,12,0,0">
+                <!-- Log Section -->
+                <Grid x:Name="LogSection"
+                      Visibility="Collapsed"
+                      HorizontalAlignment="Stretch"
+                      Padding="{StaticResource PagePadding}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8" HorizontalAlignment="Left">
                             <Button Click="CopyLog_Click">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <SymbolIcon Symbol="Copy" />
@@ -349,6 +390,8 @@
 
                         <ListView Grid.Row="1"
                                   ItemsSource="{x:Bind ViewModel.LogEntries}" 
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
                                   SelectionMode="None">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
@@ -357,11 +400,14 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </Grid>
-                </PivotItem>
 
-                <!-- Settings Tab -->
-                <PivotItem Header="Settings">
-                    <StackPanel Spacing="16" Padding="0,12,0,0">
+                <!-- Settings Section -->
+                <ScrollViewer x:Name="SettingsSection" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Stretch"
+                                Padding="{StaticResource PagePadding}"
+                                Spacing="{StaticResource SectionSpacing}">
+
+                        <TextBlock Text="Settings" Style="{StaticResource PageTitleTextStyle}" />
 
                         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 CornerRadius="8" Padding="16"
@@ -551,12 +597,31 @@
                             </StackPanel>
                         </Border>
 
-                    </StackPanel>
-                </PivotItem>
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Reset settings" FontWeight="SemiBold" />
+                                    <TextBlock Text="Restore all settings to their defaults. This cannot be undone."
+                                               Style="{StaticResource SecondaryTextStyle}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Click="ResetButton_Click" AutomationProperties.Name="Reset settings">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <SymbolIcon Symbol="Clear" />
+                                        <TextBlock Text="Reset" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
 
-            </Pivot>
-            </StackPanel>
-        </ScrollViewer>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Grid>
+        </Grid>
     </NavigationView>
 </Page>
 
