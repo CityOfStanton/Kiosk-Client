@@ -32,15 +32,15 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Set package version
       id: version
@@ -93,7 +93,7 @@ jobs:
         if ($LASTEXITCODE -ne 0) { throw "makeappx bundle failed" }
 
     - name: Upload Store package
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: store-package
         path: StorePackage/*.msixbundle

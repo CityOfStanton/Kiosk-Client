@@ -26,15 +26,15 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Restore dependencies
       run: msbuild ${{ env.SOLUTION_PATH }} -t:Restore -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }}
@@ -47,7 +47,7 @@ jobs:
       run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration ${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: test-results-${{ matrix.platform }}
@@ -59,15 +59,15 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Restore dependencies
       run: msbuild ${{ env.SOLUTION_PATH }} -t:Restore -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=x64
