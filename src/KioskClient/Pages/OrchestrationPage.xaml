@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="KioskClient.Pages.OrchestrationPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="Black"
+    KeyDown="Page_KeyDown"
+    KeyboardAcceleratorPlacementMode="Hidden">
+
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="EscapeAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
+    <Grid>
+        <!-- Action Content Frame -->
+        <Frame x:Name="ActionFrame" />
+
+        <StackPanel Orientation="Horizontal"
+                    Spacing="12"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Left"
+                    Margin="16,0,0,16"
+                    IsHitTestVisible="False">
+            <!-- Network Disconnected Watermark -->
+            <Border x:Name="NetworkWatermark"
+                    Background="Red"
+                    CornerRadius="4"
+                    Padding="10,4"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon x:Name="NetworkWatermarkIcon" Glyph="&#xF384;" FontSize="14" Foreground="Black" />
+                    <TextBlock x:Name="NetworkWatermarkText" Text="Network Disconnected" FontSize="14" FontWeight="SemiBold" Foreground="Black" />
+                </StackPanel>
+            </Border>
+
+            <!-- Duration Countdown -->
+            <Border x:Name="CountdownBadge"
+                    CornerRadius="6"
+                    Padding="10,2"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="CountdownText"
+                           FontSize="32"
+                           FontWeight="SemiBold" />
+            </Border>
+        </StackPanel>
+    </Grid>
+</Page>

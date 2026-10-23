@@ -1,0 +1,93 @@
+name: Build, Test & Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # .slnx solution files require the .NET 9 SDK (9.0.200+); projects still target net8.
+  DOTNET_VERSION: |
+    8.0.x
+    9.0.x
+  SOLUTION_PATH: KioskClient.slnx
+  APP_PROJECT_PATH: src/KioskClient/KioskClient.csproj
+  TEST_PROJECT_PATH: tests/KioskClient.Tests/KioskClient.Tests.csproj
+  CONFIGURATION: Release
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore dependencies
+      run: msbuild ${{ env.SOLUTION_PATH }} -t:Restore -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }}
+
+    - name: Build solution
+      run: msbuild ${{ env.SOLUTION_PATH }} -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }} -m
+
+    - name: Run tests
+      if: matrix.platform == 'x64'
+      run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration ${{ env.CONFIGURATION }} -p:Platform=${{ matrix.platform }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.platform }}
+        path: '**/*.trx'
+
+  security-analysis:
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore dependencies
+      run: msbuild ${{ env.SOLUTION_PATH }} -t:Restore -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=x64
+
+    - name: Run .NET security audit
+      run: dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: csharp
+        build-mode: manual
+
+    - name: Build for CodeQL analysis
+      run: msbuild ${{ env.SOLUTION_PATH }} -p:Configuration=${{ env.CONFIGURATION }} -p:Platform=x64 -m
+
+    - name: Perform CodeQL analysis
+      uses: github/codeql-action/analyze@v3
+
+  package:
+    needs: [build-and-test, security-analysis]
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/package.yml

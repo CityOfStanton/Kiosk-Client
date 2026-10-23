@@ -1,5 +1,0 @@
-<Project>
- <PropertyGroup>
-   <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
- </PropertyGroup>
-</Project>
