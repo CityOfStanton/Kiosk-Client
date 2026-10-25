@@ -10,26 +10,33 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+
+        <!-- Name -->
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                    Margin="20,0,0,40" Spacing="8" HorizontalAlignment="Center">
+            <TextBlock Text="Kiosk Client"
+                       Style="{ThemeResource HeaderTextBlockStyle}"/>
+        </StackPanel>
+
         <!-- Logo -->
-        <StackPanel Grid.Row="0" Grid.Column="0"
-                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Margin="10">
+        <StackPanel Grid.Row="1" Grid.Column="0"
+                    HorizontalAlignment="Center" VerticalAlignment="Top"
+                    Margin="0,0,0,20">
             <Image Source="ms-appx:///Assets/Square150x150Logo.scale-200.png"
                    Width="128" Height="128"
                    AutomationProperties.Name="Kiosk Client logo"/>
         </StackPanel>
 
         <!-- Info -->
-        <StackPanel Grid.Row="0" Grid.Column="1"
-                    Margin="20,0,0,0" Spacing="8">
-            <TextBlock Text="Kiosk Client"
-                       Style="{ThemeResource HeaderTextBlockStyle}"/>
+        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="8"
+                    Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="Version:"
                            Style="{ThemeResource TitleTextBlockStyle}"/>
@@ -39,8 +46,13 @@
             <TextBlock Text="Copyright (c) 2026. City of Stanton. All Rights Reserved."
                        TextWrapping="Wrap" MaxWidth="275"
                        Style="{ThemeResource SubtitleTextBlockStyle}"/>
-            <TextBlock Text="Disclaimer: This code and information is provided 'as is' without warranty of any kind, either expressed or implied, including but not limited to the implied warranties of merchantability and/or fitness for a particular purpose."
-                       TextWrapping="Wrap" MaxWidth="275"/>
+        </StackPanel>
+
+
+        <!-- Links -->
+        <StackPanel Grid.Row="2" Grid.Column="0"
+                    HorizontalAlignment="Center" VerticalAlignment="Top"
+                    Margin="10">
             <HyperlinkButton Content="Kiosk Client GitHub"
                              NavigateUri="https://github.com/CityOfStanton/Kiosk-Client"/>
             <HyperlinkButton Content="Kiosk Client on the Windows Store"
@@ -51,13 +63,22 @@
                              Content="Open Debug Logs Folder"
                              Click="LogsButton_Click"/>
         </StackPanel>
+        
+        <!-- Disclaimer & Buttons -->
+        <StackPanel Grid.Row="2" Grid.Column="1"
+                    HorizontalAlignment="Center" VerticalAlignment="Top"
+                    Margin="10">
+            
+            <TextBlock Text="Disclaimer: This code and information is provided 'as is' without warranty of any kind, either expressed or implied, including but not limited to the implied warranties of merchantability and/or fitness for a particular purpose."
+                       TextWrapping="Wrap" MaxWidth="275"/>
 
-        <Button Grid.Row="1" Grid.Column="1"
+            <Button Grid.Row="1" Grid.Column="1"
                 Content="Close"
                 Style="{StaticResource GreenButtonStyle}"
                 Width="200"
                 HorizontalAlignment="Right"
                 Margin="0,30,0,0"
                 Click="CloseButton_Click"/>
+        </StackPanel>
     </Grid>
 </ContentDialog>
