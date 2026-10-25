@@ -9,7 +9,7 @@
   <Identity
     Name="5999BirchCom.385071C3770F8"
     Publisher="CN=291573D4-2B42-451F-9AD2-2CCDBBAF6DB9"
-    Version="2.0.0.0" />
+    Version="2.0.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="e8b0a5b0-1234-5678-9abc-def012345678" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
