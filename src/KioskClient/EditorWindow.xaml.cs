@@ -70,9 +70,10 @@ public sealed partial class EditorWindow : Window
             if (owner != IntPtr.Zero && self != IntPtr.Zero)
                 SetWindowLongPtr(self, GWLP_HWNDPARENT, owner);
         }
-        catch
+        catch (Exception ex)
         {
             // Fall back to normal window ordering.
+            KioskClient.Core.Logging.AppLog.Warn("Editor", "Could not set editor window owner.", ex);
         }
     }
 
@@ -117,8 +118,9 @@ public sealed partial class EditorWindow : Window
                 file = await StorageFile.GetFileFromPathAsync(source.SourcePath);
                 isXml = file.FileType.Equals(".xml", StringComparison.OrdinalIgnoreCase);
             }
-            catch
+            catch (Exception ex)
             {
+                KioskClient.Core.Logging.AppLog.Warn("Editor", "Could not open the orchestration source file for editing.", ex);
                 file = null;
             }
         }
@@ -148,6 +150,7 @@ public sealed partial class EditorWindow : Window
         }
         catch (Exception ex)
         {
+            KioskClient.Core.Logging.AppLog.Error("Editor", "Unable to open orchestration file.", ex);
             await ShowMessageAsync("Unable to open file", ex.Message);
         }
     }
@@ -266,6 +269,7 @@ public sealed partial class EditorWindow : Window
         }
         catch (Exception ex)
         {
+            KioskClient.Core.Logging.AppLog.Error("Editor", "Unable to save orchestration file.", ex);
             await ShowMessageAsync("Unable to save file", ex.Message);
             return false;
         }

@@ -73,6 +73,7 @@ public sealed partial class ExamplesDialog : ContentDialog
         }
         catch (Exception ex)
         {
+            KioskClient.Core.Logging.AppLog.Error("Examples", "Failed to save example orchestration.", ex);
             StatusText.Text = $"Error: {ex.Message}";
         }
     }

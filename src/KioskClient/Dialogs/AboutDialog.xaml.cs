@@ -41,8 +41,8 @@ public sealed partial class AboutDialog : ContentDialog
 
     private async void LogsButton_Click(object sender, RoutedEventArgs e)
     {
-        // Same folder SettingsService writes to (packaged or unpackaged)
-        var path = KioskClient.Services.SettingsService.GetCacheFolderPath();
+        // Folder the daily debug log files are written to (packaged or unpackaged)
+        var path = KioskClient.Services.SettingsService.GetLogFolderPath();
         var folder = await StorageFolder.GetFolderFromPathAsync(path);
         await Windows.System.Launcher.LaunchFolderAsync(folder);
     }

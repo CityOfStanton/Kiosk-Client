@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using KioskClient.Core.Logging;
 
 namespace KioskClient.Core.Services;
 
@@ -55,8 +56,9 @@ public class ImageHashService : IImageHashService
         {
             throw;
         }
-        catch
+        catch (Exception ex)
         {
+            AppLog.Warn("ImageHash", $"Could not hash image {AppLog.Describe(path)}; it will be reloaded.", ex);
             return null;
         }
     }

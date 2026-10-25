@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -27,6 +28,8 @@ public sealed partial class VideoPage : Page
         if (e.Parameter is not VideoAction action) return;
         _action = action;
 
+        AppLog.Debug("VideoPage", $"Loading video: target={AppLog.Describe(_action.Path)}, mode={_action.PlayMode}, muted={_action.IsMuted}, stretch={_action.Stretch}.");
+
         try
         {
             if (!Uri.TryCreate(_action.Path, UriKind.Absolute, out var uri))
@@ -48,6 +51,7 @@ public sealed partial class VideoPage : Page
         }
         catch (Exception ex)
         {
+            AppLog.Error("VideoPage", $"Failed to start video {AppLog.Describe(_action.Path)}.", ex);
             ShowError(ex.Message);
         }
     }
@@ -70,11 +74,13 @@ public sealed partial class VideoPage : Page
 
     private void Player_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
     {
+        AppLog.Error("VideoPage", $"Media failed: error={args.Error}, hresult=0x{args.ExtendedErrorCode.HResult:X8}, message={args.ErrorMessage}");
         DispatcherQueue.TryEnqueue(() => ShowError(args.ErrorMessage));
     }
 
     private void Player_MediaOpened(MediaPlayer sender, object args)
     {
+        AppLog.Debug("VideoPage", $"Media opened: duration={sender.NaturalDuration.TotalSeconds:0.#}s.");
         // Play-once videos have no fixed duration, so count down the video's own length.
         if (_action?.PlayMode != VideoPlayMode.PlayOnce) return;
         var seconds = (int)Math.Ceiling(sender.NaturalDuration.TotalSeconds);
@@ -88,6 +94,7 @@ public sealed partial class VideoPage : Page
 
     private void Player_MediaEnded(MediaPlayer sender, object args)
     {
+        AppLog.Debug("VideoPage", "Media ended.");
         if (_action?.PlayMode == VideoPlayMode.PlayOnce)
             App.OrchestrationRunner.NotifyActionCompleted();
     }

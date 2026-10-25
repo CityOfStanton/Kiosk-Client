@@ -1,4 +1,5 @@
 using System.Net;
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 
 namespace KioskClient.Core.Services;
@@ -40,6 +41,7 @@ public class HttpService : IHttpService, IDisposable
             throw new InvalidOperationException(error);
 
         using var response = await _client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        AppLog.Debug("Http", $"GET {AppLog.Describe(uri.ToString())} -> {(int)response.StatusCode} {response.StatusCode}, contentLength={response.Content.Headers.ContentLength?.ToString() ?? "unknown"}.");
         response.EnsureSuccessStatusCode();
         if (response.Content.Headers.ContentLength > SecurityPolicy.MaxOrchestrationBytes)
             throw new InvalidOperationException($"Orchestration exceeds the maximum size of {SecurityPolicy.MaxOrchestrationBytes} bytes.");
@@ -56,6 +58,7 @@ public class HttpService : IHttpService, IDisposable
 
         if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsedUri))
         {
+            AppLog.Warn("Http", "URL validation failed: invalid URI format.");
             result.IsValid = false;
             result.Message = "Invalid URI format.";
             result.Guidance = "Ensure the URI is a valid absolute URL (e.g., https://example.com/file.json).";
@@ -65,6 +68,7 @@ public class HttpService : IHttpService, IDisposable
         var policyError = SecurityPolicy.CheckRemoteUrl(parsedUri);
         if (policyError is not null)
         {
+            AppLog.Warn("Http", $"URL rejected by security policy: {AppLog.Describe(uri)}. Reason: {policyError}");
             result.IsValid = false;
             result.Message = policyError;
             result.Guidance = "Use an https:// address.";
@@ -96,17 +100,20 @@ public class HttpService : IHttpService, IDisposable
                     result.IsValid = false;
                     result.Message = $"URI returned HTTP {(int)response.StatusCode} ({response.StatusCode}).";
                     result.Guidance = "Verify the URI is correct and the server is accessible.";
+                    AppLog.Warn("Http", $"URL validation failed for {AppLog.Describe(uri)}: HTTP {(int)response.StatusCode} ({response.StatusCode}).");
                 }
             }
         }
         catch (HttpRequestException ex)
         {
+            AppLog.Warn("Http", $"URL validation failed for {AppLog.Describe(uri)}: request error.", ex);
             result.IsValid = false;
             result.Message = $"Failed to reach URI: {ex.Message}";
             result.Guidance = "Check network connectivity and verify the URI is correct.";
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
+            AppLog.Warn("Http", $"URL validation timed out or was cancelled for {AppLog.Describe(uri)}.", ex);
             result.IsValid = false;
             result.Message = "Request timed out.";
             result.Guidance = "The server took too long to respond. Try again or check the URI.";

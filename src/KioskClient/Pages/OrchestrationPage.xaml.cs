@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 using KioskClient.Core.Services;
 using KioskClient.Pages.Actions;
@@ -33,6 +34,7 @@ public sealed partial class OrchestrationPage : Page
         if (e.Parameter is not Orchestration orchestration) return;
 
         _orchestration = orchestration;
+        AppLog.Info("OrchestrationPage", $"Orchestration page opened: source={orchestration.Source}, actions={orchestration.Actions.Count}.");
         App.SettingsVM.RecordLastRun(orchestration);
 
         // Enter full screen
@@ -68,17 +70,27 @@ public sealed partial class OrchestrationPage : Page
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            switch (e.Action)
+            try
             {
-                case ImageAction imageAction:
-                    ActionFrame.Navigate(typeof(ImagePage), imageAction);
-                    break;
-                case WebsiteAction websiteAction:
-                    ActionFrame.Navigate(typeof(WebsitePage), websiteAction);
-                    break;
-                case VideoAction videoAction:
-                    ActionFrame.Navigate(typeof(VideoPage), videoAction);
-                    break;
+                switch (e.Action)
+                {
+                    case ImageAction imageAction:
+                        ActionFrame.Navigate(typeof(ImagePage), imageAction);
+                        break;
+                    case WebsiteAction websiteAction:
+                        ActionFrame.Navigate(typeof(WebsitePage), websiteAction);
+                        break;
+                    case VideoAction videoAction:
+                        ActionFrame.Navigate(typeof(VideoPage), videoAction);
+                        break;
+                    default:
+                        AppLog.Warn("OrchestrationPage", $"Unsupported action type: {e.Action.GetType().Name}.");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLog.Error("OrchestrationPage", $"Failed to show action {e.ActionIndex + 1}/{e.TotalActions} ({e.Action.GetType().Name}).", ex);
             }
         });
     }
@@ -149,6 +161,7 @@ public sealed partial class OrchestrationPage : Page
 
     private void Runner_NetworkStatusChanged(object? sender, bool isConnected)
     {
+        AppLog.Info("OrchestrationPage", $"Network status changed: connected={isConnected}.");
         DispatcherQueue.TryEnqueue(() =>
         {
             var vm = App.SettingsVM;
@@ -196,6 +209,7 @@ public sealed partial class OrchestrationPage : Page
     {
         if (_runner is null || _orchestration is null) return;
         App.SettingsVM.AddLog("Orchestration restarted by user.");
+        AppLog.Info("OrchestrationPage", "Orchestration restarted by user.");
         _runner.Stop();
         _ = _runner.StartAsync(_orchestration);
     }
@@ -206,6 +220,7 @@ public sealed partial class OrchestrationPage : Page
     public void CancelAndReturn(string reason = "Settings/exit button clicked")
     {
         App.SettingsVM.AddLog($"Orchestration stopped by user: {reason}.");
+        AppLog.Info("OrchestrationPage", $"Orchestration stopped by user: {reason}.");
         _runner?.Stop();
         ReturnToHome(true);
     }
@@ -217,10 +232,12 @@ public sealed partial class OrchestrationPage : Page
         // Navigate back - if auto-retry is configured, signal it
         if (!wasCancelled && App.SettingsVM.IsAutoRetryEnabled && App.SettingsVM.CanStart)
         {
+            AppLog.Info("OrchestrationPage", "Returning to home page for auto-retry.");
             Frame.Navigate(typeof(HomePage), "autoRetry");
         }
         else
         {
+            AppLog.Info("OrchestrationPage", $"Returning to settings page (cancelled={wasCancelled}).");
             Frame.Navigate(typeof(SettingsPage));
         }
     }

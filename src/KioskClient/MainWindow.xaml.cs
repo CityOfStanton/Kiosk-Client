@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Pages;
 using KioskClient.Services;
 using Microsoft.UI.Xaml;
@@ -20,6 +21,7 @@ public sealed partial class MainWindow : Window
 
         // Check if tutorial should be shown
         var showTutorial = !App.Settings.GetSetting(SettingsKeys.DoNotShowTutorial, false);
+        AppLog.Info("Startup", $"Main window created: showTutorial={showTutorial}.");
 
         if (showTutorial)
         {
@@ -44,6 +46,7 @@ public sealed partial class MainWindow : Window
     /// </summary>
     public void EnterFullScreen()
     {
+        AppLog.Debug("Window", "Entering full screen.");
         this.AppWindow.SetPresenter(Microsoft.UI.Windowing.AppWindowPresenterKind.FullScreen);
     }
 
@@ -52,6 +55,7 @@ public sealed partial class MainWindow : Window
     /// </summary>
     public void ExitFullScreen()
     {
+        AppLog.Debug("Window", "Exiting full screen.");
         this.AppWindow.SetPresenter(Microsoft.UI.Windowing.AppWindowPresenterKind.Default);
     }
 }

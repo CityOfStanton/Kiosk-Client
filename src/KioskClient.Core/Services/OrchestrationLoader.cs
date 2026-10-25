@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 using KioskClient.Core.Serialization;
 
@@ -49,6 +50,7 @@ public class OrchestrationLoader : IOrchestrationLoader
         orchestration.Source = OrchestrationSource.URL;
         orchestration.SourcePath = url;
         orchestration.ContentHash = ComputeHash(content);
+        AppLog.Debug("Loader", $"Loaded orchestration from {AppLog.Describe(url)}: bytes={content.Length}, actions={orchestration.Actions.Count}.");
         return orchestration;
     }
 
@@ -70,11 +72,11 @@ public class OrchestrationLoader : IOrchestrationLoader
         orchestration.Source = OrchestrationSource.File;
         orchestration.SourcePath = filePath;
         orchestration.ContentHash = ComputeHash(content);
+        AppLog.Debug("Loader", $"Loaded orchestration from {AppLog.Describe(filePath)}: bytes={content.Length}, actions={orchestration.Actions.Count}.");
         return orchestration;
     }
 
-    public Orchestration LoadFromContent(string content)
-    {
+    public Orchestration LoadFromContent(string content)    {
         EnsureOrchestrationSize(content);
         var orchestration = OrchestrationSerializer.Deserialize(content)
             ?? throw new InvalidOperationException("Failed to deserialize orchestration from content.");

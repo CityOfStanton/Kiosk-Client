@@ -1,4 +1,5 @@
 using System.Text.Json;
+using KioskClient.Core.Logging;
 using Windows.Storage;
 using AppDataStorage = Microsoft.Windows.Storage.ApplicationData;
 
@@ -81,6 +82,16 @@ public class SettingsService : ISettingsService
         return UnpackagedCachePath;
     }
 
+    /// <summary>
+    /// Gets the folder where the daily debug log files are written (a Debug folder inside the cache folder).
+    /// </summary>
+    public static string GetLogFolderPath()
+    {
+        var path = Path.Combine(GetCacheFolderPath(), "Debug");
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
     private static StorageFolder GetUnpackagedCacheFolder()
     {
         Directory.CreateDirectory(UnpackagedCachePath);
@@ -97,7 +108,11 @@ public class SettingsService : ISettingsService
             var json = File.ReadAllText(UnpackagedSettingsPath);
             return JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonOptions) ?? [];
         }
-        catch { return []; }
+        catch (Exception ex)
+        {
+            AppLog.Warn("Settings", "Could not read the settings file; using defaults.", ex);
+            return [];
+        }
     }
 
     private void SaveUnpackagedSettings()
@@ -123,7 +138,11 @@ public class SettingsService : ISettingsService
         if (raw is string json)
         {
             try { return JsonSerializer.Deserialize<T>(json, JsonOptions); }
-            catch { return defaultValue; }
+            catch (Exception ex)
+            {
+                AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; using default.", ex);
+                return defaultValue;
+            }
         }
         if (raw is JsonElement el)
         {
@@ -135,7 +154,11 @@ public class SettingsService : ISettingsService
 
                 return el.Deserialize<T>(JsonOptions);
             }
-            catch { return defaultValue; }
+            catch (Exception ex)
+            {
+                AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; using default.", ex);
+                return defaultValue;
+            }
         }
         return defaultValue;
     }
@@ -173,17 +196,31 @@ public class SettingsService : ISettingsService
         }
         catch (FileNotFoundException)
         {
+            AppLog.Debug("Settings", $"Cache file '{key}' not found.");
             return default;
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Settings", $"Failed to read cache file '{key}'.", ex);
+            throw;
         }
     }
 
     public async Task SaveFileAsync<T>(string key, T value)
     {
-        var file = await LocalCacheFolder.CreateFileAsync(
-            SanitizeFileName(key),
-            CreationCollisionOption.ReplaceExisting);
-        var json = JsonSerializer.Serialize(value, JsonOptions);
-        await FileIO.WriteTextAsync(file, json);
+        try
+        {
+            var file = await LocalCacheFolder.CreateFileAsync(
+                SanitizeFileName(key),
+                CreationCollisionOption.ReplaceExisting);
+            var json = JsonSerializer.Serialize(value, JsonOptions);
+            await FileIO.WriteTextAsync(file, json);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Settings", $"Failed to write cache file '{key}'.", ex);
+            throw;
+        }
     }
 
     public async Task RemoveFileAsync(string key)
@@ -196,6 +233,11 @@ public class SettingsService : ISettingsService
         catch (FileNotFoundException)
         {
             // Already gone
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Settings", $"Failed to remove cache file '{key}'.", ex);
+            throw;
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 using KioskClient.Core.Services;
 using KioskClient.Services;
@@ -316,6 +317,7 @@ public partial class SettingsViewModel : ObservableObject
         OrchestrationValidationResult = null;
         LoadError = null;
         AddLog($"Loading orchestration from: {UriPath}");
+        AppLog.Info("Settings", $"Loading orchestration from {AppLog.Describe(UriPath)}.");
 
         try
         {
@@ -325,6 +327,7 @@ public partial class SettingsViewModel : ObservableObject
             {
                 IsUriPathVerified = false;
                 AddLog($"URI validation failed: {validation.Message}");
+                AppLog.Warn("Settings", $"URI validation failed: {validation.Message}");
                 IsUriLoading = false;
                 return;
             }
@@ -343,6 +346,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             IsUriPathVerified = false;
             LoadError = ex.Message;
+            AppLog.Error("Settings", $"Error loading orchestration from {AppLog.Describe(UriPath)}.", ex);
             AddLog($"Error loading orchestration: {ex.Message}");
         }
         finally
@@ -363,6 +367,7 @@ public partial class SettingsViewModel : ObservableObject
         LoadError = null;
         LocalPath = filePath;
         AddLog($"Loading orchestration from file: {filePath}");
+        AppLog.Info("Settings", $"Loading orchestration from {AppLog.Describe(filePath)}.");
 
         try
         {
@@ -375,6 +380,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             IsLocalPathVerified = false;
             LoadError = ex.Message;
+            AppLog.Error("Settings", $"Error loading orchestration from {AppLog.Describe(filePath)}.", ex);
             AddLog($"Error loading file: {ex.Message}");
         }
         finally
@@ -390,9 +396,13 @@ public partial class SettingsViewModel : ObservableObject
         OrchestrationValidationResult = validationResult;
 
         AddLog($"Validation: {validationResult.PassedCount} passed, {validationResult.FailedCount} failed");
+        AppLog.Info("Settings", $"Orchestration validation: passed={validationResult.PassedCount}, failed={validationResult.FailedCount}.");
         if (!validationResult.IsFullyValid)
             foreach (var failure in GetFailures(validationResult))
+            {
+                AppLog.Warn("Settings", $"Validation failure: {failure.Message}");
                 AddLog($"  ✗ {failure.Identifier}: {failure.Message}");
+            }
     }
 
     private static IEnumerable<ValidationResult> GetFailures(ValidationResult result)
@@ -474,6 +484,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(orchestration.SourcePath)) return;
 
+        AppLog.Debug("Startup", $"Recording last run: source={orchestration.Source}, target={AppLog.Describe(orchestration.SourcePath)}.");
         _settings.SaveSetting(SettingsKeys.LastRunSource, orchestration.Source == OrchestrationSource.File ? "File" : "URL");
         _settings.SaveSetting(SettingsKeys.LastRunPath, orchestration.SourcePath);
     }
@@ -487,7 +498,12 @@ public partial class SettingsViewModel : ObservableObject
         var source = _settings.GetSetting<string>(SettingsKeys.LastRunSource);
         var path = _settings.GetSetting<string>(SettingsKeys.LastRunPath);
         if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(path))
+        {
+            AppLog.Info("Startup", "Auto-start: no previous orchestration recorded.");
             return StartupLoadResult.NoPreviousOrchestration;
+        }
+
+        AppLog.Info("Startup", $"Auto-start: reloading last orchestration (source={source}, target={AppLog.Describe(path)}).");
 
         try
         {
@@ -505,8 +521,9 @@ public partial class SettingsViewModel : ObservableObject
 
             return CanStart ? StartupLoadResult.LoadedAndValid : StartupLoadResult.LoadFailed;
         }
-        catch
+        catch (Exception ex)
         {
+            AppLog.Error("Startup", "Auto-start: failed to reload the last orchestration.", ex);
             return StartupLoadResult.LoadFailed;
         }
     }

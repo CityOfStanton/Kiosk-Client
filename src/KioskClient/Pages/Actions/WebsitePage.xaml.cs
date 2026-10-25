@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,6 +24,7 @@ public sealed partial class WebsitePage : Page
     private const int RefreshRate = 60;
     private const double PixelsPerSecond = 60;
     private bool _escapeHooked;
+    private bool _scrollErrorLogged;
     public WebsitePage()
     {
         this.InitializeComponent();
@@ -36,6 +38,8 @@ public sealed partial class WebsitePage : Page
 
         if (e.Parameter is not WebsiteAction action) return;
         _action = action;
+
+        AppLog.Debug("WebsitePage", $"Loading website: target={AppLog.Describe(_action.Path)}, autoScroll={_action.AutoScroll}, scrollSpeed={_action.ScrollSpeed}, scrollDelay={_action.ScrollingStartDelay}s, settingsDisplayTime={_action.SettingsDisplayTime}s.");
 
         try
         {
@@ -80,6 +84,7 @@ public sealed partial class WebsitePage : Page
         }
         catch (Exception ex)
         {
+            AppLog.Error("WebsitePage", $"Failed to load website {AppLog.Describe(_action.Path)}.", ex);
             ShowError(ex.Message);
         }
     }
@@ -97,9 +102,12 @@ public sealed partial class WebsitePage : Page
         {
             if (!args.IsSuccess)
             {
+                AppLog.Error("WebsitePage", $"Navigation failed: status={args.WebErrorStatus}, httpStatus={args.HttpStatusCode}.");
                 ShowError($"Navigation failed: {args.WebErrorStatus}");
                 return;
             }
+
+            AppLog.Debug("WebsitePage", $"Navigation completed: httpStatus={args.HttpStatusCode}.");
 
             if (_scrollingTimer is not null)
             {
@@ -113,6 +121,7 @@ public sealed partial class WebsitePage : Page
         }
         catch (Exception ex)
         {
+            AppLog.Error("WebsitePage", "Error handling navigation completion.", ex);
             ShowError(ex.Message);
         }
     }
@@ -131,9 +140,14 @@ public sealed partial class WebsitePage : Page
             var y = _position.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
             await WebviewDisplay.ExecuteScriptAsync($"window.scrollTo(0,{y});");
         }
-        catch
+        catch (Exception ex)
         {
             // WebView may be disposed during navigation
+            if (!_scrollErrorLogged)
+            {
+                _scrollErrorLogged = true;
+                AppLog.Debug("WebsitePage", $"Auto-scroll step failed (WebView may be navigating): {ex.GetType().Name}.");
+            }
         }
     }
 

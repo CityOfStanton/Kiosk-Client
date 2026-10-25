@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Core.Services;
 using KioskClient.Services;
 using KioskClient.ViewModels;
@@ -26,6 +27,7 @@ public partial class App : Application
     /// </summary>
     public static async Task OpenEditorAsync(KioskClient.Core.Models.Orchestration? orchestration)
     {
+        AppLog.Info("Editor", $"Opening editor window (existing orchestration: {orchestration is not null}).");
         var editor = new EditorWindow();
         editor.BringToFront();
         if (orchestration is not null)
@@ -35,11 +37,42 @@ public partial class App : Application
 
     public App()
     {
+        InitializeLogging();
         this.InitializeComponent();
+        this.UnhandledException += App_UnhandledException;
+    }
+
+    private static void InitializeLogging()
+    {
+        AppLog.Initialize(SettingsService.GetLogFolderPath());
+
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            AppLog.Error("App", $"Unhandled domain exception (terminating={e.IsTerminating}).", e.ExceptionObject as Exception);
+            if (e.IsTerminating) AppLog.Shutdown();
+        };
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+            AppLog.Error("App", "Unobserved task exception.", e.Exception);
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            AppLog.Info("App", "Application exiting.");
+            AppLog.Shutdown();
+        };
+
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        AppLog.Info("App", $"Application starting: version={version}, runtime={System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}, " +
+                           $"os={Environment.OSVersion.Version}, arch={System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}.");
+    }
+
+    private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        AppLog.Error("App", $"Unhandled UI exception: {e.Message}", e.Exception);
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        AppLog.Info("Startup", "Launching: initializing services.");
+
         // Initialize services
         Settings = new SettingsService();
         HttpService = new HttpService();
@@ -49,5 +82,6 @@ public partial class App : Application
 
         _window = new MainWindow();
         _window.Activate();
+        AppLog.Info("Startup", "Main window activated.");
     }
 }

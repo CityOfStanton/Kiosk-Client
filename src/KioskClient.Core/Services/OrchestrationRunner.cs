@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 
 namespace KioskClient.Core.Services;
@@ -70,6 +71,7 @@ public class OrchestrationRunner : IDisposable
         _cts = new CancellationTokenSource();
         _isRunning = true;
 
+        AppLog.Info("Runner", $"Orchestration started: source={orchestration.Source}, actions={orchestration.Actions.Count}, order={orchestration.Order}, lifecycle={orchestration.Lifecycle}.");
         OrchestrationStarted?.Invoke(this, EventArgs.Empty);
         RaiseStatus($"Orchestration started: {orchestration.Name} ({orchestration.Actions.Count} actions, {orchestration.Order}, {orchestration.Lifecycle}).");
 
@@ -79,8 +81,14 @@ public class OrchestrationRunner : IDisposable
         }
         catch (OperationCanceledException)
         {
+            AppLog.Info("Runner", "Orchestration cancelled.");
             OrchestrationCancelled?.Invoke(this, EventArgs.Empty);
             RaiseStatus("Orchestration cancelled.");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Runner", "Orchestration run loop failed.", ex);
+            throw;
         }
         finally
         {
@@ -95,6 +103,7 @@ public class OrchestrationRunner : IDisposable
     {
         if (_cts is not null)
         {
+            AppLog.Debug("Runner", "Stop requested.");
             _cts.Cancel();
             _cts.Dispose();
             _cts = null;
@@ -138,6 +147,8 @@ public class OrchestrationRunner : IDisposable
                     VideoAction a => a.Path,
                     _ => string.Empty
                 };
+                AppLog.Debug("Runner", $"Action {i + 1}/{actions.Count} started: type={action.GetType().Name}, target={AppLog.Describe(target)}, " +
+                             (endsWhenComplete ? "duration=until video ends" : $"duration={duration}s"));
                 RaiseStatus($"Action {i + 1}/{actions.Count} started: {action.GetType().Name.Replace("Action", string.Empty)} {target} " +
                             (endsWhenComplete ? "(until video ends)" : $"({duration}s)"));
 
@@ -174,6 +185,7 @@ public class OrchestrationRunner : IDisposable
             {
                 _currentOrchestration = _nextOrchestration;
                 _nextOrchestration = null;
+                AppLog.Info("Runner", $"Orchestration reloaded with updated content: actions={_currentOrchestration.Actions.Count}.");
                 RaiseStatus("Orchestration reloaded with updated content.");
             }
 
@@ -181,6 +193,7 @@ public class OrchestrationRunner : IDisposable
 
         await pollingTask;
 
+        AppLog.Info("Runner", "Orchestration completed.");
         OrchestrationCompleted?.Invoke(this, EventArgs.Empty);
         RaiseStatus("Orchestration completed.");
     }
@@ -203,6 +216,7 @@ public class OrchestrationRunner : IDisposable
 
         if (hash is not null && key == _displayedImageKey && hash == _displayedImageHash)
         {
+            AppLog.Debug("Runner", $"Image unchanged, not reloading: {AppLog.Describe(image.Path)}");
             RaiseStatus($"Image unchanged, not reloading: {image.Path}");
             return true;
         }
@@ -250,6 +264,7 @@ public class OrchestrationRunner : IDisposable
                 await Task.Delay(TimeSpan.FromSeconds(delaySeconds), ct);
                 ct.ThrowIfCancellationRequested();
 
+                AppLog.Debug("Runner", "Polling: checking for orchestration updates.");
                 RaiseStatus("Polling: checking for orchestration updates...");
                 var reloaded = await _loader.LoadFromUrlAsync(_currentOrchestration.SourcePath, ct);
 
@@ -261,6 +276,7 @@ public class OrchestrationRunner : IDisposable
                 else
                 {
                     _nextOrchestration = reloaded;
+                    AppLog.Info("Runner", "Polling: orchestration changed, will apply at next cycle boundary.");
                     NetworkStatusChanged?.Invoke(this, true);
                     RaiseStatus("Polling: orchestration changed, will apply at next cycle boundary.");
                 }
@@ -276,6 +292,7 @@ public class OrchestrationRunner : IDisposable
             }
             catch (Exception ex)
             {
+                AppLog.Warn("Runner", "Polling: failed to check for updates; network considered disconnected.", ex);
                 NetworkStatusChanged?.Invoke(this, false);
                 RaiseStatus("Network disconnected.", isError: true);
                 RaiseStatus($"Polling: failed to check for updates: {ex.Message}");
@@ -294,6 +311,7 @@ public class OrchestrationRunner : IDisposable
                     return;
                 }
 
+                AppLog.Info("Runner", "Network reconnected.");
                 NetworkStatusChanged?.Invoke(this, true);
                 RaiseStatus("Network reconnected.");
             }
@@ -320,8 +338,9 @@ public class OrchestrationRunner : IDisposable
         {
             throw;
         }
-        catch
+        catch (Exception ex)
         {
+            AppLog.Debug("Runner", $"Connectivity probe failed: {ex.GetType().Name}.");
             return false;
         }
     }

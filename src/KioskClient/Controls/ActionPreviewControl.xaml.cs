@@ -68,6 +68,7 @@ public sealed partial class ActionPreviewControl : UserControl
         }
         catch (Exception ex)
         {
+            KioskClient.Core.Logging.AppLog.Warn("Preview", $"Preview failed for {action.GetType().Name}.", ex);
             return Fail(ex.Message);
         }
         finally

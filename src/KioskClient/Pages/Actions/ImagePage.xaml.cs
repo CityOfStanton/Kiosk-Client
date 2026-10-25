@@ -1,3 +1,4 @@
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -34,6 +35,8 @@ public sealed partial class ImagePage : Page
     {
         if (_action is null) return;
 
+        AppLog.Debug("ImagePage", $"Loading image: target={AppLog.Describe(_action.Path)}, stretch={_action.Stretch}.");
+
         try
         {
             LoadingPanel.Visibility = Visibility.Visible;
@@ -59,9 +62,11 @@ public sealed partial class ImagePage : Page
 
             LoadingPanel.Visibility = Visibility.Collapsed;
             ImageDisplay.Visibility = Visibility.Visible;
+            AppLog.Debug("ImagePage", "Image displayed.");
         }
         catch (Exception ex)
         {
+            AppLog.Error("ImagePage", $"Failed to load image {AppLog.Describe(_action.Path)}.", ex);
             LoadingPanel.Visibility = Visibility.Collapsed;
             ErrorPanel.Visibility = Visibility.Visible;
             ErrorDetail.Text = ex.Message;

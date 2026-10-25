@@ -354,6 +354,7 @@ public sealed partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
+            KioskClient.Core.Logging.AppLog.Warn("SettingsPage", "Unable to load action preview.", ex);
             if (version != _previewVersion) return;
             PreviewMessage.Text = $"Unable to load preview: {ex.Message}";
             PreviewMessage.Visibility = Visibility.Visible;
@@ -563,6 +564,7 @@ public sealed partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
+            KioskClient.Core.Logging.AppLog.Error("SettingsPage", "Failed to save the session log file.", ex);
             ViewModel.AddLog($"Failed to save log: {ex.Message}");
         }
     }

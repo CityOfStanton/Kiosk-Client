@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Serialization;
+using KioskClient.Core.Logging;
 using KioskClient.Core.Models;
 
 namespace KioskClient.Core.Serialization;
@@ -113,9 +114,10 @@ public static class OrchestrationSerializer
             {
                 return DeserializeJson(content);
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
                 // Fall through to XML
+                AppLog.Warn("Serializer", "JSON deserialization failed.", ex);
             }
         }
 
@@ -126,13 +128,15 @@ public static class OrchestrationSerializer
             {
                 return DeserializeXml(content);
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
                 // XML deserialization failed
+                AppLog.Warn("Serializer", "XML deserialization failed.", ex);
             }
-            catch (XmlException)
+            catch (XmlException ex)
             {
                 // Malformed or prohibited XML (e.g. DTD)
+                AppLog.Warn("Serializer", "XML is malformed or contains prohibited content.", ex);
             }
         }
 

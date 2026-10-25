@@ -1,4 +1,5 @@
 using KioskClient.Dialogs;
+using KioskClient.Core.Logging;
 using KioskClient.Services;
 using KioskClient.ViewModels;
 using Microsoft.UI.Xaml;
@@ -27,6 +28,8 @@ public sealed partial class HomePage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+
+        AppLog.Debug("Startup", $"Home page opened: mode={(e.Parameter as string) ?? "(none)"}.");
 
         if (e.Parameter is string param && param == "showTutorial")
         {
@@ -62,6 +65,7 @@ public sealed partial class HomePage : Page
     {
         var dialog = new TutorialDialog { XamlRoot = this.XamlRoot };
         var result = await dialog.ShowAsync();
+        AppLog.Debug("Startup", $"Tutorial dialog closed: result={result}, doNotShowAgain={dialog.DoNotShowThisAgain}.");
 
         if (dialog.DoNotShowThisAgain)
             App.Settings.SaveSetting(SettingsKeys.DoNotShowTutorial, true);
@@ -81,8 +85,10 @@ public sealed partial class HomePage : Page
     {
         LoadingRing.IsActive = true;
         StatusText.Text = "Loading last orchestration...";
+        AppLog.Info("Startup", "Auto-start: loading last orchestration.");
 
         var result = await App.SettingsVM.TryAutoStartAsync();
+        AppLog.Info("Startup", $"Auto-start result: {result}.");
 
         switch (result)
         {
@@ -105,6 +111,7 @@ public sealed partial class HomePage : Page
         var vm = App.SettingsVM;
         if (!vm.IsAutoRetryEnabled || !vm.CanStart)
         {
+            AppLog.Info("Startup", $"Auto-retry not started: enabled={vm.IsAutoRetryEnabled}, canStart={vm.CanStart}.");
             LoadingRing.IsActive = false;
             StatusText.Text = "Orchestration returned. Press Settings to reconfigure.";
             return;
@@ -114,6 +121,7 @@ public sealed partial class HomePage : Page
         _retryPaused = false;
         vm.CurrentAutoRetryCountdown = vm.AutoRetrySeconds;
         vm.IsAutoRetryActive = true;
+        AppLog.Info("Startup", $"Auto-retry countdown started: {vm.AutoRetrySeconds}s.");
 
         LoadingRing.IsActive = false;
         StatusText.Text = "Retrying orchestration...";
@@ -136,7 +144,7 @@ public sealed partial class HomePage : Page
         if (vm.CurrentAutoRetryCountdown <= 0)
         {
             StopRetryTimer();
-            // Navigate to settings to start the orchestration
+            AppLog.Info("Startup", $"Auto-retry countdown elapsed: canStart={vm.CanStart}, hasOrchestration={vm.Orchestration is not null}.");
             if (vm.CanStart && vm.Orchestration is not null)
             {
                 Frame.Navigate(typeof(OrchestrationPage), vm.Orchestration);
@@ -146,6 +154,7 @@ public sealed partial class HomePage : Page
 
     private void StopRetryButton_Click(object sender, RoutedEventArgs e)
     {
+        AppLog.Info("Startup", "Auto-retry stopped by user.");
         StopRetryTimer();
         RetryPanel.Visibility = Visibility.Collapsed;
         StatusText.Text = "Auto-retry stopped. Press Settings to reconfigure.";
