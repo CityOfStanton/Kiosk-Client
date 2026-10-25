@@ -48,7 +48,7 @@
             <HyperlinkButton Content="City of Stanton Technology"
                              NavigateUri="https://www.stantonky.gov/technology"/>
             <HyperlinkButton x:Name="LogsButton"
-                             Content="Open Logs Folder"
+                             Content="Open Debug Logs Folder"
                              Click="LogsButton_Click"/>
         </StackPanel>
 
