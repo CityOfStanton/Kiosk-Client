@@ -11,6 +11,7 @@
     <UseWinUI>true</UseWinUI>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>MSIX</WindowsPackageType>
     <PublishAot>true</PublishAot>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
