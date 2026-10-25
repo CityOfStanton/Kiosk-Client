@@ -25,7 +25,7 @@ public partial class App : Application
     /// <summary>
     /// Opens the orchestration editor in its own window, optionally loading an existing orchestration.
     /// </summary>
-    public static async Task OpenEditorAsync(KioskClient.Core.Models.Orchestration? orchestration)
+    public static async Task OpenEditorAsync(KioskClient.Core.Models.Orchestration? orchestration, bool startTutorial = false)
     {
         AppLog.Info("Editor", $"Opening editor window (existing orchestration: {orchestration is not null}).");
         var editor = new EditorWindow();
@@ -33,6 +33,8 @@ public partial class App : Application
         if (orchestration is not null)
             await editor.LoadFromOrchestrationAsync(orchestration);
         editor.BringToFront();
+        if (startTutorial)
+            editor.StartTutorial();
     }
 
     public App()

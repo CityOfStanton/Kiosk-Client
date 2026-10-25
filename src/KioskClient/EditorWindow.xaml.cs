@@ -82,6 +82,26 @@ public sealed partial class EditorWindow : Window
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     /// <summary>Shows the window and gives it focus, in front of the other app windows.</summary>
+    private void TutorialButton_Click(object sender, RoutedEventArgs e) => StartTutorial();
+
+    public void StartTutorial()
+    {
+        var steps = new List<KioskClient.Services.TutorialStep>
+        {
+            new(null, "The Editor", "This is where you create an orchestration: a playlist of Actions (Image, Website, Video) that Kiosk Client plays in a loop."),
+            new(NameBox, "Name it", "Click here and type a name for your orchestration."),
+            new(LifecycleBox, "Lifecycle", "Choose what happens after the last action: repeat, stop, and so on."),
+            new(OrderBox, "Order", "Choose whether actions play in list order or randomly."),
+            new(AddActionBtn, "Add actions", "Click Add action, then choose Image (shows a picture), Website (shows a web page) or Video (plays a video)."),
+            new(ActionList, "Your actions", "Actions appear here. Click one to edit it, drag to reorder, or use the Move up, Move down and Remove buttons above."),
+            new(ActionNameBox, "Configure an action", "With an action selected, give it a name, then set its Path (URL or file), how long it is shown, and type-specific options."),
+            new(ValidateBtn, "Validate", "Click Validate to check for problems before saving."),
+            new(SaveBtn, "Save", "Click Save to write the orchestration to a file."),
+            new(null, "Run it", "Close the Editor, then in the main window choose the File source, Browse to your saved file, and click Run orchestration (or press F5)."),
+        };
+        KioskClient.Services.TutorialGuide.Run(TutorialTip, steps);
+    }
+
     public void BringToFront()
     {
         AppWindow.Show();

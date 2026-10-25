@@ -35,9 +35,7 @@ public sealed partial class HomePage : Page
         {
             LoadingRing.IsActive = false;
             StatusText.Text = string.Empty;
-
-            // Defer until the page is fully loaded and XamlRoot is available
-            this.Loaded += OnPageLoaded;
+            Frame.Navigate(typeof(SettingsPage), "tutorialPrompt");
         }
         // Auto-retry when returning from a failed orchestration run
         else if (e.Parameter is string retryParam && retryParam == "autoRetry")
@@ -63,17 +61,12 @@ public sealed partial class HomePage : Page
 
     private async Task ShowTutorialDialogAsync()
     {
-        var dialog = new TutorialDialog { XamlRoot = this.XamlRoot };
-        var result = await dialog.ShowAsync();
-        AppLog.Debug("Startup", $"Tutorial dialog closed: result={result}, doNotShowAgain={dialog.DoNotShowThisAgain}.");
+        var choice = await TutorialDialog.ShowTutorialAsync(this.XamlRoot);
+        AppLog.Debug("Startup", $"Tutorial dialog closed: choice={choice?.ToString() ?? "none"}.");
 
-        if (dialog.DoNotShowThisAgain)
-            App.Settings.SaveSetting(SettingsKeys.DoNotShowTutorial, true);
-
-        if (result == ContentDialogResult.Primary)
+        if (choice is not null)
         {
-            // User wants to run the demo - navigate to settings
-            NavigateToSettings();
+            Frame.Navigate(typeof(SettingsPage), choice.Value);
         }
         else
         {

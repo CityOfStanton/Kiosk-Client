@@ -23,14 +23,7 @@ public sealed partial class MainWindow : Window
         var showTutorial = !App.Settings.GetSetting(SettingsKeys.DoNotShowTutorial, false);
         AppLog.Info("Startup", $"Main window created: showTutorial={showTutorial}.");
 
-        if (showTutorial)
-        {
-            RootFrame.Navigate(typeof(HomePage), "showTutorial");
-        }
-        else
-        {
-            RootFrame.Navigate(typeof(HomePage), "startup");
-        }
+        RootFrame.Navigate(typeof(HomePage), "startup");
     }
 
     /// <summary>

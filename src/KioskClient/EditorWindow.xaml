@@ -38,8 +38,9 @@
 
         <!-- Header: commands + file -->
         <StackPanel Grid.Row="0">
+            <TeachingTip x:Name="TutorialTip" PreferredPlacement="Auto" />
             <CommandBar DefaultLabelPosition="Right" IsOpen="False" HorizontalAlignment="Left">
-                <AppBarButton Label="New" Icon="Add" Click="NewButton_Click">
+                <AppBarButton x:Name="NewBtn" Label="New" Icon="Add" ToolTipService.ToolTip="Start a new, empty orchestration" Click="NewButton_Click">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="N" Modifiers="Control" />
                     </AppBarButton.KeyboardAccelerators>
@@ -49,7 +50,7 @@
                         <KeyboardAccelerator Key="O" Modifiers="Control" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Label="Save" Icon="Save" Click="SaveButton_Click">
+                <AppBarButton x:Name="SaveBtn" Label="Save" Icon="Save" ToolTipService.ToolTip="Save the orchestration to a file (Ctrl+S)" Click="SaveButton_Click">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="S" Modifiers="Control" />
                     </AppBarButton.KeyboardAccelerators>
@@ -72,11 +73,13 @@
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton Label="Validate" Icon="Accept" Click="ValidateButton_Click">
+                <AppBarButton x:Name="ValidateBtn" Label="Validate" Icon="Accept" ToolTipService.ToolTip="Check the orchestration for problems (F5)" Click="ValidateButton_Click">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F5" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
+                <AppBarSeparator />
+                <AppBarButton x:Name="TutorialBtn" Label="Tutorial" Icon="Help" ToolTipService.ToolTip="Take a guided tour of the Editor" Click="TutorialButton_Click" />
             </CommandBar>
             <TextBox x:Name="FilePathBox"
                      IsReadOnly="True"
@@ -124,7 +127,7 @@
                                 HorizontalAlignment="Right"
                                 IsOpen="False"
                                 Background="Transparent">
-                        <AppBarButton Label="Add action" Icon="Add">
+                        <AppBarButton x:Name="AddActionBtn" Label="Add action" Icon="Add" ToolTipService.ToolTip="Add an Image, Website, or Video action">
                             <AppBarButton.Flyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="Image" Tag="Image" Click="AddAction_Click">
@@ -199,14 +202,14 @@
                                   HorizontalAlignment="Stretch"
                                   HorizontalContentAlignment="Stretch">
                             <StackPanel Spacing="12">
-                                <TextBox x:Name="NameBox" Header="Name" TextChanged="NameBox_TextChanged" />
+                                <TextBox x:Name="NameBox" Header="Name" ToolTipService.ToolTip="A friendly name for this orchestration" TextChanged="NameBox_TextChanged" />
                                 <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <ComboBox x:Name="LifecycleBox" Header="Lifecycle" HorizontalAlignment="Stretch" SelectionChanged="LifecycleBox_SelectionChanged" />
-                                    <ComboBox x:Name="OrderBox" Grid.Column="1" Header="Order" HorizontalAlignment="Stretch" SelectionChanged="OrderBox_SelectionChanged" />
+                                    <ComboBox x:Name="LifecycleBox" Header="Lifecycle" ToolTipService.ToolTip="What happens after the last action finishes" HorizontalAlignment="Stretch" SelectionChanged="LifecycleBox_SelectionChanged" />
+                                    <ComboBox x:Name="OrderBox" Grid.Column="1" Header="Order" ToolTipService.ToolTip="Play actions in list order or randomly" HorizontalAlignment="Stretch" SelectionChanged="OrderBox_SelectionChanged" />
                                 </Grid>
                                 <TextBlock x:Name="VersionText" Style="{StaticResource SecondaryTextStyle}" />
                             </StackPanel>

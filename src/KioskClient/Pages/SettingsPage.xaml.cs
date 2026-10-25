@@ -30,9 +30,20 @@ public sealed partial class SettingsPage : Page
         NavView.SelectedItem = NavItem_Orchestration;
     }
 
+    private static bool _tutorialPromptShown;
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        if (!_tutorialPromptShown && !ViewModel.ShouldAutoRetryStart &&
+            !App.Settings.GetSetting(KioskClient.Services.SettingsKeys.DoNotShowTutorial, false))
+        {
+            _tutorialPromptShown = true;
+            if (IsLoaded && XamlRoot is not null)
+                DispatcherQueue.TryEnqueue(async () => await ShowTutorialDialogAsync());
+            else
+                Loaded += OnLoadedShowTutorial;
+        }
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         UpdateValidationDisplay();
         _ = UpdatePreviewAsync();
@@ -158,10 +169,45 @@ public sealed partial class SettingsPage : Page
         await dialog.ShowAsync();
     }
 
+    private async void OnLoadedShowTutorial(object sender, RoutedEventArgs e)
+    {
+        Loaded -= OnLoadedShowTutorial;
+        await ShowTutorialDialogAsync();
+    }
+
     private async Task ShowTutorialDialogAsync()
     {
-        var dialog = new TutorialDialog { XamlRoot = this.XamlRoot };
-        await dialog.ShowAsync();
+        if (XamlRoot is null) return;
+        var choice = await TutorialDialog.ShowTutorialAsync(XamlRoot);
+        if (choice is not null)
+            StartTutorial(choice.Value);
+    }
+
+    private async void StartTutorial(KioskClient.Services.TutorialChoice choice)
+    {
+        ShowSection("Orchestration");
+        NavView.SelectedItem = NavItem_Orchestration;
+
+        if (choice == KioskClient.Services.TutorialChoice.Create)
+        {
+            await App.OpenEditorAsync(null, startTutorial: true);
+            return;
+        }
+
+        var steps = new List<KioskClient.Services.TutorialStep>
+        {
+            new(NavItem_Orchestration, "Orchestration", "This page loads and runs an orchestration. Click here any time to return to it."),
+            new(RadioUrl, "Choose a source", "Pick URL to load an orchestration from a web address, or File to load one saved on this computer."),
+            new(UrlAutoSuggestBox, "Enter the URL", "Type or paste the address of an orchestration file. Previously used URLs appear in the history list."),
+            new(LoadUrlButton, "Load it", "Click Load to download and validate the orchestration."),
+            new(BrowseButton, "Or browse for a file", "With File selected, click Browse to pick an orchestration .json or .xml file."),
+            new(RunButton, "Run it", "Once loaded and valid, click Run orchestration (or press F5) to start. Press Escape while running to return here."),
+            new(OpenEditorButton, "Edit or create", "Click Open in editor to change the loaded orchestration or build a new one."),
+            new(NavItem_Settings, "Settings", "Adjust retry behavior, countdown, and other options here."),
+            new(NavItem_Examples, "Examples", "Download ready-made example orchestrations to try."),
+            new(NavItem_Tutorial, "Tutorial", "Reopen this tutorial at any time from here."),
+        };
+        KioskClient.Services.TutorialGuide.Run(TutorialTip, steps);
     }
 
     private async Task ShowAboutDialogAsync()
