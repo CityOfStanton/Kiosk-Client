@@ -41,7 +41,9 @@ public sealed partial class AboutDialog : ContentDialog
 
     private async void LogsButton_Click(object sender, RoutedEventArgs e)
     {
-        var localCacheFolder = ApplicationData.Current.LocalCacheFolder;
-        await Windows.System.Launcher.LaunchFolderAsync(localCacheFolder);
+        // Same folder SettingsService writes to (packaged or unpackaged)
+        var path = KioskClient.Services.SettingsService.GetCacheFolderPath();
+        var folder = await StorageFolder.GetFolderFromPathAsync(path);
+        await Windows.System.Launcher.LaunchFolderAsync(folder);
     }
 }

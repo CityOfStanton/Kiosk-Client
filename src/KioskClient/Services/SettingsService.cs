@@ -50,7 +50,7 @@ public class SettingsService : ISettingsService
     }
 
     // Packaged path: Windows App SDK ApplicationData
-    private Microsoft.Windows.Storage.ApplicationDataContainer? LocalSettings =>
+    private static Microsoft.Windows.Storage.ApplicationDataContainer? LocalSettings =>
         IsPackaged ? AppDataStorage.GetDefault().LocalSettings : null;
 
     // Packaged: Windows App SDK LocalCacheFolder; Unpackaged: %LOCALAPPDATA%\KioskClient\cache
@@ -67,6 +67,19 @@ public class SettingsService : ISettingsService
     private static readonly string UnpackagedCachePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "KioskClient", "cache");
+
+    /// <summary>
+    /// Gets the folder path where the app writes its cache/log files,
+    /// for both packaged and unpackaged execution.
+    /// </summary>
+    public static string GetCacheFolderPath()
+    {
+        if (IsPackaged)
+            return AppDataStorage.GetDefault().LocalCacheFolder.Path;
+
+        Directory.CreateDirectory(UnpackagedCachePath);
+        return UnpackagedCachePath;
+    }
 
     private static StorageFolder GetUnpackagedCacheFolder()
     {
