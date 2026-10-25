@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using KioskClient.Core.Logging;
 using Windows.Storage;
 using AppDataStorage = Microsoft.Windows.Storage.ApplicationData;
@@ -35,11 +36,9 @@ public interface ISettingsService
 /// </summary>
 public class SettingsService : ISettingsService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
+    private static JsonTypeInfo<T> TypeInfo<T>() =>
+        SettingsJsonContext.Default.GetTypeInfo(typeof(T)) as JsonTypeInfo<T>
+        ?? throw new NotSupportedException($"{typeof(T)} is not registered in SettingsJsonContext.");
 
     // Lazily determined once at runtime
     private static readonly bool IsPackaged = CheckPackageIdentity();
@@ -106,7 +105,8 @@ public class SettingsService : ISettingsService
         {
             if (!File.Exists(UnpackagedSettingsPath)) return [];
             var json = File.ReadAllText(UnpackagedSettingsPath);
-            return JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonOptions) ?? [];
+            var loaded = JsonSerializer.Deserialize(json, SettingsJsonContext.Default.DictionaryStringObject);
+            return loaded is null ? [] : new Dictionary<string, object?>(loaded!);
         }
         catch (Exception ex)
         {
@@ -119,7 +119,7 @@ public class SettingsService : ISettingsService
     {
         Directory.CreateDirectory(Path.GetDirectoryName(UnpackagedSettingsPath)!);
         File.WriteAllText(UnpackagedSettingsPath,
-            JsonSerializer.Serialize(_unpackagedCache, JsonOptions));
+            JsonSerializer.Serialize((Dictionary<string, object>)_unpackagedCache!, SettingsJsonContext.Default.DictionaryStringObject));
     }
 
     public T? GetSetting<T>(string key, T? defaultValue = default)
@@ -137,7 +137,7 @@ public class SettingsService : ISettingsService
         if (raw is T typed) return typed;
         if (raw is string json)
         {
-            try { return JsonSerializer.Deserialize<T>(json, JsonOptions); }
+            try { return JsonSerializer.Deserialize(json, TypeInfo<T>()); }
             catch (Exception ex)
             {
                 AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; using default.", ex);
@@ -150,9 +150,9 @@ public class SettingsService : ISettingsService
             {
                 // Complex values are stored as JSON text inside a JSON string.
                 if (el.ValueKind == JsonValueKind.String && typeof(T) != typeof(string))
-                    return JsonSerializer.Deserialize<T>(el.GetString()!, JsonOptions);
+                    return JsonSerializer.Deserialize(el.GetString()!, TypeInfo<T>());
 
-                return el.Deserialize<T>(JsonOptions);
+                return el.Deserialize(TypeInfo<T>());
             }
             catch (Exception ex)
             {
@@ -169,13 +169,13 @@ public class SettingsService : ISettingsService
         {
             LocalSettings!.Values[key] = (value is string or int or long or double or float or bool)
                 ? (object?)value
-                : JsonSerializer.Serialize(value, JsonOptions);
+                : JsonSerializer.Serialize(value, TypeInfo<T>());
         }
         else
         {
             _unpackagedCache[key] = (value is string or int or long or double or float or bool)
                 ? (object?)value
-                : JsonSerializer.Serialize(value, JsonOptions);
+                : JsonSerializer.Serialize(value, TypeInfo<T>());
             SaveUnpackagedSettings();
         }
     }
@@ -192,7 +192,7 @@ public class SettingsService : ISettingsService
         {
             var file = await LocalCacheFolder.GetFileAsync(SanitizeFileName(key));
             var content = await FileIO.ReadTextAsync(file);
-            return JsonSerializer.Deserialize<T>(content, JsonOptions);
+            return JsonSerializer.Deserialize(content, TypeInfo<T>());
         }
         catch (FileNotFoundException)
         {
@@ -213,7 +213,7 @@ public class SettingsService : ISettingsService
             var file = await LocalCacheFolder.CreateFileAsync(
                 SanitizeFileName(key),
                 CreationCollisionOption.ReplaceExisting);
-            var json = JsonSerializer.Serialize(value, JsonOptions);
+            var json = JsonSerializer.Serialize(value, TypeInfo<T>());
             await FileIO.WriteTextAsync(file, json);
         }
         catch (Exception ex)

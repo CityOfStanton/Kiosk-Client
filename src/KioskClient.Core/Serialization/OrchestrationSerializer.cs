@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Serialization;
@@ -12,12 +13,14 @@ namespace KioskClient.Core.Serialization;
 /// </summary>
 public static class OrchestrationSerializer
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true
-    };
+    // XmlSerializer is reflection-based; the dependencies below keep the model members it needs from being trimmed.
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Orchestration))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ActionBase))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ImageAction))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(WebsiteAction))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(VideoAction))]
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Model types are preserved by the DynamicDependency attributes above.")]
+    private static XmlSerializer CreateXmlSerializer() => new(typeof(Orchestration));
 
     /// <summary>
     /// Deserializes an orchestration from a JSON string.
@@ -27,7 +30,7 @@ public static class OrchestrationSerializer
     /// </summary>
     public static Orchestration? DeserializeJson(string json)
     {
-        var orchestration = JsonSerializer.Deserialize<Orchestration>(json, JsonOptions);
+        var orchestration = JsonSerializer.Deserialize(json, OrchestrationJsonContext.Default.Orchestration);
         if (orchestration is null) return null;
 
         // Detect deprecated polling fields
@@ -50,16 +53,17 @@ public static class OrchestrationSerializer
     /// </summary>
     public static string SerializeJson(Orchestration orchestration)
     {
-        return JsonSerializer.Serialize(orchestration, JsonOptions);
+        return JsonSerializer.Serialize(orchestration, OrchestrationJsonContext.Default.Orchestration);
     }
 
     /// <summary>
     /// Deserializes an orchestration from an XML string.
     /// Detects deprecated polling fields and flags <see cref="Orchestration.UsedDeprecatedPollingField"/>.
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Model types are preserved by CreateXmlSerializer.")]
     public static Orchestration? DeserializeXml(string xml)
     {
-        var serializer = new XmlSerializer(typeof(Orchestration));
+        var serializer = CreateXmlSerializer();
         using var stringReader = new StringReader(xml);
         using var reader = XmlReader.Create(stringReader, new XmlReaderSettings
         {
@@ -84,9 +88,10 @@ public static class OrchestrationSerializer
     /// <summary>
     /// Serializes an orchestration to an XML string.
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Model types are preserved by CreateXmlSerializer.")]
     public static string SerializeXml(Orchestration orchestration)
     {
-        var serializer = new XmlSerializer(typeof(Orchestration));
+        var serializer = CreateXmlSerializer();
         using var writer = new StringWriter();
         using var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings
         {

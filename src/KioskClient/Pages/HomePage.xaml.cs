@@ -17,7 +17,6 @@ namespace KioskClient.Pages;
 public sealed partial class HomePage : Page
 {
     private DispatcherTimer? _retryTimer;
-    private bool _shouldAutoRetry;
     private bool _retryPaused;
 
     public HomePage()
@@ -110,7 +109,6 @@ public sealed partial class HomePage : Page
             return;
         }
 
-        _shouldAutoRetry = true;
         _retryPaused = false;
         vm.CurrentAutoRetryCountdown = vm.AutoRetrySeconds;
         vm.IsAutoRetryActive = true;
@@ -158,7 +156,6 @@ public sealed partial class HomePage : Page
     {
         _retryTimer?.Stop();
         _retryTimer = null;
-        _shouldAutoRetry = false;
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)

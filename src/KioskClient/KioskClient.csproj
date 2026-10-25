@@ -23,6 +23,8 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <!-- Field-based [ObservableProperty] is only consumed through x:Bind, so the WinRT AOT marshalling concern doesn't apply. -->
+    <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

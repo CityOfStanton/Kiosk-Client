@@ -15,7 +15,7 @@ public class ImageAction : ActionBase
 
     /// <summary>How to stretch the image within the display area.</summary>
     [JsonPropertyName("stretch")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<ImageStretch>))]
     [XmlElement("Stretch")]
     public ImageStretch Stretch { get; set; } = ImageStretch.Uniform;
 

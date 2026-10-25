@@ -25,7 +25,7 @@ public class VideoAction : ActionBase
 
     /// <summary>How to stretch the video within the display area.</summary>
     [JsonPropertyName("stretch")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<ImageStretch>))]
     [XmlElement("Stretch")]
     public ImageStretch Stretch { get; set; } = ImageStretch.Uniform;
 
@@ -39,7 +39,7 @@ public class VideoAction : ActionBase
     /// PlayOnce plays the video a single time and ends when it finishes (Duration is ignored).
     /// </summary>
     [JsonPropertyName("playMode")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<VideoPlayMode>))]
     [XmlElement("PlayMode")]
     public VideoPlayMode PlayMode { get; set; } = VideoPlayMode.DurationLoop;
 

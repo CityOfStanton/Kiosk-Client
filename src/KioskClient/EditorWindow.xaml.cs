@@ -346,7 +346,7 @@ public sealed partial class EditorWindow : Window
     private void AddAction_Click(object sender, RoutedEventArgs e)
     {
         var version = OrchestrationMigrator.CurrentVersion;
-        ActionBase action = (sender as MenuFlyoutItem)?.Tag as string switch
+        ActionBase action = ((sender as MenuFlyoutItem)?.Tag as string) switch
         {
             "Image" => new ImageAction { Name = "New Image", Version = version, Duration = 10 },
             "Website" => new WebsiteAction { Name = "New Website", Version = version, Duration = 30 },

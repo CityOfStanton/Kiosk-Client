@@ -64,7 +64,7 @@ public class Orchestration
     /// Defines behavior after all actions have been displayed.
     /// </summary>
     [JsonPropertyName("lifecycle")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<LifecycleBehavior>))]
     [XmlElement("Lifecycle")]
     public LifecycleBehavior Lifecycle { get; set; } = LifecycleBehavior.ContinuousLoop;
 
@@ -72,7 +72,7 @@ public class Orchestration
     /// Defines the order in which actions are displayed.
     /// </summary>
     [JsonPropertyName("order")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<Ordering>))]
     [XmlElement("Order")]
     public Ordering Order { get; set; } = Ordering.Sequential;
 
