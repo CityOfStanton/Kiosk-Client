@@ -124,6 +124,19 @@ public class SettingsService : ISettingsService
 
     public T? GetSetting<T>(string key, T? defaultValue = default)
     {
+        try
+        {
+            return GetSettingCore(key, defaultValue);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("Settings", $"Could not read setting '{key}'; using default.", ex);
+            return defaultValue;
+        }
+    }
+
+    private T? GetSettingCore<T>(string key, T? defaultValue)
+    {
         object? raw;
         if (IsPackaged)
         {

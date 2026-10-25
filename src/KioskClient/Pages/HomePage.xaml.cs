@@ -79,21 +79,36 @@ public sealed partial class HomePage : Page
         StatusText.Text = "Loading last orchestration...";
         AppLog.Info("Startup", "Auto-start: loading last orchestration.");
 
-        var result = await App.SettingsVM.TryAutoStartAsync();
-        AppLog.Info("Startup", $"Auto-start result: {result}.");
-
-        switch (result)
+        try
         {
-            case StartupLoadResult.LoadedAndValid:
-                Frame.Navigate(typeof(OrchestrationPage), App.SettingsVM.Orchestration);
-                break;
-            case StartupLoadResult.LoadFailed:
-                App.SettingsVM.ShouldAutoRetryStart = true;
-                Frame.Navigate(typeof(SettingsPage));
-                break;
-            default:
-                Frame.Navigate(typeof(SettingsPage));
-                break;
+            var task = App.SettingsVM.TryAutoStartAsync();
+            var result = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(60))) == task
+                ? await task
+                : StartupLoadResult.LoadFailed;
+            AppLog.Info("Startup", $"Auto-start result: {result}.");
+
+            switch (result)
+            {
+                case StartupLoadResult.LoadedAndValid:
+                    Frame.Navigate(typeof(OrchestrationPage), App.SettingsVM.Orchestration);
+                    break;
+                case StartupLoadResult.LoadFailed:
+                    App.SettingsVM.ShouldAutoRetryStart = true;
+                    Frame.Navigate(typeof(SettingsPage));
+                    break;
+                default:
+                    Frame.Navigate(typeof(SettingsPage));
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Startup", "Auto-start failed unexpectedly; opening Settings.", ex);
+            Frame.Navigate(typeof(SettingsPage));
+        }
+        finally
+        {
+            LoadingRing.IsActive = false;
         }
     }
 

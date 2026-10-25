@@ -253,7 +253,77 @@ public partial class SettingsViewModel : ObservableObject
         _settings = settings;
         _loader = loader;
         _httpService = httpService;
-        LoadState();
+        MigrateLegacySettings();
+        try
+        {
+            LoadState();
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Settings", "Failed to load saved settings; falling back to defaults.", ex);
+            RecoverPaths();
+        }
+    }
+
+    private const string LegacyDefaultUriKey = "#DefaultOrchestrationURI";
+    private const string LegacyDefaultSourceKey = "#DefaultOrchestrationSource";
+
+    /// <summary>
+    /// Carries the previous version's default orchestration path over to the current settings keys.
+    /// Never throws.
+    /// </summary>
+    private void MigrateLegacySettings()
+    {
+        try
+        {
+            var legacyPath = _settings.GetSetting<string>(LegacyDefaultUriKey);
+            if (string.IsNullOrWhiteSpace(legacyPath)) return;
+
+            var isFile = string.Equals(_settings.GetSetting<string>(LegacyDefaultSourceKey), "File", StringComparison.OrdinalIgnoreCase);
+
+            if (string.IsNullOrWhiteSpace(_settings.GetSetting<string>(SettingsKeys.LastRunPath)))
+            {
+                _settings.SaveSetting(SettingsKeys.LastRunSource, isFile ? "File" : "URL");
+                _settings.SaveSetting(SettingsKeys.LastRunPath, legacyPath);
+            }
+
+            var hasCurrent = !string.IsNullOrWhiteSpace(_settings.GetSetting<string>(SettingsKeys.OrchestrationUri))
+                || !string.IsNullOrWhiteSpace(_settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath));
+            if (hasCurrent) return;
+
+            _settings.SaveSetting(SettingsKeys.OrchestrationSource, isFile ? "File" : "URL");
+            _settings.SaveSetting(isFile ? SettingsKeys.OrchestrationFilePath : SettingsKeys.OrchestrationUri, legacyPath);
+            AppLog.Info("Settings", $"Migrated legacy default orchestration (source={(isFile ? "File" : "URL")}).");
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("Settings", "Legacy settings migration failed.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Fail-safe used when saved state
+    /// </summary>
+    private void RecoverPaths()
+    {
+        try
+        {
+            var lastSource = _settings.GetSetting<string>(SettingsKeys.LastRunSource);
+            var lastPath = _settings.GetSetting<string>(SettingsKeys.LastRunPath);
+            var uri = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri);
+            var file = _settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath);
+
+            if (lastSource == "File" && !string.IsNullOrEmpty(lastPath)) file = lastPath;
+            else if (!string.IsNullOrEmpty(lastPath)) uri = lastPath;
+
+            IsLocalFile = lastSource == "File" || (string.IsNullOrEmpty(uri) && !string.IsNullOrEmpty(file));
+            UriPath = uri ?? string.Empty;
+            LocalPath = file ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Settings", "Path recovery failed.", ex);
+        }
     }
 
     /// <summary>
@@ -495,8 +565,17 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     public async Task<StartupLoadResult> TryAutoStartAsync()
     {
-        var source = _settings.GetSetting<string>(SettingsKeys.LastRunSource);
-        var path = _settings.GetSetting<string>(SettingsKeys.LastRunPath);
+        string? source = null, path = null;
+        try
+        {
+            source = _settings.GetSetting<string>(SettingsKeys.LastRunSource);
+            path = _settings.GetSetting<string>(SettingsKeys.LastRunPath);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Startup", "Auto-start: could not read last run.", ex);
+            return StartupLoadResult.LoadFailed;
+        }
         if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(path))
         {
             AppLog.Info("Startup", "Auto-start: no previous orchestration recorded.");
@@ -524,6 +603,7 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             AppLog.Error("Startup", "Auto-start: failed to reload the last orchestration.", ex);
+            RecoverPaths();
             return StartupLoadResult.LoadFailed;
         }
     }
