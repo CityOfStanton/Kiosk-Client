@@ -70,7 +70,7 @@ jobs:
             /p:GenerateAppxPackageOnBuild=true `
             /p:AppxBundle=Never `
             /p:AppxPackageSigningEnabled=false `
-            /p:AppxPackageDir="$env:GITHUB_WORKSPACE\AppPackages\$platform\"
+            "/p:AppxPackageDir=$env:GITHUB_WORKSPACE\AppPackages\$platform\\"
           if ($LASTEXITCODE -ne 0) { throw "MSBuild failed for $platform" }
         }
 
@@ -81,9 +81,16 @@ jobs:
         $out = Join-Path $env:GITHUB_WORKSPACE 'StorePackage'
         New-Item -ItemType Directory -Force $staging, $out | Out-Null
 
-        $msix = Get-ChildItem "$env:GITHUB_WORKSPACE\AppPackages" -Recurse -Filter *.msix |
-                Where-Object { $_.FullName -notmatch '\\Dependencies\\' }
-        if ($msix.Count -lt 2) { throw "Expected x64 and ARM64 .msix files, found $($msix.Count)" }
+        $all = @(Get-ChildItem "$env:GITHUB_WORKSPACE\AppPackages" -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)
+        Write-Host "Files under AppPackages:"
+        $all | ForEach-Object { Write-Host $_ }
+
+        $msix = @(Get-ChildItem "$env:GITHUB_WORKSPACE\AppPackages" -Recurse -Filter *.msix -ErrorAction SilentlyContinue |
+                  Where-Object { $_.FullName -notmatch '\\Dependencies\\' })
+        foreach ($platform in 'x64','ARM64') {
+          $count = @($msix | Where-Object { $_.FullName -match "\\AppPackages\\$platform\\" }).Count
+          if ($count -ne 1) { throw "Expected exactly one $platform .msix, found $count. Files: $($all -join '; ')" }
+        }
         $msix | ForEach-Object { Copy-Item $_.FullName $staging }
 
         $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe" |
