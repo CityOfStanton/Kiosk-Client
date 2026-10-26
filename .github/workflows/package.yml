@@ -54,7 +54,9 @@ jobs:
         if ($requested -notmatch '^\d+\.\d+\.\d+\.0$') {
           throw "Version '$requested' is invalid. Store packages require Major.Minor.Build.0"
         }
-        $updated = [regex]::Replace($manifest, '(?s)(<Identity.*?Version=")[^"]+(")', "`${1}$requested`${2}", 1)
+        $p = $requested.Split('.')
+        $requested = "$($p[0]).$($p[1]).${{ github.run_number }}.0"
+        $updated = 
         Set-Content "${{ env.MANIFEST_PATH }}" $updated -NoNewline
         "version=$requested" >> $env:GITHUB_OUTPUT
 
