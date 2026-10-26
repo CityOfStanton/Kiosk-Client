@@ -95,7 +95,8 @@ jobs:
 
         $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe" |
                     Sort-Object FullName -Descending | Select-Object -First 1
-        $bundle = Join-Path $out "KioskClient_${{ steps.version.outputs.version }}.msixbundle"
+        $parts = '${{ steps.version.outputs.version }}'.Split('.')
+        $bundle = Join-Path $out "KioskClient_$($parts[0]).$($parts[1]).${{ github.run_number }}.msixbundle"
         & $makeappx.FullName bundle /d $staging /p $bundle /o
         if ($LASTEXITCODE -ne 0) { throw "makeappx bundle failed" }
 
