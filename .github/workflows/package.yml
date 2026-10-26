@@ -56,7 +56,8 @@ jobs:
         }
         $p = $requested.Split('.')
         $requested = "$($p[0]).$($p[1]).${{ github.run_number }}.0"
-        $updated = 
+        $regex = [regex]'(?s)(<Identity.*?Version=")[^"]+(")'
+        $updated = $regex.Replace($manifest, "`${1}$requested`${2}", 1)
         Set-Content "${{ env.MANIFEST_PATH }}" $updated -NoNewline
         "version=$requested" >> $env:GITHUB_OUTPUT
 
