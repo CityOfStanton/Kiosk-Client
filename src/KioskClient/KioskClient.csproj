@@ -16,6 +16,7 @@
     <PublishAot>true</PublishAot>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
     <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
     <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
     <Company>City of Stanton</Company>
