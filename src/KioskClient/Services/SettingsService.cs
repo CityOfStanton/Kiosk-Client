@@ -153,7 +153,8 @@ public class SettingsService : ISettingsService
             try { return JsonSerializer.Deserialize(json, TypeInfo<T>()); }
             catch (Exception ex)
             {
-                AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; using default.", ex);
+                AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; clearing it and using default.", ex);
+                ClearInvalidSetting(key);
                 return defaultValue;
             }
         }
@@ -169,11 +170,48 @@ public class SettingsService : ISettingsService
             }
             catch (Exception ex)
             {
-                AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; using default.", ex);
+                AppLog.Warn("Settings", $"Could not deserialize setting '{key}'; clearing it and using default.", ex);
+                ClearInvalidSetting(key);
                 return defaultValue;
             }
         }
+        if (raw is null) return defaultValue;
+
+        if (TryConvertValue<T>(raw, out var converted))
+        {
+            AppLog.Info("Settings", $"Setting '{key}' was stored as {raw.GetType().Name}; converted to {typeof(T).Name}.");
+            return converted;
+        }
+
+        AppLog.Warn("Settings", $"Setting '{key}' has an incompatible stored type ({raw.GetType().Name}, expected {typeof(T).Name}); clearing it and using the default.");
+        ClearInvalidSetting(key);
         return defaultValue;
+    }
+
+    private static bool TryConvertValue<T>(object raw, out T? value)
+    {
+        value = default;
+        var target = typeof(T);
+        if (raw is not IConvertible
+            || (target != typeof(string) && target != typeof(bool) && target != typeof(int)
+                && target != typeof(long) && target != typeof(double) && target != typeof(float)))
+            return false;
+
+        try
+        {
+            value = (T)Convert.ChangeType(raw, target, System.Globalization.CultureInfo.InvariantCulture);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void ClearInvalidSetting(string key)
+    {
+        try { RemoveSetting(key); }
+        catch (Exception ex) { AppLog.Warn("Settings", $"Could not clear invalid setting '{key}'.", ex); }
     }
 
     public void SaveSetting<T>(string key, T value)

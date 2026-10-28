@@ -11,8 +11,16 @@ using Windows.Storage.Pickers;
 
 namespace KioskClient.Pages;
 
+[global::WinRT.GeneratedBindableCustomProperty]
+public sealed partial class ValidationNodeItem
+{
+    public string Glyph { get; init; } = string.Empty;
+    public Brush IconForeground { get; init; } = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+    public string Label { get; init; } = string.Empty;
+}
+
 /// <summary>
-/// Settings page with NavigationView and Pivot tabs for orchestration management,
+/// Settings page with NavigationView
 /// validation results, logging, and application settings.
 /// </summary>
 public sealed partial class SettingsPage : Page
@@ -489,13 +497,6 @@ public sealed partial class SettingsPage : Page
         ValidationTree.RootNodes.Clear();
         var rootNode = CreateTreeNode(root);
         ValidationTree.RootNodes.Add(rootNode);
-    }
-
-    private sealed class ValidationNodeItem
-    {
-        public string Glyph { get; init; } = string.Empty;
-        public Brush IconForeground { get; init; } = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-        public string Label { get; init; } = string.Empty;
     }
 
     private static TreeViewNode CreateTreeNode(ValidationResult result)

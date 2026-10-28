@@ -6,7 +6,8 @@ namespace KioskClient.ViewModels;
 /// <summary>
 /// List item wrapper used by the orchestration editor to display an action.
 /// </summary>
-public class EditorActionItem : ObservableObject
+[global::WinRT.GeneratedBindableCustomProperty]
+public partial class EditorActionItem : ObservableObject
 {
     public EditorActionItem(ActionBase action)
     {

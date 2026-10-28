@@ -16,6 +16,8 @@
     <PublishAot>true</PublishAot>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
+    <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
     <Company>City of Stanton</Company>
     <Product>Kiosk Client</Product>
     <Copyright>Copyright (c) 2021-2026 City of Stanton. All rights reserved.</Copyright>
@@ -37,7 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250205002" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
   </ItemGroup>

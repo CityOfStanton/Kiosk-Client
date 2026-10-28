@@ -185,16 +185,17 @@ public partial class SettingsViewModel : ObservableObject
         _settings.SaveSetting(SettingsKeys.CountdownOpacityPercent, (int)Math.Round(Math.Clamp(value, 0, 100)));
     }
 
-    private static Windows.UI.Color ParseColor(string hex)
+    private static Windows.UI.Color ParseColor(string hex, string settingName = "color")
     {
         var s = hex.TrimStart('#');
         if (s.Length == 8 && uint.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out var v))
             return Windows.UI.Color.FromArgb((byte)(v >> 24), (byte)(v >> 16), (byte)(v >> 8), (byte)v);
+        AppLog.Warn("Settings", $"Setting '{settingName}' has an invalid color value '{hex}'; using white.");
         return Microsoft.UI.Colors.White;
     }
 
-    public ObservableCollection<string> UrlHistory { get; } = [];
-    public ObservableCollection<string> LogEntries { get; } = [];
+    public StringCollection UrlHistory { get; } = [];
+    public StringCollection LogEntries { get; } = [];
 
     // Computed properties
     public bool IsFileMode => IsLocalFile;
@@ -331,36 +332,54 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     private void LoadState()
     {
-        IsAutoRetryEnabled = _settings.GetSetting(SettingsKeys.AutoRetryEnabled, true);
-        AutoRetrySeconds = _settings.GetSetting(SettingsKeys.RetryTimeoutSeconds, SettingsKeys.DefaultRetryTimeoutSeconds);
-        BlockHttp = _settings.GetSetting(SettingsKeys.BlockHttp, true);
-        SecurityPolicy.BlockHttp = BlockHttp;
-        MaxContentMegabytes = Math.Clamp(_settings.GetSetting(SettingsKeys.MaxContentMegabytes, SettingsKeys.DefaultMaxContentMegabytes), 1, 1024);
-        SecurityPolicy.MaxContentBytes = (long)MaxContentMegabytes * 1024 * 1024;
-
-        ShowCountdown = _settings.GetSetting(SettingsKeys.ShowCountdown, false);
-        ShowNetworkWatermark = _settings.GetSetting(SettingsKeys.ShowNetworkWatermark, true);
-        SettingsButtonOpacityPercent = _settings.GetSetting(SettingsKeys.SettingsButtonOpacityPercent, SettingsKeys.DefaultSettingsButtonOpacityPercent);
-        NetworkWatermarkBackground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkBackground, SettingsKeys.DefaultNetworkWatermarkBackground) ?? SettingsKeys.DefaultNetworkWatermarkBackground);
-        NetworkWatermarkForeground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkForeground, SettingsKeys.DefaultNetworkWatermarkForeground) ?? SettingsKeys.DefaultNetworkWatermarkForeground);
-        CountdownColor = ParseColor(_settings.GetSetting(SettingsKeys.CountdownColor, SettingsKeys.DefaultCountdownColor) ?? SettingsKeys.DefaultCountdownColor);
-        CountdownOpacityPercent = _settings.GetSetting(SettingsKeys.CountdownOpacityPercent, SettingsKeys.DefaultCountdownOpacityPercent);
-        CountdownAutoContrast = _settings.GetSetting(SettingsKeys.CountdownAutoContrast, true);
-
-        var maxHistory = _settings.GetSetting(SettingsKeys.MaxUrlHistory, SettingsKeys.DefaultMaxUrlHistory);
-        MaxUrlHistory = maxHistory;
-        var historyList = _settings.GetSetting<List<string>>(SettingsKeys.UrlHistory);
-        if (historyList is not null)
+        Guard("AutoRetryEnabled", () => IsAutoRetryEnabled = _settings.GetSetting(SettingsKeys.AutoRetryEnabled, true));
+        Guard("RetryTimeoutSeconds", () => AutoRetrySeconds = Math.Clamp(_settings.GetSetting(SettingsKeys.RetryTimeoutSeconds, SettingsKeys.DefaultRetryTimeoutSeconds), 1, 86400));
+        Guard("BlockHttp", () =>
         {
-            foreach (var url in historyList.Take(maxHistory))
+            BlockHttp = _settings.GetSetting(SettingsKeys.BlockHttp, true);
+            SecurityPolicy.BlockHttp = BlockHttp;
+        });
+        Guard("MaxContentMegabytes", () =>
+        {
+            MaxContentMegabytes = Math.Clamp(_settings.GetSetting(SettingsKeys.MaxContentMegabytes, SettingsKeys.DefaultMaxContentMegabytes), 1, 1024);
+            SecurityPolicy.MaxContentBytes = (long)MaxContentMegabytes * 1024 * 1024;
+        });
+
+        Guard("ShowCountdown", () => ShowCountdown = _settings.GetSetting(SettingsKeys.ShowCountdown, false));
+        Guard("ShowNetworkWatermark", () => ShowNetworkWatermark = _settings.GetSetting(SettingsKeys.ShowNetworkWatermark, true));
+        Guard("SettingsButtonOpacityPercent", () => SettingsButtonOpacityPercent = Math.Clamp(_settings.GetSetting(SettingsKeys.SettingsButtonOpacityPercent, SettingsKeys.DefaultSettingsButtonOpacityPercent), 0, 100));
+        Guard("NetworkWatermarkBackground", () => NetworkWatermarkBackground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkBackground, SettingsKeys.DefaultNetworkWatermarkBackground) ?? SettingsKeys.DefaultNetworkWatermarkBackground, SettingsKeys.NetworkWatermarkBackground));
+        Guard("NetworkWatermarkForeground", () => NetworkWatermarkForeground = ParseColor(_settings.GetSetting(SettingsKeys.NetworkWatermarkForeground, SettingsKeys.DefaultNetworkWatermarkForeground) ?? SettingsKeys.DefaultNetworkWatermarkForeground, SettingsKeys.NetworkWatermarkForeground));
+        Guard("CountdownColor", () => CountdownColor = ParseColor(_settings.GetSetting(SettingsKeys.CountdownColor, SettingsKeys.DefaultCountdownColor) ?? SettingsKeys.DefaultCountdownColor, SettingsKeys.CountdownColor));
+        Guard("CountdownOpacityPercent", () => CountdownOpacityPercent = Math.Clamp(_settings.GetSetting(SettingsKeys.CountdownOpacityPercent, SettingsKeys.DefaultCountdownOpacityPercent), 0, 100));
+        Guard("CountdownAutoContrast", () => CountdownAutoContrast = _settings.GetSetting(SettingsKeys.CountdownAutoContrast, true));
+
+        var maxHistory = SettingsKeys.DefaultMaxUrlHistory;
+        Guard("MaxUrlHistory", () =>
+        {
+            maxHistory = Math.Clamp(_settings.GetSetting(SettingsKeys.MaxUrlHistory, SettingsKeys.DefaultMaxUrlHistory), 1, 1000);
+            MaxUrlHistory = maxHistory;
+        });
+        Guard("UrlHistory", () =>
+        {
+            var historyList = _settings.GetSetting<List<string>>(SettingsKeys.UrlHistory);
+            if (historyList is null) return;
+            foreach (var url in historyList.Where(u => !string.IsNullOrWhiteSpace(u)).Take(maxHistory))
                 UrlHistory.Add(url);
-        }
+        });
 
-        var savedSource = _settings.GetSetting<string>(SettingsKeys.OrchestrationSource);
-        IsLocalFile = savedSource == "File";
+        Guard("OrchestrationSource", () => IsLocalFile = _settings.GetSetting<string>(SettingsKeys.OrchestrationSource) == "File");
+        Guard("OrchestrationUri", () => UriPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri) ?? string.Empty);
+        Guard("OrchestrationFilePath", () => LocalPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath) ?? string.Empty);
 
-        UriPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationUri) ?? string.Empty;
-        LocalPath = _settings.GetSetting<string>(SettingsKeys.OrchestrationFilePath) ?? string.Empty;
+        AppLog.Debug("Settings", $"Settings loaded: source={(IsLocalFile ? "File" : "URL")}, autoRetry={IsAutoRetryEnabled}/{AutoRetrySeconds}s, blockHttp={BlockHttp}, maxContentMB={MaxContentMegabytes}, urlHistory={UrlHistory.Count}.");
+    }
+
+    /// <summary>Loads one setting; a failure is logged and leaves that setting at its default without affecting the others.</summary>
+    private static void Guard(string name, Action load)
+    {
+        try { load(); }
+        catch (Exception ex) { AppLog.Warn("Settings", $"Could not apply saved setting '{name}'; using its default.", ex); }
     }
 
     /// <summary>

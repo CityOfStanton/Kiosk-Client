@@ -18,7 +18,7 @@ namespace KioskClient;
 /// </summary>
 public sealed partial class EditorWindow : Window
 {
-    private readonly ObservableCollection<EditorActionItem> _items = [];
+    private readonly KioskClient.ViewModels.EditorActionItemCollection _items = [];
     private Orchestration _orchestration = CreateNew();
     private StorageFile? _file;
     private bool _isXml;

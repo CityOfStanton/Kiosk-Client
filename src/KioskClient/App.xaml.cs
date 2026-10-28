@@ -69,6 +69,8 @@ public partial class App : Application
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         AppLog.Error("App", $"Unhandled UI exception: {e.Message}", e.Exception);
+        // Keep the kiosk alive; the exception is already logged.
+        e.Handled = true;
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
