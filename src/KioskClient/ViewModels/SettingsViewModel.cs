@@ -277,7 +277,11 @@ public partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            var legacyPath = _settings.GetSetting<string>(LegacyDefaultUriKey);
+            CleanStoredPath(SettingsKeys.OrchestrationUri);
+            CleanStoredPath(SettingsKeys.OrchestrationFilePath);
+            CleanStoredPath(SettingsKeys.LastRunPath);
+
+            var legacyPath = CleanPath(_settings.GetSetting<string>(LegacyDefaultUriKey));
             if (string.IsNullOrWhiteSpace(legacyPath)) return;
 
             var isFile = string.Equals(_settings.GetSetting<string>(LegacyDefaultSourceKey), "File", StringComparison.OrdinalIgnoreCase);
@@ -299,6 +303,29 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             AppLog.Warn("Settings", "Legacy settings migration failed.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Removes surrounding whitespace and quote characters left by legacy (double-serialized) values.
+    /// </summary>
+    internal static string? CleanPath(string? value)
+    {
+        if (value is null) return null;
+        var cleaned = value.Trim();
+        while (cleaned.Length >= 2 && (cleaned[0] == '"' || cleaned[0] == '\'') && cleaned[^1] == cleaned[0])
+            cleaned = cleaned[1..^1].Trim();
+        return cleaned.Trim('"', '\'', ' ');
+    }
+
+    private void CleanStoredPath(string key)
+    {
+        var raw = _settings.GetSetting<string>(key);
+        var cleaned = CleanPath(raw);
+        if (raw is not null && cleaned != raw)
+        {
+            _settings.SaveSetting(key, cleaned ?? string.Empty);
+            AppLog.Info("Settings", $"Cleaned stray quotes from saved value '{key}'.");
         }
     }
 
