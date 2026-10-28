@@ -19,6 +19,8 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
     <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
+    <!-- Required for CsWinRT to generate AOT marshalling for generic collections (CsWinRT1030). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Company>City of Stanton</Company>
     <Product>Kiosk Client</Product>
     <Copyright>Copyright (c) 2021-2026 City of Stanton. All rights reserved.</Copyright>
