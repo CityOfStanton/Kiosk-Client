@@ -1,28 +1,100 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Outer White Strip -->
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="#FFFFFF" />
-  
-  <!-- Inner Black Strip -->
-  <rect x="32" y="32" width="448" height="448" rx="96" fill="#1A1A1A" />
-  
-  <!-- Main Green Background -->
-  <rect x="48" y="48" width="416" height="416" rx="80" fill="#388E3C" />
-  
-  <!-- Monitor Stand Base -->
-  <path d="M 176 380 L 336 380 L 356 400 L 156 400 Z" fill="#1A1A1A" />
-  
-  <!-- Monitor Stand Neck -->
-  <rect x="236" y="340" width="40" height="40" fill="#1A1A1A" />
-  
-  <!-- Monitor Frame -->
-  <rect x="96" y="130" width="320" height="210" rx="20" fill="#1A1A1A" />
-  
-  <!-- Inner Screen (Darker green for contrast) -->
-  <rect x="112" y="146" width="288" height="178" rx="10" fill="#2E7D32" />
-  
-  <!-- "Kiosk" Text -->
-  <text x="256" y="200" font-family="&#39;Segoe UI&#39;, Roboto, Helvetica, sans-serif" font-size="64" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">Kiosk</text>
-  
-  <!-- "Client" Text -->
-  <text x="256" y="270" font-family="&#39;Segoe UI&#39;, Roboto, Helvetica, sans-serif" font-size="64" font-weight="800" fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">Client</text>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   sodipodi:docname="KioskClientLogo-LowRes.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.3222656"
+     inkscape:cx="255.78469"
+     inkscape:cy="256"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g1">
+    <inkscape:page
+       x="0"
+       y="0"
+       inkscape:label="1"
+       id="page1"
+       width="512"
+       height="512"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <g
+     id="g1"
+     inkscape:groupmode="layer"
+     inkscape:label="1">
+    <path
+       id="path1"
+       d="m 96,12 h 192 c 46.535,0 84,37.465 84,84 v 192 c 0,46.535 -37.465,84 -84,84 H 96 C 49.465,372 12,334.535 12,288 V 96 C 12,49.465 49.465,12 96,12 Z"
+       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <path
+       id="path2"
+       d="m 96,24 h 192 c 39.887,0 72,32.113 72,72 v 192 c 0,39.887 -32.113,72 -72,72 H 96 C 56.113,360 24,327.887 24,288 V 96 C 24,56.113 56.113,24 96,24 Z"
+       style="fill:#1a1a1a;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <path
+       id="path3"
+       d="m 96,36 h 192 c 33.238,0 60,26.762 60,60 v 192 c 0,33.238 -26.762,60 -60,60 H 96 C 62.762,348 36,321.238 36,288 V 96 C 36,62.762 62.762,36 96,36 Z"
+       style="fill:#808080;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <path
+       id="path4"
+       d="m 132,285 h 120 l 15,15 H 117 Z"
+       style="fill:#1a1a1a;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <path
+       id="path5"
+       d="m 177,255 h 30 v 30 h -30 z"
+       style="fill:#1a1a1a;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <path
+       id="path6"
+       d="m 87,97.5 h 210 c 8.309,0 15,6.691 15,15 V 240 c 0,8.309 -6.691,15 -15,15 H 87 c -8.309,0 -15,-6.691 -15,-15 V 112.5 c 0,-8.309 6.691,-15 15,-15 z"
+       style="fill:#1a1a1a;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <path
+       id="path7"
+       d="m 91.5,109.5 h 201 c 4.156,0 7.5,3.344 7.5,7.5 v 118.5 c 0,4.156 -3.344,7.5 -7.5,7.5 H 91.5 C 87.344,243 84,239.656 84,235.5 V 117 c 0,-4.156 3.344,-7.5 7.5,-7.5 z"
+       style="fill:#2e7d32;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       transform="scale(1.3333333)" />
+    <text
+       id="text7"
+       xml:space="preserve"
+       transform="matrix(1.3333333,0,0,1.3333333,172.60937,216)"><tspan
+         id="tspan7"
+         style="font-variant:normal;font-weight:700;font-size:48px;font-family:'Segoe UI';writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="0"
+         dx="0 0.76800001 0.72000003 0.76800001 0.72000003"
+         y="0">Kiosk</tspan><tspan
+         id="tspan8"
+         style="font-variant:normal;font-weight:700;font-size:48px;font-family:'Segoe UI';writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         x="-4.7929678"
+         dx="0 0.76800001 0.72000003 0.76800001 0.72000003 0.76800001"
+         y="52.5">Client</tspan></text>
+  </g>
 </svg>
