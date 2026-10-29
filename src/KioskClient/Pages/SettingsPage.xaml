@@ -200,17 +200,17 @@
                                     Style="{StaticResource AccentGreenButtonStyle}"
                                     IsEnabled="{x:Bind ViewModel.CanStart, Mode=OneWay}"
                                     ToolTipService.ToolTip="{x:Bind ViewModel.RunTooltip, Mode=OneWay}"
-                                    AutomationProperties.Name="Run orchestration">
+                                    AutomationProperties.Name="Run Orchestration">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <SymbolIcon Symbol="Play" />
-                                    <TextBlock Text="Run orchestration" />
+                                    <TextBlock Text="Run Orchestration" />
                                     <TextBlock Text="F5" Opacity="0.7" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                                 </Button>
                                 <Button x:Name="OpenEditorButton" Click="OpenInEditor_Click" ToolTipService.ToolTip="Open the Editor to create or change an orchestration" AutomationProperties.Name="Open orchestration editor">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <SymbolIcon Symbol="Edit" />
-                                    <TextBlock Text="Open in editor" />
+                                    <TextBlock Text="Edit Orchestration" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
