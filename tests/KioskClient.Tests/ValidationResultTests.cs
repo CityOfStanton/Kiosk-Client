@@ -56,7 +56,7 @@ public class ValidationResultTests
     }
 
     [Fact]
-    public void PassedCount_CountsAllValidRecursively()
+    public void PassedCount_CountsOnlyValidLeafNodes()
     {
         var result = new ValidationResult
         {
@@ -77,11 +77,11 @@ public class ValidationResultTests
             ]
         };
 
-        Assert.Equal(3, result.PassedCount); // Root + Child1 + Grandchild
+        Assert.Equal(1, result.PassedCount); // Grandchild only (Child2 is a failed leaf)
     }
 
     [Fact]
-    public void FailedCount_CountsAllInvalidRecursively()
+    public void FailedCount_CountsOnlyInvalidLeafNodes()
     {
         var result = new ValidationResult
         {
@@ -102,7 +102,7 @@ public class ValidationResultTests
             ]
         };
 
-        Assert.Equal(3, result.FailedCount); // Root + Child2 + Grandchild
+        Assert.Equal(1, result.FailedCount); // Grandchild only (Child1 is a passed leaf)
     }
 
     [Fact]
