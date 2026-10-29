@@ -31,14 +31,14 @@ public class ValidationResult
         IsValid == true && Children.All(c => c.IsFullyValid);
 
     /// <summary>
-    /// Gets the total count of passed validations (this + descendants).
+    /// Gets the count of passed leaf validations (nodes without children).
     /// </summary>
     public int PassedCount =>
-        (IsValid == true ? 1 : 0) + Children.Sum(c => c.PassedCount);
+        Children.Count == 0 ? (IsValid == true ? 1 : 0) : Children.Sum(c => c.PassedCount);
 
     /// <summary>
-    /// Gets the total count of failed validations (this + descendants).
+    /// Gets the count of failed leaf validations (nodes without children).
     /// </summary>
     public int FailedCount =>
-        (IsValid == false ? 1 : 0) + Children.Sum(c => c.FailedCount);
+        Children.Count == 0 ? (IsValid == false ? 1 : 0) : Children.Sum(c => c.FailedCount);
 }
