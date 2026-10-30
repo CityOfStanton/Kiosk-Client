@@ -87,5 +87,28 @@ public partial class App : Application
         _window = new MainWindow();
         _window.Activate();
         AppLog.Info("Startup", "Main window activated.");
+
+        _ = EnsureStartupTaskEnabledAsync();
+    }
+
+    private static async Task EnsureStartupTaskEnabledAsync()
+    {
+        try
+        {
+            var task = await Windows.ApplicationModel.StartupTask.GetAsync("KioskClientStartup");
+            if (task.State == Windows.ApplicationModel.StartupTaskState.Disabled)
+            {
+                var state = await task.RequestEnableAsync();
+                AppLog.Info("Startup", $"Startup task enable requested: {state}.");
+            }
+            else
+            {
+                AppLog.Info("Startup", $"Startup task state: {task.State}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Startup", "Failed to configure startup task.", ex);
+        }
     }
 }
