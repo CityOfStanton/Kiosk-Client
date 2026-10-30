@@ -45,7 +45,7 @@
         <uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badge"/>
       </uap:VisualElements>
       <Extensions>
-        <desktop:Extension Category="windows.startupTask" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
+        <desktop:Extension Category="windows.startupTask" Executable="KioskClient.exe" EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask TaskId="KioskClientStartup" Enabled="true" DisplayName="Kiosk Client" />
         </desktop:Extension>
       </Extensions>
