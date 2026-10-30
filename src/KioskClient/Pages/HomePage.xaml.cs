@@ -84,7 +84,7 @@ public sealed partial class HomePage : Page
         try
         {
             var task = App.SettingsVM.TryAutoStartAsync();
-            Task.Delay(TimeSpan.FromSeconds(StartupLoadTimeoutSeconds))
+            var result = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(StartupLoadTimeoutSeconds))) == task
                 ? await task
                 : StartupLoadResult.LoadFailed;
             AppLog.Info("Startup", $"Auto-start result: {result}.");
