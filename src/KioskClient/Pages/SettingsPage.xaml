@@ -445,6 +445,33 @@
                                 CornerRadius="8" Padding="16"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                             <StackPanel Spacing="12">
+                                <TextBlock Text="Startup" FontWeight="Bold" FontSize="16" />
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Start Kiosk Client when Windows starts" />
+                                    <TextBlock Text="Adds or removes Kiosk Client from Windows Startup Apps."
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12" />
+                                    <Grid ToolTipService.ToolTip="{x:Bind ViewModel.StartupTooltip, Mode=OneWay}"
+                                          Background="Transparent">
+                                        <ToggleSwitch AutomationProperties.Name="Start Kiosk Client when Windows starts"
+                                                      IsOn="{x:Bind ViewModel.IsStartupEnabled, Mode=TwoWay}"
+                                                      IsEnabled="{x:Bind ViewModel.CanChangeStartup, Mode=OneWay}" />
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind ViewModel.StartupTooltip, Mode=OneWay}"
+                                               Visibility="{x:Bind ViewModel.HasStartupMessage, Mode=OneWay}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8" Padding="16"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="12">
                                 <TextBlock Text="Security" FontWeight="Bold" FontSize="16" />
 
                                 <StackPanel Spacing="4">

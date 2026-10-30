@@ -92,6 +92,112 @@ public partial class SettingsViewModel : ObservableObject
         _settings.SaveSetting(SettingsKeys.BlockHttp, value);
     }
 
+    private const string StartupTaskId = "KioskClientStartup";
+    private Windows.ApplicationModel.StartupTask? _startupTask;
+    private bool _isSyncingStartup;
+
+    [ObservableProperty]
+    private bool _isStartupEnabled;
+
+    [ObservableProperty]
+    private bool _canChangeStartup;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasStartupMessage))]
+    private string? _startupTooltip;
+
+    public bool HasStartupMessage => !string.IsNullOrEmpty(StartupTooltip);
+
+    partial void OnIsStartupEnabledChanged(bool value)
+    {
+        if (_isSyncingStartup) return;
+        _ = ApplyStartupAsync(value);
+    }
+
+    /// <summary>
+    /// Reads the current Windows Startup App state and updates the bound properties.
+    /// </summary>
+    public async Task RefreshStartupStateAsync()
+    {
+        try
+        {
+            _startupTask ??= await Windows.ApplicationModel.StartupTask.GetAsync(StartupTaskId);
+            UpdateStartupState(_startupTask.State);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Startup", "Failed to read startup task state.", ex);
+            SetStartupState(false, false, $"Startup behavior cannot be changed because its state could not be read ({ex.GetType().Name}: {ex.Message}). This is expected when running unpackaged or under some debug configurations.");
+        }
+    }
+
+    private async Task ApplyStartupAsync(bool enable)
+    {
+        if (_startupTask is null) return;
+        try
+        {
+            if (enable)
+            {
+                var state = await _startupTask.RequestEnableAsync();
+                AppLog.Info("Startup", $"Startup task enable requested: {state}.");
+                UpdateStartupState(state);
+            }
+            else
+            {
+                _startupTask.Disable();
+                AppLog.Info("Startup", "Startup task disabled.");
+                UpdateStartupState(_startupTask.State);
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Startup", "Failed to change startup task.", ex);
+            await RefreshStartupStateAsync();
+            if (CanChangeStartup)
+                SetStartupState(IsStartupEnabled, true, $"Could not change the startup setting ({ex.Message}).");
+        }
+    }
+
+    private void UpdateStartupState(Windows.ApplicationModel.StartupTaskState state)
+    {
+        switch (state)
+        {
+            case Windows.ApplicationModel.StartupTaskState.Enabled:
+                SetStartupState(true, true, null);
+                break;
+            case Windows.ApplicationModel.StartupTaskState.Disabled:
+                SetStartupState(false, true, null);
+                break;
+            case Windows.ApplicationModel.StartupTaskState.DisabledByUser:
+                SetStartupState(false, false, "Startup was turned off in Windows. To enable it, open Windows Settings > Apps > Startup and turn on Kiosk Client.");
+                break;
+            case Windows.ApplicationModel.StartupTaskState.DisabledByPolicy:
+                SetStartupState(false, false, "Startup is disabled by your organization's policy. Contact your administrator to change it.");
+                break;
+            case Windows.ApplicationModel.StartupTaskState.EnabledByPolicy:
+                SetStartupState(true, false, "Startup is enabled by your organization's policy and cannot be changed.");
+                break;
+            default:
+                SetStartupState(false, false, $"Startup behavior cannot be changed (Windows reported state: {state}).");
+                break;
+        }
+    }
+
+    private void SetStartupState(bool isEnabled, bool canChange, string? tooltip)
+    {
+        _isSyncingStartup = true;
+        try
+        {
+            IsStartupEnabled = isEnabled;
+            CanChangeStartup = canChange;
+            StartupTooltip = tooltip;
+        }
+        finally
+        {
+            _isSyncingStartup = false;
+        }
+    }
+
     partial void OnMaxContentMegabytesChanged(double value)
     {
         if (double.IsNaN(value) || value < 1) return;

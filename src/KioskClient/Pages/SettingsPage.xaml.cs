@@ -43,6 +43,7 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        _ = ViewModel.RefreshStartupStateAsync();
         if (!_tutorialPromptShown && !ViewModel.ShouldAutoRetryStart &&
             !App.Settings.GetSetting(KioskClient.Services.SettingsKeys.DoNotShowTutorial, false))
         {
