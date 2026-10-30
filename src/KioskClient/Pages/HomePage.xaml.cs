@@ -16,6 +16,8 @@ namespace KioskClient.Pages;
 /// </summary>
 public sealed partial class HomePage : Page
 {
+    private const int StartupLoadTimeoutSeconds = 15;
+
     private DispatcherTimer? _retryTimer;
     private bool _retryPaused;
 
@@ -82,7 +84,7 @@ public sealed partial class HomePage : Page
         try
         {
             var task = App.SettingsVM.TryAutoStartAsync();
-            var result = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(60))) == task
+            Task.Delay(TimeSpan.FromSeconds(StartupLoadTimeoutSeconds))
                 ? await task
                 : StartupLoadResult.LoadFailed;
             AppLog.Info("Startup", $"Auto-start result: {result}.");
@@ -121,6 +123,7 @@ public sealed partial class HomePage : Page
             AppLog.Info("Startup", $"Auto-retry not started: enabled={vm.IsAutoRetryEnabled}, canStart={vm.CanStart}.");
             LoadingRing.IsActive = false;
             StatusText.Text = "Orchestration returned. Press Settings to reconfigure.";
+            NavigateToSettings();
             return;
         }
 
